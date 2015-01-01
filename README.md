@@ -1,12 +1,11 @@
 Fedora srvctl
 ==============
 
-srvctl can manage
-- LXC containers 
--- Web configuration
--- Mail configuration
--- User configuratin
--- CMS installation
+srvctl can manage LXC containers
+- Web configuration
+- Mail configuration
+- User configuratin
+- CMS installation
 
 As of version 2.0.0 - fedora 21
 
