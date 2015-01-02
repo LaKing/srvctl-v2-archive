@@ -1,6 +1,6 @@
 #!/bin/bash
-# Last update:2014.12.25-02:09:58
-# srvctl version 2.0.0
+# Last update:2015.01.02-05:31:41
+# version 2.0.1
 #
 # Server Controll script for Fedora with LXC containers
 #
@@ -11,6 +11,7 @@
 ## Source URL
 #URL="https://raw.githubusercontent.com/LaKing/Fedora-scripts/master/srvctl"
 
+## try $(dirname "$BASH_SOURCE")
 install_dir=/home/x/Fedora-scripts/srvctl-2.x
 
 source $install_dir/authorize.sh
