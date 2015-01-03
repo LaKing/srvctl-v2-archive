@@ -1,6 +1,6 @@
 #!/bin/bash
-# Last update:2015.01.03-20:02:51
-# version 2.0.2
+# Last update:2015.01.03-20:27:05
+# version 2.0.3
 #
 # Server Controll script for Fedora with LXC containers
 #
