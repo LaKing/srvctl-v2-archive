@@ -55,6 +55,8 @@ cd ~/srvctl
 if $is_root
 then
     cd /srv/srvctl
+else
+    cd ~/srvctl
 fi
 
 if [ ! -f "srvctl.sh" ]
@@ -106,8 +108,10 @@ cd ..
 rpmdev-setuptree
 
 ## I assume that the srvctl source is cloned into the home directory
+echo "Compressing tar.gz"
 tar -cvzf srvctl-$nv.tar.gz --exclude-vcs srvctl
 
+echo"Moving from $(pwd)"
 mv srvctl-$nv.tar.gz rpmbuild/SOURCES/
 
 echo 'Summary: Command line tool to manage Fedora servers and container farms.
