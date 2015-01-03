@@ -54,8 +54,10 @@ fi
 cd ~/srvctl
 if $is_root
 then
+    echo "@@ IS ROOT"
     cd /srv/srvctl
 else
+    echo "@@ NOT ROOT"
     cd ~/srvctl
 fi
 
@@ -104,7 +106,9 @@ echo "Packaging srvctl $nv"
 ## set up an enviroment in the home folder of the user - or in /srv
 cd ..
 #rm -rf ~/rpmbuild
-rpmdev-setuptree
+#rpmdev-setuptree
+
+mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS,tmp}
 
 ## I assume that the srvctl source is cloned into the home directory
 echo "Compressing tar.gz"
