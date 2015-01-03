@@ -69,7 +69,6 @@ fi
 g='srvctl.sh'
 
 NOW=$(date +%Y.%m.%d-%H:%M:%S)
-echo "Updateing $g $NOW"
 
 cat $g > $g.bak
 
@@ -111,7 +110,7 @@ rpmdev-setuptree
 echo "Compressing tar.gz"
 tar -cvzf srvctl-$nv.tar.gz --exclude-vcs srvctl
 
-echo"Moving from $(pwd)"
+echo "Moving from $(pwd)"
 mv srvctl-$nv.tar.gz rpmbuild/SOURCES/
 
 echo 'Summary: Command line tool to manage Fedora servers and container farms.
