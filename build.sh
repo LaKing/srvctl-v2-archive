@@ -51,7 +51,6 @@ fi
 
 ## I assume you cloned srvctl into your home directory
 
-cd ~/srvctl
 if $is_root
 then
     cd /srv
