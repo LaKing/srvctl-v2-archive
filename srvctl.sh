@@ -1,6 +1,6 @@
 #!/bin/bash
-# Last update:2015.01.03-20:38:51
-# version 2.0.2
+# Last update:2015.01.05-05:34:53
+# version 2.0.3
 #
 # Server Controll script for Fedora with LXC containers
 #
@@ -12,14 +12,14 @@
 #URL="https://raw.githubusercontent.com/LaKing/Fedora-scripts/master/srvctl"
 
 ## try $(dirname "$BASH_SOURCE")
-install_dir=/home/x/Fedora-scripts/srvctl-2.x
+install_dir=/usr/share/srvctl
 
 source $install_dir/authorize.sh
 source $install_dir/init.sh
 
 for libfile in $install_dir/libs/*
 do
-	source $libfile
+        source $libfile
 done
 
 log "[$(whoami)@$(hostname) $(pwd)]# $0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
@@ -28,7 +28,7 @@ SUCC=""
 
 ## hint provides a sort of help functionality - initialize empty
 function hint {
-	echo "-" >> /dev/null
+        echo "-" >> /dev/null
 } 
 
 ## this is used at the end of command-blocks, to confirm command success or failure.
@@ -39,17 +39,17 @@ SUCC=" "
 ### TODO 2.x check if this is needed. propably only on source install
 if $onHS
 then
-	## yum and source builds work with different directories.
-	lxc_usr_path="/usr"
-	if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "zip" ]
-	then
-		lxc_usr_path="/usr/local"
+        ## yum and source builds work with different directories.
+        lxc_usr_path="/usr"
+        if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "zip" ]
+        then
+                lxc_usr_path="/usr/local"
 
-		if [ -z $(echo $LD_LIBRARY_PATH | grep '/usr/local/lib') ]
-		then
-			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-		fi
-	fi
+                if [ -z $(echo $LD_LIBRARY_PATH | grep '/usr/local/lib') ]
+                then
+                        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+                fi
+        fi
 
 fi
 
@@ -61,7 +61,7 @@ dbg "Debug mode: on"
 
 for sourcefile in $install_dir/commands/*
 do
-	source $sourcefile
+        source $sourcefile
 done
 
 source $install_dir/finish.sh
