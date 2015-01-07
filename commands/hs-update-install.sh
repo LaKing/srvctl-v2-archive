@@ -3,13 +3,13 @@
 if $onHS
 then ## no identation.
 
-## just to make sure, LXC is installed for real
-if [ -z "$(lxc-info --version 2> /dev/null)" ] && ! [ "$CMD" == "update-install" ]
-then        
-        err "   LXC NOT INSTALLED!"
-        msg "        run 'srvctl update-install' to configure this system as container-host."
-ok
-fi
+## just to make sure, LXC is installed for real - TODO check this
+#if [ -z "$(lxc-info --version 2> /dev/null)" ] && ! [ "$CMD" == "update-install" ]
+#then        
+#        err "   LXC NOT INSTALLED!"
+#        msg "        run 'srvctl update-install' to configure this system as container-host."
+#ok
+#fi
 
 
 hint "update-install [all]" "This will update the srvctl host installation."

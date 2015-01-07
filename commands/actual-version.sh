@@ -13,9 +13,9 @@ then
 
     if [ -z "$(lxc-info --version 2> /dev/null)" ]
     then
-	err "LXC NOT INSTALLED!"
+        err "LXC NOT INSTALLED!"
     else
-	msg 'LXC: '$(lxc-info --version)' installed'
+        msg 'LXC: '$(lxc-info --version)' installed'
     fi
     msg_yum_version_installed Pound
     msg_yum_version_installed postfix
@@ -28,4 +28,7 @@ then
 ok
 fi
 
-
+man '
+    Display kernel version, srvctl version
+    Pound, postfix, perdition, fail2ban, bind, clamav versions
+'
