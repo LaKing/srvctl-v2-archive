@@ -6,209 +6,214 @@ then ## no identation.
 
 if [ "$test_mariadb" == "active" ]
 then
-	  
+          
 
-	setup_mariadb
+        setup_mariadb
 
-	hint "mysql [CMD..]	" "Enter mariadb/mysql as root, or execute SQL command."
-	if  [ "$CMD" == "mysql" ]
-	then
-		if [ -z "$2" ]
-		then
-			mysql $MDA
-		else
-			mysql $MDA -e "$2" 
-		fi 
-	ok
-	fi
+        hint "mysql [CMD..]        " "Enter mariadb/mysql as root, or execute SQL command."
+        if  [ "$CMD" == "mysql" ]
+        then
+                if [ -z "$2" ]
+                then
+                        mysql $MDA
+                else
+                        mysql $MDA -e "$2" 
+                fi 
+        ok
+        fi
 
-	hint "import-db DATABASE" "Import a mysql database."
-	if [ "$CMD" == "import-db" ] 
-	then
+        hint "import-db DATABASE" "Import a mysql database."
+        if [ "$CMD" == "import-db" ] 
+        then
 
-		argument db
+                argument db
 
-		mysql $MDA < $db
+                mysql $MDA < $db
 
-		mysql $MDA -e "show databases;"
+                mysql $MDA -e "show databases;"
 
-	ok
-	fi ## import db
-
-
-
-	hint "add-db DATABASE" "Add a new database."
-	if [ "$CMD" == "add-db" ] 
-	then
-		#MDA="--defaults-file=$MDF -u root"
-
-		argument db_name
-
-		get_password
-
-		db_usr=$db_name 
-		db_pwd=$password
-
-		SQL="CREATE DATABASE IF NOT EXISTS $db_name"
-		ntc "$SQL"
-		mysql $MDA -e "$SQL"
+        ok
+        fi ## import db
 
 
-		SQL="GRANT ALL ON *.* TO '$db_usr'@'localhost' IDENTIFIED BY '$db_pwd'; flush privileges;"
-		ntc "$SQL"
-		mysql $MDA -e "$SQL"
 
-		## save these params
-		conf=/etc/mysqluser.conf
-		echo 'dbf:'$db_name >> $conf
-		echo 'usr:'$db_usr >> $conf
-		echo 'pwd:'$db_pwd >> $conf
+        hint "add-db DATABASE" "Add a new database."
+        if [ "$CMD" == "add-db" ] 
+        then
+                #MDA="--defaults-file=$MDF -u root"
 
+                argument db_name
 
-	ok
-	fi ## add-db
+                get_password
 
+                db_usr=$db_name 
+                db_pwd=$password
 
-	hint "reset-db-root-passwd" "Reset Database root password."
-	if [ "$CMD" == "reset-db-root-passwd" ] 
-	then
-
-		get_password
-
-		test=$(mysql $MDA -e "show databases" | grep Database)
-
-		if [ "$test" == "Database" ] 
-		then
-			msg "The database is accessible."
-		else
-			msg "Could not enter database! "
-
-			systemctl stop mysqld.service
-			sleep 1
-			mysqld_safe --skip-grant-tables &
-			sleep 10
-
-			test=$(mysql $MDA -e "show databases" | grep Database)
-			if [ "$test" == "Database" ] 
-			then
-				msg "Re-entered database in safe mode."
-			else
-				err "Could not re-enter mysql!"
-				exit
-			fi
-
-		fi
-
-		log "Set MariaDB database root password to: $password"
-		SQL="UPDATE mysql.user SET Password=PASSWORD('$password') WHERE User='root'; flush privileges;"
-		mysql $MDA -e "$SQL"
+                SQL="CREATE DATABASE IF NOT EXISTS $db_name"
+                ntc "$SQL"
+                mysql $MDA -e "$SQL"
 
 
-		## set up backup params
-		bak $MDF
+                SQL="GRANT ALL ON *.* TO '$db_usr'@'localhost' IDENTIFIED BY '$db_pwd'; flush privileges;"
+                ntc "$SQL"
+                mysql $MDA -e "$SQL"
 
-		echo '[client]' > $MDF
-		echo 'user=root' >> $MDF
-		echo 'password='$password >> $MDF
-
-		msg "Rebooting the container."
-		reboot
-
-	ok
-	fi ## reset-db-root-password
-
-	hint "backup-db [clean]" "Create a backup of the Mysql/MariaDB database, Optionally clean older backups."
-	if [ "$CMD" == "backup-db" ] 
-	then
-
-		log "Creating backup of Mysql/Mariadb databases."
-
-		old_backup=$(ls -d /root/backup/* 2> /dev/null)
-
-		BACKUP_POINT="/root/backup/"$(date +%Y_%m_%d__%H_%M_%S)
-		mkdir -p $BACKUP_POINT
-
-		## All Databases into a single file?
-		# mysqldump $MDA --all-databases >$BACKUP_POINT/all-databases.sql
-
-		succ=1
-		## create backup for each database
-		for i in `echo "show databases" | mysql $MDA | grep -v Database`; do 
-		    if [ "$i" != "information_schema" ] && [ "$i" != "performance_schema" ] 
-		    then 
-		    mysqldump $MDA --databases $i > $BACKUP_POINT/$i.sql
-		    if [ "$?" -eq 0 ]
-		     then
-				msg "OK:   "$i
-			else
-			 	err "ERROR "$i
-			 	succ=0
-			fi
-		    fi
-		done
-
-		if [ $succ -gt 0 ]
-		then
-		    msg 'All databases have a backup in '$BACKUP_POINT
-
-		    if [ "$2" == "clean" ]
-		    then
-		     rm -fr $old_backup
-		    fi
-		fi
-	ok
-	fi ## backup db
-
-	hint "add-phpmyadmin" "Set up phpmyadmin."
-	if [ "$CMD" == "add-phpmyadmin" ] 
-	then
-
-		yum -y install phpmyadmin
+                ## save these params
+                conf=/etc/mysqluser.conf
+                echo 'dbf:'$db_name >> $conf
+                echo 'usr:'$db_usr >> $conf
+                echo 'pwd:'$db_pwd >> $conf
 
 
-		## grant access.
-		## This will grant passwordless setup!		
-		#sed_file /etc/httpd/conf.d/phpMyAdmin.conf "       Require ip 127.0.0.1" "       Require all granted"
-		#sed_file /etc/httpd/conf.d/phpMyAdmin.conf "       Require ip ::1" "       #Require ip ::1"
+        ok
+        fi ## add-db
 
-		## instead, use this custom conf for Apache 2.4
-		set_file /etc/httpd/conf.d/phpMyAdmin.conf "# phpMyAdmin - Web based MySQL browser written in php
 
-		Alias /phpMyAdmin /usr/share/phpMyAdmin
-		Alias /phpmyadmin /usr/share/phpMyAdmin
+        hint "reset-db-root-passwd" "Reset Database root password."
+        if [ "$CMD" == "reset-db-root-passwd" ] 
+        then
 
-		<Directory /usr/share/phpMyAdmin/>
-		   <IfModule mod_authz_core.c>
-		     <RequireAny>
-		       Require all granted
-		     </RequireAny>
-		   </IfModule>
-		</Directory>
+                get_password
 
-		<Directory /usr/share/phpMyAdmin/setup/>
-		   <IfModule mod_authz_core.c>
-		     # Apache 2.4
-		     <RequireAny>
-		       Require ip ::1
-		     </RequireAny>
-		   </IfModule>
-		</Directory>
-		"
-		systemctl reload httpd.service
-	ok
-	fi
+                test=$(mysql $MDA -e "show databases" | grep Database)
+
+                if [ "$test" == "Database" ] 
+                then
+                        msg "The database is accessible."
+                else
+                        msg "Could not enter database! "
+
+                        systemctl stop mysqld.service
+                        sleep 1
+                        mysqld_safe --skip-grant-tables &
+                        sleep 10
+
+                        test=$(mysql $MDA -e "show databases" | grep Database)
+                        if [ "$test" == "Database" ] 
+                        then
+                                msg "Re-entered database in safe mode."
+                        else
+                                err "Could not re-enter mysql!"
+                                exit
+                        fi
+
+                fi
+
+                log "Set MariaDB database root password to: $password"
+                SQL="UPDATE mysql.user SET Password=PASSWORD('$password') WHERE User='root'; flush privileges;"
+                mysql $MDA -e "$SQL"
+
+
+                ## set up backup params
+                bak $MDF
+
+                echo '[client]' > $MDF
+                echo 'user=root' >> $MDF
+                echo 'password='$password >> $MDF
+
+                msg "Rebooting the container."
+                reboot
+
+        ok
+        fi ## reset-db-root-password
+
+        hint "backup-db [clean]" "Create a backup of the Mysql/MariaDB database, Optionally clean older backups."
+        if [ "$CMD" == "backup-db" ] 
+        then
+
+                log "Creating backup of Mysql/Mariadb databases."
+
+                old_backup=$(ls -d /root/backup/* 2> /dev/null)
+
+                BACKUP_POINT="/root/backup/"$(date +%Y_%m_%d__%H_%M_%S)
+                mkdir -p $BACKUP_POINT
+
+                ## All Databases into a single file?
+                # mysqldump $MDA --all-databases >$BACKUP_POINT/all-databases.sql
+
+                succ=1
+                ## create backup for each database
+                for i in `echo "show databases" | mysql $MDA | grep -v Database`; do 
+                    if [ "$i" != "information_schema" ] && [ "$i" != "performance_schema" ] 
+                    then 
+                    mysqldump $MDA --databases $i > $BACKUP_POINT/$i.sql
+                    if [ "$?" -eq 0 ]
+                     then
+                                msg "OK:   "$i
+                        else
+                                 err "ERROR "$i
+                                 succ=0
+                        fi
+                    fi
+                done
+
+                if [ $succ -gt 0 ]
+                then
+                    msg 'All databases have a backup in '$BACKUP_POINT
+
+                    if [ "$2" == "clean" ]
+                    then
+                     rm -fr $old_backup
+                    fi
+                fi
+        ok
+        fi ## backup db
+
+        hint "add-phpmyadmin" "Set up phpmyadmin."
+        if [ "$CMD" == "add-phpmyadmin" ] 
+        then
+
+                yum -y install phpmyadmin
+
+
+                ## grant access.
+                ## This will grant passwordless setup!                
+                #sed_file /etc/httpd/conf.d/phpMyAdmin.conf "       Require ip 127.0.0.1" "       Require all granted"
+                #sed_file /etc/httpd/conf.d/phpMyAdmin.conf "       Require ip ::1" "       #Require ip ::1"
+
+                ## instead, use this custom conf for Apache 2.4
+                set_file /etc/httpd/conf.d/phpMyAdmin.conf "# phpMyAdmin - Web based MySQL browser written in php
+
+                Alias /phpMyAdmin /usr/share/phpMyAdmin
+                Alias /phpmyadmin /usr/share/phpMyAdmin
+
+                <Directory /usr/share/phpMyAdmin/>
+                   <IfModule mod_authz_core.c>
+                     <RequireAny>
+                       Require all granted
+                     </RequireAny>
+                   </IfModule>
+                </Directory>
+
+                <Directory /usr/share/phpMyAdmin/setup/>
+                   <IfModule mod_authz_core.c>
+                     # Apache 2.4
+                     <RequireAny>
+                       Require ip ::1
+                     </RequireAny>
+                   </IfModule>
+                </Directory>
+                "
+                systemctl reload httpd.service
+        ok
+        fi
 
 
 else
 
-	hint "install-mariadb	" "install MariaDB (mysql) database."
-	if [ "$CMD" == "install-mariadb" ] 
-	then	
+        hint "install-mariadb        " "install MariaDB (mysql) database."
+        if [ "$CMD" == "install-mariadb" ] 
+        then        
 
-		setup_mariadb
-	ok
-	fi ## setup mariadb
-
+                setup_mariadb
+        ok
+        fi ## setup mariadb
+        
+        if [ "$CMD" == "backup-db" ] 
+        then        
+             msg "Maria-db inactive."
+        ok
+        fi 
 fi ## MariaDB related fuctions
 
 

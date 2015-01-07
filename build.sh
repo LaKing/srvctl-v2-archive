@@ -120,7 +120,7 @@ URL:     http://D250.hu
 License: GPLv3
 Group: System Environment/Base
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
-Requires: bash
+Requires: mc
 Source0: srvctl-'$nv'.tar.gz
 BuildArch: noarch
 
