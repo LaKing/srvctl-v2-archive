@@ -5,9 +5,9 @@ then ## no identation.
 
 ## just to make sure, LXC is installed for real
 if [ -z "$(lxc-info --version 2> /dev/null)" ] && ! [ "$CMD" == "update-install" ]
-then	
-	err "   LXC NOT INSTALLED!"
-	msg "	run 'srvctl update-install' to configure this system as container-host."
+then        
+        err "   LXC NOT INSTALLED!"
+        msg "        run 'srvctl update-install' to configure this system as container-host."
 ok
 fi
 
@@ -16,37 +16,37 @@ hint "update-install [all]" "This will update the srvctl host installation."
 if [ "$CMD" == "update-install" ]
 then
 
-	if [ "$2" == "all" ]
-	then
-	   all_arg_set=true
-	fi
+        if [ "$2" == "all" ]
+        then
+           all_arg_set=true
+        fi
 
-	### srvctl
+        ### srvctl
 
-	## TODO create a srvctl file in /bin and ..
-	# ln /bin/srvctl /var/srvctl
+        ## TODO create a srvctl file in /bin and ..
+        # ln /bin/srvctl /var/srvctl
 
-	if [ ! $0 == "/bin/srvctl" ]
-	then
-		msg "srvctl should be located at /bin/srvctl"
-	fi
+        if [ ! $0 == "/bin/srvctl" ]
+        then
+                msg "srvctl should be located at /bin/srvctl"
+        fi
 
-	## TODO yum -y update ?
+        ## TODO yum -y update ?
 
-	## TODO make sure networking is set and okay.
-	# /etc/sysconfig/network-scripts/ifcfg-em1
-	# /etc/sysconfig/network
-	# systemctl stop NetworkManager.service
-	# systemctl remove NetworkManager
-	# systemctl enable network.service
-	# systemctl start network.service
+        ## TODO make sure networking is set and okay.
+        # /etc/sysconfig/network-scripts/ifcfg-em1
+        # /etc/sysconfig/network
+        # systemctl stop NetworkManager.service
+        # systemctl remove NetworkManager
+        # systemctl enable network.service
+        # systemctl start network.service
 
-	mkdir -p /etc/srvctl
+        mkdir -p /etc/srvctl
 
-	if [ ! -f /etc/srvctl/config ]
-	then
-	
-	get_password
+        if [ ! -f /etc/srvctl/config ]
+        then
+        
+        get_password
 
 set_file /etc/srvctl/config "## srvctl config 
 ## Use with "" if value contains spaces.
@@ -97,176 +97,176 @@ ssl_password=ssl_pass_$password
 
 
 "
-	msg "Generated default /etc/srvctl/config for customization. Please edit, and restart the update-install process. Exiting."
-	exit
+        msg "Generated default /etc/srvctl/config for customization. Please edit, and restart the update-install process. Exiting."
+        exit
 
-	fi
+        fi
 
 ## Requirement checks .--
 ## certificate
-		if [ ! -f /root/crt.pem ]
-		then
-			create_certificate /root
-		fi
+                if [ ! -f /root/crt.pem ]
+                then
+                        create_certificate /root
+                fi
 
-		if [ ! -f /root/key.pem ]
-		then
-			create_certificate /root
-		fi
+                if [ ! -f /root/key.pem ]
+                then
+                        create_certificate /root
+                fi
 
-		if [ -f /root/ca-bundle.pem ]
-		then
-			no_ca_bundle_hashmark=''
-			cert_status=$(openssl verify -CAfile /root/ca-bundle.pem /root/crt.pem | tail -n 1 | tail -c 3)
+                if [ -f /root/ca-bundle.pem ]
+                then
+                        no_ca_bundle_hashmark=''
+                        cert_status=$(openssl verify -CAfile /root/ca-bundle.pem /root/crt.pem | tail -n 1 | tail -c 3)
 
-			if [ ! "$cert_status" == "OK" ]
-			then
-				err "Requirement-check, error: certificate check failed with /root/ca-bundle.pem /root/crt.pem - Exiting"
-				exit
+                        if [ ! "$cert_status" == "OK" ]
+                        then
+                                err "Requirement-check, error: certificate check failed with /root/ca-bundle.pem /root/crt.pem - Exiting"
+                                exit
 
-			fi
-		else
-			msg "No ca-bundle.pem found."
-			no_ca_bundle_hashmark='# '
-			cert_status=$(openssl verify /root/crt.pem | tail -n 1 | tail -c 3)
+                        fi
+                else
+                        msg "No ca-bundle.pem found."
+                        no_ca_bundle_hashmark='# '
+                        cert_status=$(openssl verify /root/crt.pem | tail -n 1 | tail -c 3)
 
-			if [ ! "$cert_status" == "OK" ]
-			then
-				err "Requirement-check, error: certificate check failed. /root/crt.pem - Exiting"
-				exit
+                        if [ ! "$cert_status" == "OK" ]
+                        then
+                                err "Requirement-check, error: certificate check failed. /root/crt.pem - Exiting"
+                                exit
 
-			fi
-		fi
+                        fi
+                fi
 ## authorized keys. own hosts should have custom values that add into the config when regenerating.
-		
-		if [ ! -f /root/.ssh/own_hosts ] && [ -f /root/.ssh/known_hosts ]
-		then
-			cat /root/.ssh/known_hosts > /root/.ssh/own_hosts
-		fi
+                
+                if [ ! -f /root/.ssh/own_hosts ] && [ -f /root/.ssh/known_hosts ]
+                then
+                        cat /root/.ssh/known_hosts > /root/.ssh/own_hosts
+                fi
 
 ## saslauthd
 
-	if [ ! -f /root/saslauthd ]
-	then
-		msg "No custom saslauthd file detected. Attemt to download a compiled 64bit executable from d250.hu."
-		wget -O /root/saslauthd http://d250.hu/scripts/bin/saslauthd
-	fi
+        if [ ! -f /root/saslauthd ]
+        then
+                msg "No custom saslauthd file detected. Attemt to download a compiled 64bit executable from d250.hu."
+                wget -O /root/saslauthd http://d250.hu/scripts/bin/saslauthd
+        fi
 
-	if [ ! -f /root/saslauthd ]
-	then
-		err "Due to incompatibility of saslauthd <= 2.1.26 and perdition, a custom version of saslauthd is required, that has to be located at /root/saslauthd. Exiting."
-		exit
-	fi
+        if [ ! -f /root/saslauthd ]
+        then
+                err "Due to incompatibility of saslauthd <= 2.1.26 and perdition, a custom version of saslauthd is required, that has to be located at /root/saslauthd. Exiting."
+                exit
+        fi
 
 ## TODO saslauthd may hang, research / or implementation fix is needed.
 
 ## @update-install
 if [ -z "$(lxc-info --version 2> /dev/null)" ] || $all_arg_set
 then
-	log "Installing LXC!"
-	msg $CDN
+        log "Installing LXC!"
+        msg $CDN
 
-	if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "zip" ]
-	then
-		## packages needed for compilation and for running
-		log "Install Development Tools"
-		yum -y groupinstall "Development Tools"
-		yum -y install automake
-		yum -y install graphviz
-		yum -y install libcap-devel
+        if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "zip" ]
+        then
+                ## packages needed for compilation and for running
+                log "Install Development Tools"
+                yum -y groupinstall "Development Tools"
+                yum -y install automake
+                yum -y install graphviz
+                yum -y install libcap-devel
 
 
-		cd /root
+                cd /root
 
-		if [ "$LXC_INSTALL" == "git" ]
-		then
-			log "Install LXC via git"
-		  	git clone git://github.com/lxc/lxc
-		fi
+                if [ "$LXC_INSTALL" == "git" ]
+                then
+                        log "Install LXC via git"
+                          git clone git://github.com/lxc/lxc
+                fi
 
-		if [ "$LXC_INSTALL" == "src" ]
-		then
-			log "Installing using existing /root/lxc source."
-		fi
+                if [ "$LXC_INSTALL" == "src" ]
+                then
+                        log "Installing using existing /root/lxc source."
+                fi
 
-		if [ "$LXC_INSTALL" == "zip" ]
-		then
+                if [ "$LXC_INSTALL" == "zip" ]
+                then
 
-			if [ $LXC_VERSION == '' ]
-			then
-				err 'LXC_VERSION not specified! CAN NOT use a release! exiting.'
-				exit 10
-			fi
+                        if [ $LXC_VERSION == '' ]
+                        then
+                                err 'LXC_VERSION not specified! CAN NOT use a release! exiting.'
+                                exit 10
+                        fi
 
-			if $all_arg_set
-			then
-				rm -rf lxc
-			fi
+                        if $all_arg_set
+                        then
+                                rm -rf lxc
+                        fi
 
-			## use a version-release
-			if [ ! -f /root/lxc-$LXC_VERSION.zip ] 
-			then 
-				msg "Downloading LXC $LXC_VERSION"
-				wget -O /root/lxc-$LXC_VERSION.zip https://github.com/lxc/lxc/archive/lxc-$LXC_VERSION.zip
-			fi
-			
-			unzip /root/lxc-$LXC_VERSION.zip
-			mv /root/lxc-lxc-$LXC_VERSION /root/lxc
-		fi
-	 
-		cd /root/lxc
+                        ## use a version-release
+                        if [ ! -f /root/lxc-$LXC_VERSION.zip ] 
+                        then 
+                                msg "Downloading LXC $LXC_VERSION"
+                                wget -O /root/lxc-$LXC_VERSION.zip https://github.com/lxc/lxc/archive/lxc-$LXC_VERSION.zip
+                        fi
+                        
+                        unzip /root/lxc-$LXC_VERSION.zip
+                        mv /root/lxc-lxc-$LXC_VERSION /root/lxc
+                fi
+         
+                cd /root/lxc
 
-		if [ ! -f /root/lxc/autogen.sh ]
-		then
-			err "LXC-building: autogen.sh not found!"
-			exit 11
-		fi
+                if [ ! -f /root/lxc/autogen.sh ]
+                then
+                        err "LXC-building: autogen.sh not found!"
+                        exit 11
+                fi
 
-		log "LXC-building: autogen"
-		./autogen.sh
+                log "LXC-building: autogen"
+                ./autogen.sh
 
-		if [ ! -f /root/lxc/configure ]
-		then
-			err "LXC-building: configure not found!"
-			exit 12
-		fi
+                if [ ! -f /root/lxc/configure ]
+                then
+                        err "LXC-building: configure not found!"
+                        exit 12
+                fi
 
-		log "LXC-building: configure"
-		./configure
+                log "LXC-building: configure"
+                ./configure
 
-		log "LXC-building: make"
-		make
+                log "LXC-building: make"
+                make
 
-		log "LXC-building: install"
-		make install
+                log "LXC-building: install"
+                make install
     
-	else
-		## this is the default method
-		log "yum install lxc $LXC_VERSION"
+        else
+                ## this is the default method
+                log "yum install lxc $LXC_VERSION"
 
-		if [ ! "$LXC_VERSION" == '' ]
-		then
-			yum -y install lxc-$LXC_VERSION
-			yum -y install lxc-extra-$LXC_VERSION
-			yum -y install lxc-templates-$LXC_VERSION
-		else
-			yum -y install lxc
-			yum -y install lxc-extra
-			yum -y install lxc-templates
-		fi 		
-	fi
+                if [ ! "$LXC_VERSION" == '' ]
+                then
+                        yum -y install lxc-$LXC_VERSION
+                        yum -y install lxc-extra-$LXC_VERSION
+                        yum -y install lxc-templates-$LXC_VERSION
+                else
+                        yum -y install lxc
+                        yum -y install lxc-extra
+                        yum -y install lxc-templates
+                fi                 
+        fi
 
 
-	add_conf /root/.bash_profile "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib"
+        add_conf /root/.bash_profile "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib"
 
-	log "Configure libvirt network"
+        log "Configure libvirt network"
 
 ## Networking with libvirt
-	yum -y install libvirt-daemon-driver-network libvirt-daemon-config-network libvirt-daemon-config-nwfilter
+        yum -y install libvirt-daemon-driver-network libvirt-daemon-config-network libvirt-daemon-config-nwfilter
 
-	## DHCP is only for manually created containers. srvctl containers should use static ip addresses.
-
-	set_file /etc/libvirt/qemu/networks/default.xml '<network>
+        ## DHCP is only for manually created containers. srvctl containers should use static ip addresses.
+        
+        set_file /etc/libvirt/qemu/networks/default.xml '<network>
   <name>default</name>
   <uuid>00000000-0000-aaaa-aaaa-aaaaaaaaaaaa</uuid>
   <bridge name="inet-br"/>
@@ -292,18 +292,18 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
 
 ## TODO, .. consider to set a new bridge for ipv6
 
-	ln -s /etc/libvirt/qemu/networks/primary.xml /etc/libvirt/qemu/networks/autostart/primary.xml 2> /dev/null
+        ln -s /etc/libvirt/qemu/networks/primary.xml /etc/libvirt/qemu/networks/autostart/primary.xml 2> /dev/null
 
-	systemctl enable libvirtd.service
-	systemctl start  libvirtd.service
-	systemctl status libvirtd.service
+        systemctl enable libvirtd.service
+        systemctl start  libvirtd.service
+        systemctl status libvirtd.service
 
-	#### RESTART REQUIRED HERE, if libvirt networks got modified.
-	if ! $all_arg_set
-	then
-		log "LXC Installed. Please reboot, and run this command again to continiue. Exiting."
-		exit
-	fi
+        #### RESTART REQUIRED HERE, if libvirt networks got modified.
+        if ! $all_arg_set
+        then
+                log "LXC Installed. Please reboot, and run this command again to continiue. Exiting."
+                exit
+        fi
 
 else
 msg "LXC is OK! "$(lxc-info --version)
@@ -311,129 +311,131 @@ fi ## Install LXC
 
 ## @update-install
 
-	## srvctl
+        ## srvctl
 
-	## TODO change counter location to /var/srvctl/counter
-	if [ -f /etc/srvctl/counter ]
-	then
-	 msg "Counter exists, counting at "$(cat /etc/srvctl/counter)
-	else
-	 log "Counter does not exist. Creating."
-	 echo '0' > /etc/srvctl/counter
-	fi
+        ## TODO change counter location to /var/srvctl/counter
+        if [ -f /etc/srvctl/counter ]
+        then
+         msg "Counter exists, counting at "$(cat /etc/srvctl/counter)
+        else
+         log "Counter does not exist. Creating."
+         echo '0' > /etc/srvctl/counter
+        fi
 
-	## make sure srvctl enviroment directories exists
-	mkdir -p $SRV
-	mkdir -p $TMP
-	mkdir -p /var/srvctl/share
-	mkdir -p /etc/srvctl
+        ## make sure srvctl enviroment directories exists
+        mkdir -p $SRV
+        mkdir -p $TMP
+        #mkdir -p /var/srvctl/share
+        mkdir -p /etc/srvctl
 
-	## this will save a little space. 
-	## TODO: I'm not a distro engineer, but I think there is space for optimalisation. Move locale-archive to shar efolder
+        ## this will save a little space. 
+        ## TODO: I'm not a distro engineer, but I think there is space for optimalisation. Move locale-archive to shar efolder
 
-	if [ ! -f /var/srvctl/locale-archive ]
-	then
-	 log "Shared local archive does not exist. Copying from host."
-	 cp /usr/lib/locale/locale-archive /var/srvctl
-	fi
-
-
-	## default path for containers - source install
-	if [ -f "/usr/local/etc/lxc/default.conf" ]
-	then	
-		set_file "/usr/local/etc/lxc/lxc.conf" "lxc.lxcpath=$SRV" 
-	fi	
-	## package install
-	if [ -f "/etc/lxc/default.conf" ]
-	then			
-		set_file "/etc/lxc/lxc.conf" "lxc.lxcpath=$SRV" 
-	fi
-
-	## just in case
-	bak /etc/hosts
-
-	## create ssh key for root
-	if [ ! -f /root/.ssh/id_rsa.pub ]
-	then
-	  ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N ''
-	  log "Created ssh keypair for root."
-	fi
+        if [ ! -f /var/srvctl/locale-archive ]
+        then
+         log "Shared local archive does not exist. Copying from host."
+         cp /usr/lib/locale/locale-archive /var/srvctl
+        fi
 
 
+        ## default path for containers - source install
+        if [ -f "/usr/local/etc/lxc/default.conf" ]
+        then        
+                set_file "/usr/local/etc/lxc/lxc.conf" "lxc.lxcpath=$SRV" 
+        fi        
+        ## package install
+        if [ -f "/etc/lxc/default.conf" ]
+        then                        
+                set_file "/etc/lxc/lxc.conf" "lxc.lxcpath=$SRV" 
+        fi
 
-	## We do some customisations in our template
-	## template path is different depending on installation, yum or some src
+        ## just in case
+        bak /etc/hosts
 
-	
+        ## create ssh key for root
+        if [ ! -f /root/.ssh/id_rsa.pub ]
+        then
+          ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N ''
+          log "Created ssh keypair for root."
+        fi
 
-	## yum-based install
-	fedora_template="$lxc_usr_path/share/lxc/templates/lxc-fedora"
-	srvctl_template="$lxc_usr_path/share/lxc/templates/lxc-fedora-srv"
 
-	## rpm, based install
-	
+
+        ## We do some customisations in our template
+        ## template path is different depending on installation, yum or some src
+
+        
+
+        ## yum-based install
+        fedora_template="$lxc_usr_path/share/lxc/templates/lxc-fedora"
+        srvctl_template="$lxc_usr_path/share/lxc/templates/lxc-fedora-srv"
+
+        ## rpm, based install
+        
 
 ## @update-install
 if [ ! -f $fedora_template ] || $all_arg_set
 then
-	log "Create Custom template: $srvctl_template"
+        log "Create Custom template: $srvctl_template"
 
-	set_file $srvctl_template '#!/bin/bash
+        set_file $srvctl_template '#!/bin/bash
 
-	## You may want to add your own sillyables, or faorite characters and customy security measures.
-	declare -a pwarra=("B" "C" "D" "F" "G" "H" "J" "K" "L" "M" "N" "P" "R" "S" "T" "V" "Z")
-	pwla=${#pwarra[@]}
+        ## You may want to add your own sillyables, or faorite characters and customy security measures.
+        declare -a pwarra=("B" "C" "D" "F" "G" "H" "J" "K" "L" "M" "N" "P" "R" "S" "T" "V" "Z")
+        pwla=${#pwarra[@]}
 
-	declare -a pwarrb=("a" "e" "i" "o" "u")
-	pwlb=${#pwarrb[@]}	
+        declare -a pwarrb=("a" "e" "i" "o" "u")
+        pwlb=${#pwarrb[@]}        
 
-	declare -a pwarrc=("" "." ":" "@" ".." "::" "@@")
-	pwlc=${#pwarrc[@]}
+        declare -a pwarrc=("" "." ":" "@" ".." "::" "@@")
+        pwlc=${#pwarrc[@]}
 
-	p=''
-	p=$p${pwarra[$(( RANDOM % $pwla ))]}
-	p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
-	p=$p${pwarra[$(( RANDOM % $pwla ))]}
-	p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
-	# p=$p${pwarrc[$(( RANDOM % $pwlc ))]}
-	p=$p${pwarra[$(( RANDOM % $pwla ))]}
-	p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
-	p=$p${pwarra[$(( RANDOM % $pwla ))]}
-	p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
+        p=''
+        p=$p${pwarra[$(( RANDOM % $pwla ))]}
+        p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
+        p=$p${pwarra[$(( RANDOM % $pwla ))]}
+        p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
+        # p=$p${pwarrc[$(( RANDOM % $pwlc ))]}
+        p=$p${pwarra[$(( RANDOM % $pwla ))]}
+        p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
+        p=$p${pwarra[$(( RANDOM % $pwla ))]}
+        p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
 
-	root_password=$p
+        root_password=$p
 
 '
-	chmod 755 $srvctl_template
+        chmod 755 $srvctl_template
 
-	cat $fedora_template >> $srvctl_template
-	## cosmetical TODO remove second #!/bin/bash
+        cat $fedora_template >> $srvctl_template
+        ## cosmetical TODO remove second #!/bin/bash
 
-	## disable the root password redefining force
-	sed_file $srvctl_template 'chroot $rootfs_path passwd -e root' '## srvctl-disabled: chroot $rootfs_path passwd -e root'
-	sed_file $srvctl_template 'Container rootfs and config have been created.' 'Container rootfs and config have been created."'
-	## and do not display the dialog for that subject
-	sed_file $srvctl_template 'Edit the config file to check/enable networking setup.' 'exit 0'
+        ## disable the root password redefining force
+        sed_file $srvctl_template 'chroot $rootfs_path passwd -e root' '## srvctl-disabled: chroot $rootfs_path passwd -e root'
+        sed_file $srvctl_template 'Container rootfs and config have been created.' 'Container rootfs and config have been created."'
+        ## and do not display the dialog for that subject
+        sed_file $srvctl_template 'Edit the config file to check/enable networking setup.' 'exit 0'
 
-	## Add additional default packages 
-	sed_file $srvctl_template '    PKG_LIST="yum initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release"' '    PKG_LIST="yum initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release mc httpd mod_ssl openssl postfix mailx sendmail unzip clucene-core make  rsync nfs-utils"'
+        ## Add additional default packages 
+        sed_file $srvctl_template '    PKG_LIST="yum initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release"' '    PKG_LIST="yum initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release fedora-repos mc httpd mod_ssl openssl postfix mailx sendmail unzip clucene-core make  rsync nfs-utils"'
 
-	## wordpress mariadb mariadb-server postfix mailx sendmail dovecot .. 
+        ## fedora-repos added for fixing: https://bugzilla.redhat.com/show_bug.cgi?id=1176634
 
-	## TODO Dovecot fails with
-	##  warning: %post(dovecot-1:2.2.13-1.fc20.x86_64) scriptlet failed, exit status 1
-	## Non-fatal POSTIN scriptlet failure in rpm package 1:dovecot-2.2.13-1.fc20.x86_64
-	## therefore it should be installed once the container started.
+        ## wordpress mariadb mariadb-server postfix mailx sendmail dovecot .. 
 
-	## httpd needs to be installed here, other wise it failes with cpio set_file_cap error.redsnapper921
+        ## TODO Dovecot fails with
+        ##  warning: %post(dovecot-1:2.2.13-1.fc20.x86_64) scriptlet failed, exit status 1
+        ## Non-fatal POSTIN scriptlet failure in rpm package 1:dovecot-2.2.13-1.fc20.x86_64
+        ## therefore it should be installed once the container started.
+
+        ## httpd needs to be installed here, other wise it failes with cpio set_file_cap error.redsnapper921
 
 
-	## After modifocation of the last line, in a live filesystem, /usr/local/var/cache/lxc/fedora needs to be purged.
-	log "Clearing yum cache for container creation."
+        ## After modifocation of the last line, in a live filesystem, /usr/local/var/cache/lxc/fedora needs to be purged.
+        log "Clearing yum cache for container creation."
 
-	## paths are different for src or yum install
-	rm -rf /usr/local/var/cache/lxc/fedora
-	rm -rf /var/cache/lxc/fedora
+        ## paths are different for src or yum install
+        rm -rf /usr/local/var/cache/lxc/fedora
+        rm -rf /var/cache/lxc/fedora
 
 fi ## if fedora_template does not exists.
 
@@ -444,16 +446,16 @@ fi ## if fedora_template does not exists.
 ## TODO / ISSUE : dovecot can not be added, as it freezes the install process
 
 
-	##log "Install Pound Reverse Proxy for HTTP" 
+        ##log "Install Pound Reverse Proxy for HTTP" 
 
 
 
 if [ ! -f /etc/pound.cfg ] || $all_arg_set
 then
-	## Pound is a reverse Proxy for http
-	yum -y install Pound
+        ## Pound is a reverse Proxy for http
+        yum -y install Pound
 
-	set_file /etc/pound.cfg '## srvctl pound.cfg
+        set_file /etc/pound.cfg '## srvctl pound.cfg
 User "pound"
 Group "pound"
 Control "/var/lib/pound/pound.cfg"
@@ -497,29 +499,29 @@ End
 ## Include the default host here, as a fallback.
 # Include "/srv/default-host/pound"
 '
-	## certificate chainfile
-	mkdir -p /etc/pound
-	
+        ## certificate chainfile
+        mkdir -p /etc/pound
+        
 
-	cat /root/crt.pem > /etc/pound/crt.pem
-	cat /root/key.pem > /etc/pound/key.pem
-	cat /root/ca-bundle.pem > /etc/pound/ca-bundle.pem 2> /dev/null
+        cat /root/crt.pem > /etc/pound/crt.pem
+        cat /root/key.pem > /etc/pound/key.pem
+        cat /root/ca-bundle.pem > /etc/pound/ca-bundle.pem 2> /dev/null
 
-	cat /root/crt.pem > /etc/pound/pound.pem
-	echo '' >> /etc/pound/pound.pem
-	cat /root/key.pem >> /etc/pound/pound.pem
-	echo '' >> /etc/pound/pound.pem
-	cat /root/ca-bundle.pem >> /etc/pound/pound.pem 2> /dev/null
+        cat /root/crt.pem > /etc/pound/pound.pem
+        echo '' >> /etc/pound/pound.pem
+        cat /root/key.pem >> /etc/pound/pound.pem
+        echo '' >> /etc/pound/pound.pem
+        cat /root/ca-bundle.pem >> /etc/pound/pound.pem 2> /dev/null
 
 
-	mkdir -p /var/pound
-	mkdir -p /var/www/html
+        mkdir -p /var/pound
+        mkdir -p /var/www/html
 
-	#  echo $MSG >> /etc/srvctl/pound-include-ca.cfg
-	#  echo 'CAlist "/etc/srvctl/ca-bundle.pem"' >> /etc/srvctl/pound-include-ca.cfg
-	## TODO check for /etc/pki maybe?
+        #  echo $MSG >> /etc/srvctl/pound-include-ca.cfg
+        #  echo 'CAlist "/etc/srvctl/ca-bundle.pem"' >> /etc/srvctl/pound-include-ca.cfg
+        ## TODO check for /etc/pki maybe?
 
-	## The pound-served custom error documents
+        ## The pound-served custom error documents
 
 set_file /var/www/html/414.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
 <b>Error 414</b> @ '$(hostname)'<br />
@@ -542,42 +544,42 @@ The service is not available. Please try again later.
 </font><p></body>'
 
 
-	if [ ! -f /var/www/html/favicon.ico ]
-	then
-	   msg "Downloading favicon.ico from $CDN"
-	   wget -O /var/www/html/favicon.ico http://$CDN/favicon.ico
-	fi
+        if [ ! -f /var/www/html/favicon.ico ]
+        then
+           msg "Downloading favicon.ico from $CDN"
+           wget -O /var/www/html/favicon.ico http://$CDN/favicon.ico
+        fi
 
-	if [ ! -f /var/www/html/logo.png ]
-	then
-	   msg "Downloading logo.png from $CDN" 
-	   wget -O /var/www/html/logo.png http://$CDN/logo.png
-	fi
+        if [ ! -f /var/www/html/logo.png ]
+        then
+           msg "Downloading logo.png from $CDN" 
+           wget -O /var/www/html/logo.png http://$CDN/logo.png
+        fi
 
-	if [ ! -f /var/www/html/favicon.ico ]
-	then
-	   err "No favicon.ico from could be located."
-	fi
+        if [ ! -f /var/www/html/favicon.ico ]
+        then
+           err "No favicon.ico from could be located."
+        fi
 
-	if [ ! -f /var/www/html/logo.png ]
-	then
-	   err "No logo.png from could be located."
-	fi
+        if [ ! -f /var/www/html/logo.png ]
+        then
+           err "No logo.png from could be located."
+        fi
 
 ## Pound logging. By default pound is logging to systemd-journald.
 ## To work with logs, use rsyslog to export to /var/log/pound
 
-	yum -y install rsyslog
+        yum -y install rsyslog
 
-	add_conf /etc/rsyslog.conf 'local0.* 			-/var/log/pound'
+        add_conf /etc/rsyslog.conf 'local0.*                         -/var/log/pound'
 
-	systemctl restart rsyslog.service
+        systemctl restart rsyslog.service
 
 
-	systemctl stop pound.service
-	systemctl enable pound.service
-	systemctl start pound.service
-	systemctl status pound.service
+        systemctl stop pound.service
+        systemctl enable pound.service
+        systemctl start pound.service
+        systemctl status pound.service
 
 
 fi ## install pound
@@ -585,13 +587,13 @@ fi ## install pound
 
 if [ ! -d /etc/fail2ban ]
 then
-	yum -y install fail2ban
+        yum -y install fail2ban
 
-	cf=/etc/fail2ban/fail2ban.d/firewallcmd-ipset.conf
-	wget -O $cf https://raw.githubusercontent.com/fail2ban/fail2ban/master/config/action.d/firewallcmd-ipset.conf
+        cf=/etc/fail2ban/fail2ban.d/firewallcmd-ipset.conf
+        wget -O $cf https://raw.githubusercontent.com/fail2ban/fail2ban/master/config/action.d/firewallcmd-ipset.conf
 
-	cf=/etc/fail2ban/fail2ban.d/firewallcmd-new.conf
-	wget -O $cf https://raw.githubusercontent.com/fail2ban/fail2ban/master/config/action.d/firewallcmd-new.conf
+        cf=/etc/fail2ban/fail2ban.d/firewallcmd-new.conf
+        wget -O $cf https://raw.githubusercontent.com/fail2ban/fail2ban/master/config/action.d/firewallcmd-new.conf
 
 
 set_file /etc/fail2ban/jail.d/apache.conf '## srvctl
@@ -730,8 +732,8 @@ fi ## install fail2ban
 
 ## TODO: fail2ban seems to be resource hungry. :/
 
-	## Dev-note .. I was worried that unencrypted http between the host and a container can be sniffed from another container.
-	## My attempts to do so, did not work, therefore I kept this concept of the containers sitting together on srv-net with static IP's
+        ## Dev-note .. I was worried that unencrypted http between the host and a container can be sniffed from another container.
+        ## My attempts to do so, did not work, therefore I kept this concept of the containers sitting together on srv-net with static IP's
 
 
 ## @update-install
@@ -741,22 +743,22 @@ set_file_limits
 ## Postfix
 if [ ! -f /etc/postfix/main.cf ] || $all_arg_set
 then
-	log "Installing the Postfix mail subsystem."
+        log "Installing the Postfix mail subsystem."
 
-	yum -y install postfix
+        yum -y install postfix
 
-	pc=/etc/postfix/main.cf
+        pc=/etc/postfix/main.cf
 
-	sed_file $pc 'inet_interfaces = localhost' '#inet_interfaces # localhost'
+        sed_file $pc 'inet_interfaces = localhost' '#inet_interfaces # localhost'
 
 
-	if grep -q  '## srvctl postfix configuration directives' $pc; then
-	 log "Skipping Postfix configuration, as it seems to be configured."
-	else
-		bak $pc
+        if grep -q  '## srvctl postfix configuration directives' $pc; then
+         log "Skipping Postfix configuration, as it seems to be configured."
+        else
+                bak $pc
 
-		## append to the default conf
-		echo '
+                ## append to the default conf
+                echo '
 ## srvctl postfix configuration directives
 ## RECIEVING
 
@@ -796,9 +798,9 @@ smtpd_sasl_local_domain = '$CDN'
 ## Max 25MB mail size
 message_size_limit=26214400 
 ' >> $pc
-	fi ## add postfix directives
+        fi ## add postfix directives
 
-	echo '# srvctl postfix relaydomains' >> /etc/postfix/relaydomains
+        echo '# srvctl postfix relaydomains' >> /etc/postfix/relaydomains
 
 
 set_file /etc/postfix/master.cf '
@@ -839,13 +841,13 @@ anvil     unix  -       -       n       -       1       anvil
 scache    unix  -       -       n       -       1       scache
 '
 
-	cat /root/ca-bundle.pem > /etc/postfix/ca-bundle.pem 2> /dev/null
-	cat /root/crt.pem > /etc/postfix/crt.pem
-	cat /root/key.pem > /etc/postfix/key.pem
+        cat /root/ca-bundle.pem > /etc/postfix/ca-bundle.pem 2> /dev/null
+        cat /root/crt.pem > /etc/postfix/crt.pem
+        cat /root/key.pem > /etc/postfix/key.pem
 
-	postmap /etc/postfix/relaydomains
-	systemctl enable postfix.service
-	systemctl start postfix.service
+        postmap /etc/postfix/relaydomains
+        systemctl enable postfix.service
+        systemctl start postfix.service
 
 
 fi ## postfix
@@ -863,98 +865,98 @@ set_file /etc/aliases '
 #  Aliases in this file will NOT be expanded in the header from
 #  Mail, but WILL be visible over networks or from /bin/mail.
 #
-#	>>>>>>>>>>	The program "newaliases" must be run after
-#	>> NOTE >>	this file is updated for any changes to
-#	>>>>>>>>>>	show through to sendmail.
+#        >>>>>>>>>>        The program "newaliases" must be run after
+#        >> NOTE >>        this file is updated for any changes to
+#        >>>>>>>>>>        show through to sendmail.
 #
 
 # Basic system aliases -- these MUST be present.
-mailer-daemon:	postmaster
-postmaster:	root
+mailer-daemon:        postmaster
+postmaster:        root
 
 # General redirections for pseudo accounts.
-bin:		root
-daemon:		root
-adm:		root
-lp:		root
-sync:		root
-shutdown:	root
-halt:		root
-mail:		root
-news:		root
-uucp:		root
-operator:	root
-games:		root
-gopher:		root
-ftp:		root
-nobody:		root
-radiusd:	root
-nut:		root
-dbus:		root
-vcsa:		root
-canna:		root
-wnn:		root
-rpm:		root
-nscd:		root
-pcap:		root
-apache:		root
-webalizer:	root
-dovecot:	root
-fax:		root
-quagga:		root
-radvd:		root
-pvm:		root
-amandabackup:	root
-privoxy:	root
-ident:		root
-named:		root
-xfs:		root
-gdm:		root
-mailnull:	root
-postgres:	root
-sshd:		root
-smmsp:		root
-postfix:	root
-netdump:	root
-ldap:		root
-squid:		root
-ntp:		root
-mysql:		root
-desktop:	root
-rpcuser:	root
-rpc:		root
-nfsnobody:	root
+bin:                root
+daemon:                root
+adm:                root
+lp:                root
+sync:                root
+shutdown:        root
+halt:                root
+mail:                root
+news:                root
+uucp:                root
+operator:        root
+games:                root
+gopher:                root
+ftp:                root
+nobody:                root
+radiusd:        root
+nut:                root
+dbus:                root
+vcsa:                root
+canna:                root
+wnn:                root
+rpm:                root
+nscd:                root
+pcap:                root
+apache:                root
+webalizer:        root
+dovecot:        root
+fax:                root
+quagga:                root
+radvd:                root
+pvm:                root
+amandabackup:        root
+privoxy:        root
+ident:                root
+named:                root
+xfs:                root
+gdm:                root
+mailnull:        root
+postgres:        root
+sshd:                root
+smmsp:                root
+postfix:        root
+netdump:        root
+ldap:                root
+squid:                root
+ntp:                root
+mysql:                root
+desktop:        root
+rpcuser:        root
+rpc:                root
+nfsnobody:        root
 
-ingres:		root
-system:		root
-toor:		root
-manager:	root
-dumper:		root
-abuse:		root
+ingres:                root
+system:                root
+toor:                root
+manager:        root
+dumper:                root
+abuse:                root
 
-newsadm:	root #news
-newsadmin:	root #news
-usenet:		root #news
-ftpadm:		root #ftp
-ftpadmin:	root #ftp
-ftp-adm:	root #ftp
-ftp-admin:	root #ftp
-www:		webmaster
-webmaster:	root
-noc:		root
-security:	root
-hostmaster:	root
-#info:		postmaster
-#marketing:	postmaster
-#sales:		postmaster
-#support:	postmaster
+newsadm:        root #news
+newsadmin:        root #news
+usenet:                root #news
+ftpadm:                root #ftp
+ftpadmin:        root #ftp
+ftp-adm:        root #ftp
+ftp-admin:        root #ftp
+www:                webmaster
+webmaster:        root
+noc:                root
+security:        root
+hostmaster:        root
+#info:                postmaster
+#marketing:        postmaster
+#sales:                postmaster
+#support:        postmaster
 
 
 # trap decode to catch security attacks
-decode:		root
+decode:                root
 
 # Person who should get roots mail
-#root:		marc
+#root:                marc
 '
 
 ## TODO alternatives set postfix as default MTA - or newaliases wont work.
@@ -1038,15 +1040,15 @@ fi ## set aliases.db
 if [ ! -f /etc/perdition/perdition.conf ] || $all_arg_set
 then
 
-	log "Install perdition, with custom service files: imap4.service, imap4s.service, pop3s.service"
+        log "Install perdition, with custom service files: imap4.service, imap4s.service, pop3s.service"
 
-	yum -y install perdition
-	##   + vanessa_logger vanessa_socket
+        yum -y install perdition
+        ##   + vanessa_logger vanessa_socket
 
-	## perdition is run as template.service by default.
-	## we use our own unit files and service names.
+        ## perdition is run as template.service by default.
+        ## we use our own unit files and service names.
 
-	set_file /etc/perdition/perdition.conf '#### srvctl tuned perdition.conf
+        set_file /etc/perdition/perdition.conf '#### srvctl tuned perdition.conf
 ## Logging settings
 
 # Turn on verbose debuging.
@@ -1095,7 +1097,7 @@ ssl_key_file /etc/perdition/key.pem
 
 '
 
-	set_file /etc/perdition/popmap.re '#### srvctl tuned popmap.re
+        set_file /etc/perdition/popmap.re '#### srvctl tuned popmap.re
 
 # (.*)@'$(hostname)': localhost
 
@@ -1154,21 +1156,21 @@ set_file /etc/sasl2/smtpd.conf 'pwcheck_method: saslauthd
 mech_list: LOGIN'
 
 
-	cat /root/ca-bundle.pem > /etc/perdition/ca-bundle.pem
-	cat /root/crt.pem > /etc/perdition/crt.pem
-	cat /root/key.pem > /etc/perdition/key.pem
+        cat /root/ca-bundle.pem > /etc/perdition/ca-bundle.pem
+        cat /root/crt.pem > /etc/perdition/crt.pem
+        cat /root/key.pem > /etc/perdition/key.pem
 
-	## saslauthd
-	if ! diff /root/saslauthd /usr/sbin/saslauthd >/dev/null ; then
-	 	rm -fr /usr/sbin/saslauthd
-		cp /root/saslauthd /usr/sbin/saslauthd
-		chmod 755 /usr/sbin/saslauthd
-		saslauthd -v
-	fi
+        ## saslauthd
+        if ! diff /root/saslauthd /usr/sbin/saslauthd >/dev/null ; then
+                 rm -fr /usr/sbin/saslauthd
+                cp /root/saslauthd /usr/sbin/saslauthd
+                chmod 755 /usr/sbin/saslauthd
+                saslauthd -v
+        fi
 
-	bak /etc/sysconfig/saslauthd
+        bak /etc/sysconfig/saslauthd
 
-	set_file /etc/sysconfig/saslauthd '# Directory in which to place saslauthds listening socket, pid file, and so
+        set_file /etc/sysconfig/saslauthd '# Directory in which to place saslauthds listening socket, pid file, and so
 # on.  This directory must already exist.
 SOCKETDIR=/run/saslauthd
 
@@ -1180,27 +1182,27 @@ MECH=rimap
 # for the list of accepted flags.
 FLAGS="-O localhost -r"'
 
-	systemctl daemon-reload
+        systemctl daemon-reload
 
-	systemctl stop imap4.service
-	systemctl enable imap4.service
-	systemctl start imap4.service
-	systemctl status imap4.service
+        systemctl stop imap4.service
+        systemctl enable imap4.service
+        systemctl start imap4.service
+        systemctl status imap4.service
 
-	systemctl stop imap4s.service
-	systemctl enable imap4s.service
-	systemctl start imap4s.service
-	systemctl status imap4s.service
+        systemctl stop imap4s.service
+        systemctl enable imap4s.service
+        systemctl start imap4s.service
+        systemctl status imap4s.service
 
-	systemctl stop pop3s.service
-	systemctl enable pop3s.service
-	systemctl start pop3s.service
-	systemctl status pop3s.service
+        systemctl stop pop3s.service
+        systemctl enable pop3s.service
+        systemctl start pop3s.service
+        systemctl status pop3s.service
 
-	systemctl stop saslauthd.service
-	systemctl enable saslauthd.service
-	systemctl start saslauthd.service
-	systemctl status saslauthd.service
+        systemctl stop saslauthd.service
+        systemctl enable saslauthd.service
+        systemctl start saslauthd.service
+        systemctl status saslauthd.service
 
 fi ## install perdition
 ## @update-install
@@ -1209,11 +1211,11 @@ fi ## install perdition
 ## no recursion to prevent DNS amplifiaction attacks
 if [ ! -f /etc/named.conf ] || $all_arg_set
 then
-	log "Installing BIND (named) DNS server."
+        log "Installing BIND (named) DNS server."
 
-	yum -y install bind bind-utils
+        yum -y install bind bind-utils
 
-	set_file /etc/named.conf '// srvctl generated named.conf
+        set_file /etc/named.conf '// srvctl generated named.conf
 
 acl "trusted" {
      10.10.0.0/16;
@@ -1224,8 +1226,8 @@ acl "trusted" {
 options {
     listen-on port 53 { any; };
     listen-on-v6 port 53 { any; };
-    directory 	"/var/named";
-    dump-file 	"/var/named/data/cache_dump.db";
+    directory         "/var/named";
+    dump-file         "/var/named/data/cache_dump.db";
     statistics-file "/var/named/data/named_stats.txt";
     memstatistics-file "/var/named/data/named_mem_stats.txt";
     allow-query     { any; };
@@ -1260,11 +1262,11 @@ include "/etc/srvctl/named.conf.local";
 set_file /etc/srvctl/named.conf.local '## srvctl generated 
 '
 
-	rsync -a /usr/share/doc/bind/sample/etc/named.rfc1912.zones /etc
-	rsync -a /usr/share/doc/bind/sample/var/named /var
-	mkdir -p /var/named/dynamic
+        rsync -a /usr/share/doc/bind/sample/etc/named.rfc1912.zones /etc
+        rsync -a /usr/share/doc/bind/sample/var/named /var
+        mkdir -p /var/named/dynamic
 
-	chown -R named:named /var/named
+        chown -R named:named /var/named
 
 fi ## install named
 ## @update-install
@@ -1300,19 +1302,19 @@ useradd -r -u 104 -g 104 -s /sbin/nologin -d /tmp codepad 2> /dev/null
 
 if [ ! -f /etc/freshclam.conf ] || $all_arg_set
 then
-	log "Installing Userspace tools."
+        log "Installing Userspace tools."
 
-	msg "Clamav antivirus"
-	yum -y install clamav clamav-update
-	sed_file /etc/freshclam.conf "Example" "### Exampl."
-	sed_file /etc/freshclam.conf "#DNSDatabaseInfo current.cvd.clamav.net" "DNSDatabaseInfo current.cvd.clamav.net"
+        msg "Clamav antivirus"
+        yum -y install clamav clamav-update
+        sed_file /etc/freshclam.conf "Example" "### Exampl."
+        sed_file /etc/freshclam.conf "#DNSDatabaseInfo current.cvd.clamav.net" "DNSDatabaseInfo current.cvd.clamav.net"
 
-	msg "Tigervnc server"
-	yum -y install tigervnc-server
+        msg "Tigervnc server"
+        yum -y install tigervnc-server
 
-	msg "Version managers"
-	yum -y install mercurial
-	yum -y install git
+        msg "Version managers"
+        yum -y install mercurial
+        yum -y install git
 
 fi
 
@@ -1336,18 +1338,18 @@ fi
 scd=/root/srvctl-devel
 if [ ! -d $scd ] 
 then
-	log "Creating srvctl-shortcuts in $scd"
-	## some quick links for root
-	## this has no real imporance so it can be any directory for your convinience
-	mkdir -p $scd
+        log "Creating srvctl-shortcuts in $scd"
+        ## some quick links for root
+        ## this has no real imporance so it can be any directory for your convinience
+        mkdir -p $scd
 
-	ln -s $SRV $scd/$SRV
-	ln -s /etc/hosts $scd/hosts	
-	ln -s /etc/pound.cfg $scd/pound.cfg
+        ln -s $SRV $scd/$SRV
+        ln -s /etc/hosts $scd/hosts        
+        ln -s /etc/pound.cfg $scd/pound.cfg
 
-	#ln -s /usr/local/etc/lxc/lxc.conf $scd/lxc.conf
-	#ln -s /usr/local/share/lxc/templates/lxc-fedora-srv $scd/lxc-fedora-srv
-	#ln -s /usr/local/var/cache/lxc/fedora $scd/cache-lxc-fedora 
+        #ln -s /usr/local/etc/lxc/lxc.conf $scd/lxc.conf
+        #ln -s /usr/local/share/lxc/templates/lxc-fedora-srv $scd/lxc-fedora-srv
+        #ln -s /usr/local/var/cache/lxc/fedora $scd/cache-lxc-fedora 
 fi
 
 
