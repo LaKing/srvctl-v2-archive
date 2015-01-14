@@ -215,8 +215,10 @@ else
         ok
         fi 
 fi ## MariaDB related fuctions
-
-
-
-
 fi
+
+man '
+    To have an easy life with mysql / mariadb, srvctl detects an active server instance, and offers some basic, and advanced commands.
+    Import or create databases, backup databases, and reset passwords. The mysql root password is stored locally, for all operations.
+    PhpMyAdmin can be installed for graphical administration. 
+'

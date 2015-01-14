@@ -13,8 +13,8 @@ function hint {
  if [ ! -z "$1" ]
   then
         ## print formatted hint
-        printf ${yellow}"%-40s"${NC} "  $1" 
-        printf ${green}"%-48s"${NC} "$2"
+        printf ${green}"%-40s"${NC} "  $1" 
+        printf ${yellow}"%-48s"${NC} "$2"
         ## newline
         echo ''
  fi
@@ -26,7 +26,7 @@ function man {
      echo ''
 }
 
-if [ "$1" == "man" ]
+if [ "$1" == "man" ] || [ "$1" == "help" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]
 then    
         for sourcefile in $install_dir/commands/*
         do

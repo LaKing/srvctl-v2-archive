@@ -7,6 +7,45 @@ then ## no identation.
 
 function regenerate_config_files {
 
+        ## scan for imported containers         
+        for _S in $(ls $SRV)
+        do            
+            ## is this folder a FQDN?
+            _C=$(echo $_S | grep -P '(?=^.{6,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
+            if [ -z "$_C" ]
+            then
+              continue
+            fi
+            
+            if [ -f "$SRV/$_C" ]
+            then
+              continue
+            fi
+            
+            if  [ ! -f $SRV/$_C/rootfs/etc/hostname ]
+            then
+              continue
+            else
+              echo $_C > $SRV/$_C/rootfs/etc/hostname
+            fi
+           
+            
+            if [ ! -f $SRV/$_C/config.counter ]
+            then
+                ## increase the counter
+                counter=$(($(cat /etc/srvctl/counter)+1))
+                echo $counter >  /etc/srvctl/counter
+                echo $counter > $SRV/$_C/config.counter
+            fi
+            
+            if [ ! -f $SRV/$_C/config.ipv4 ] || [ ! -f $SRV/$_C/config ] || $all_arg_set
+            then
+                    generate_lxc_config $_C
+            fi
+       
+        done
+        
+        ## regenerate recognised containers
         for _C in $(lxc-ls)
         do
 
@@ -306,7 +345,7 @@ function regenerate_pound_files {
                 if [ ! -f $SRV/$_C/disabed ]
                 then
 
-                        ## Direct Developer DomainName - useful if your domain is not registered / dns ha problems
+                        ## Direct Developer DomainName - useful if your domain is not registered / dns has problems
                         if $ENABLE_DDDN
                         then
                                 set_file $cfg_dir/dddn-http-service '## srvctl dddn-http-service '$_C' '$_ip' 

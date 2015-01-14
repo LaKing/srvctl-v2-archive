@@ -3,102 +3,102 @@
 if $onVE
 then ## no identation.
 
-hint "setup-codepad [apache|node]" "Install ep_codepad, an Etherpad based collaborative code editor, and start a new project."
+hint "setup-codepad [apache|node]" "Install codepad and start a new project."
 if [ "$CMD" == "setup-codepad" ]
 then
 
-		project_type=$2
+                project_type=$2
 
-		log_path="/var/log/codepad/log"
+                log_path="/var/log/codepad/log"
 
-		## set default project type, if not given in an argument
-		if [ -z "$project_type" ]
-		then
-			project_type="node"
-		fi 
+                ## set default project type, if not given in an argument
+                if [ -z "$project_type" ]
+                then
+                        project_type="node"
+                fi 
 
-		msg $project_type-project
+                msg $project_type-project
 
-		setup_mariadb
+                setup_mariadb
 
-		## install packages
-		yum -y install nodejs
-		yum -y install npm
-		yum -y install gzip git-core curl python openssl-devel
-		yum -y install postgresql-devel
-		yum -y install wget		
+                ## install packages
+                yum -y install nodejs
+                yum -y install npm
+                yum -y install gzip git-core curl python openssl-devel
+                yum -y install postgresql-devel
+                yum -y install wget                
 
-		npm -g install nodemon
-		
-		## get the latest version
+                npm -g install nodemon
+                
+                ## get the latest version
 
-		if [ -d /srv/etherpad-lite ]
-		then
-			cd /srv/etherpad-lite
-			git pull
+                if [ -d /srv/etherpad-lite ]
+                then
+                        cd /srv/etherpad-lite
+                        git pull
 
-			npm update ep_codepad
-			npm update ep_cursortrace
+                        npm update ep_codepad
+                        npm update ep_cursortrace
 
-		else	
-			cd /srv	
-			git clone git://github.com/ether/etherpad-lite.git
-		
-			cd /srv/etherpad-lite 
-			npm install ep_codepad
-			#npm install ep_cursortrace
+                else        
+                        cd /srv        
+                        git clone git://github.com/ether/etherpad-lite.git
+                
+                        cd /srv/etherpad-lite 
+                        npm install ep_codepad
+                        #npm install ep_cursortrace
 
-			### increase import filesize limitation
-			#sed_file /srv/etherpad-lite/src/node/db/PadManager.js '    if(text.length > 100000)' '    if(text.length > 1000000) /* srvctl customization for file import via webAPI*/'
-		
-			### The line containing:  return /^(g.[a-zA-Z0-9]{16}\$)?[^$]{1,50}$/.test(padId); .. but mysql is limited to 100 chars, so patch it.
-			#sed_file /srv/etherpad-lite/src/node/db/PadManager.js '{1,50}$/.test(padId);' '{1,100}$/.test(padId); /* srvctl customization for file import via webAPI*/'
+                        ### increase import filesize limitation
+                        #sed_file /srv/etherpad-lite/src/node/db/PadManager.js '    if(text.length > 100000)' '    if(text.length > 1000000) /* srvctl customization for file import via webAPI*/'
+                
+                        ### The line containing:  return /^(g.[a-zA-Z0-9]{16}\$)?[^$]{1,50}$/.test(padId); .. but mysql is limited to 100 chars, so patch it.
+                        #sed_file /srv/etherpad-lite/src/node/db/PadManager.js '{1,50}$/.test(padId);' '{1,100}$/.test(padId); /* srvctl customization for file import via webAPI*/'
 
-		fi	
-
-
-		project_path=/srv/$project_type-project 
+                fi        
 
 
-
-		if [ "$project_type" == "apache" ]
-		then
-			if ! [ -d "$project_path" ]
-			then
-				ln -s /var/www/html $project_path
-			fi
-	
-			systemctl restart httpd.service
-			systemctl enable httpd.service
-
-			log_path="/var/log/httpd/error_log"
-		fi
-
-		if [ "$project_type" == "node" ]
-		then
-
-			systemctl stop httpd.service
-			systemctl disable httpd.service
-
-			mkdir -p $project_path
-			chown srv:codepad $project_path
-			chmod 775 $project_path
-			log_path="/var/log/node-project/log"
-		fi
+                project_path=/srv/$project_type-project 
 
 
-		## for sessionkey
-		get_randomstr
 
-		## this will create / update the mysql database
-		add_mariadb_db
+                if [ "$project_type" == "apache" ]
+                then
+                        if ! [ -d "$project_path" ]
+                        then
+                                ln -s /var/www/html $project_path
+                        fi
+        
+                        systemctl restart httpd.service
+                        systemctl enable httpd.service
 
-		get_password
-		adminpass=$password
+                        log_path="/var/log/httpd/error_log"
+                fi
 
-	
+                if [ "$project_type" == "node" ]
+                then
 
-		set_file /srv/etherpad-lite/settings.json '/* ep_codepad-devel settings*/
+                        systemctl stop httpd.service
+                        systemctl disable httpd.service
+
+                        mkdir -p $project_path
+                        chown srv:codepad $project_path
+                        chmod 775 $project_path
+                        log_path="/var/log/node-project/log"
+                fi
+
+
+                ## for sessionkey
+                get_randomstr
+
+                ## this will create / update the mysql database
+                add_mariadb_db
+
+                get_password
+                adminpass=$password
+
+        
+
+                set_file /srv/etherpad-lite/settings.json '/* ep_codepad-devel settings*/
 {
   "ep_codepad": { 
     "theme": "Cobalt",
@@ -138,27 +138,27 @@ then
     },
   "users": {
 '
-		for u in $(ls /mnt)
-		do
-			if [ -f "/mnt/$u/.password.sha512" ]
-			then
-				echo '      "'$u'": {"hash": "'$(cat /mnt/$u/.password.sha512)'","is_admin": true},' >> /srv/etherpad-lite/settings.json
-			fi
-		done
+                for u in $(ls /mnt)
+                do
+                        if [ -f "/mnt/$u/.password.sha512" ]
+                        then
+                                echo '      "'$u'": {"hash": "'$(cat /mnt/$u/.password.sha512)'","is_admin": true},' >> /srv/etherpad-lite/settings.json
+                        fi
+                done
 
-	echo '	"admin": {"password": "'$adminpass'","is_admin": true}' >> /srv/etherpad-lite/settings.json
-	echo '  },' >> /srv/etherpad-lite/settings.json
-	echo '}' >> /srv/etherpad-lite/settings.json
+        echo '        "admin": {"password": "'$adminpass'","is_admin": true}' >> /srv/etherpad-lite/settings.json
+        echo '  },' >> /srv/etherpad-lite/settings.json
+        echo '}' >> /srv/etherpad-lite/settings.json
 
-		## prepare the enviroment
-		cd /srv/etherpad-lite
-		bin/installDeps.sh
+                ## prepare the enviroment
+                cd /srv/etherpad-lite
+                bin/installDeps.sh
 
-		mkdir -p /var/log/codepad
-		chown codepad:codepad /var/log/codepad
-		chmod 750 /var/log/codepad
+                mkdir -p /var/log/codepad
+                chown codepad:codepad /var/log/codepad
+                chmod 750 /var/log/codepad
 
-		set_file /srv/codepad.sh '#!/bin/bash
+                set_file /srv/codepad.sh '#!/bin/bash
 echo $(whoami)" starting "$0 
 
 mkdir -p /var/log/codepad
@@ -170,17 +170,21 @@ whoami > /var/log/codepad/who
 
 cd /srv/etherpad-lite
 
-/bin/node /srv/etherpad-lite/node_modules/ep_etherpad-lite/node/server.js $*  2> /var/log/codepad/err 1> /var/log/codepad/log
+while true
+do
+    echo RESTART >> /var/log/codepad/log
+    /bin/node /srv/etherpad-lite/node_modules/ep_etherpad-lite/node/server.js $*  2> /var/log/codepad/err 1> /var/log/codepad/log
+done
 '
 
-		chmod +x /srv/codepad.sh
+                chmod +x /srv/codepad.sh
 
-		chown -R codepad:srv /srv/etherpad-lite
+                chown -R codepad:srv /srv/etherpad-lite
 
 ## // TODO: After mysql
 
-		## proper way is to create a service to run codepad
-		set_file /lib/systemd/system/codepad.service '## srvctl generated
+                ## proper way is to create a service to run codepad
+                set_file /lib/systemd/system/codepad.service '## srvctl generated
 [Unit]
 Description=Codepad, the etherpad-lite based collaborative code editor.
 After=syslog.target network.target
@@ -197,24 +201,24 @@ WantedBy=multi-user.target
 '
 
 
-		systemctl daemon-reload
+                systemctl daemon-reload
 
-		systemctl enable codepad.service
-		systemctl start codepad.service
+                systemctl enable codepad.service
+                systemctl start codepad.service
 
 
-		if [ "$project_type" == "node" ]
-		then
+                if [ "$project_type" == "node" ]
+                then
 
-			## use the localhost certificate for node
-			mkdir -p /var/node
-			cat /etc/pki/tls/private/localhost.key > /var/node/key.pem 
-			cat /etc/pki/tls/certs/localhost.crt > /var/node/crt.pem
-			chown node:node /var/node
+                        ## use the localhost certificate for node
+                        mkdir -p /var/node
+                        cat /etc/pki/tls/private/localhost.key > /var/node/key.pem 
+                        cat /etc/pki/tls/certs/localhost.crt > /var/node/crt.pem
+                        chown node:node /var/node
 
-			## create sample js file
+                        ## create sample js file
 
-			set_file /srv/node-project/server.js '/* srvctl generated hello-node sample file */
+                        set_file /srv/node-project/server.js '/* srvctl generated hello-node sample file */
 
 console.log("START");
 
@@ -267,12 +271,12 @@ console.log("Server running at http://'$C'/ and at https://'$C'/");
 
 console.log("END");
 '
-			## prepare logging capabilities
-			mkdir -p /var/log/node-project
-			chown node:codepad /var/log/node-project
-			chmod 750 /var/log/node-project
+                        ## prepare logging capabilities
+                        mkdir -p /var/log/node-project
+                        chown node:codepad /var/log/node-project
+                        chmod 750 /var/log/node-project
 
-			set_file /srv/node-project/run.sh '#!/bin/bash
+                        set_file /srv/node-project/run.sh '#!/bin/bash
 echo $(whoami)" starting "$0 
 
 mkdir -p /var/log/node-project
@@ -286,7 +290,7 @@ cd /srv/node-project
 nodemon /srv/node-project/server.js 1> /var/log/node-project/log 2> /var/log/node-project/err
 '
 
-			set_file /lib/systemd/system/node-project.service '## srvctl generated
+                        set_file /lib/systemd/system/node-project.service '## srvctl generated
 [Unit]
 Description=Development node-project.
 After=syslog.target network.target
@@ -303,83 +307,84 @@ Group=node
 
 [Install]
 WantedBy=multi-user.target
-'	
-				## prepare data dir
-				chown -R node:codepad /srv/node-project
-				chmod -R 664 /srv/node-project
-				chmod 774 /srv/node-project
-				chmod 774 /srv/node-project/run.sh
+'        
+                                ## prepare data dir
+                                chown -R node:codepad /srv/node-project
+                                chmod -R 664 /srv/node-project
+                                chmod 774 /srv/node-project
+                                chmod 774 /srv/node-project/run.sh
 
-				## this is needed for nodemon
-				chmod 777 /srv
-				## // TODO nodemon needs to write to /srv 
-				systemctl daemon-reload
+                                ## this is needed for nodemon
+                                chmod 777 /srv
+                                ## // TODO nodemon needs to write to /srv 
+                                systemctl daemon-reload
 
-				systemctl enable node-project.service
-				systemctl start node-project.service
+                                systemctl enable node-project.service
+                                systemctl start node-project.service
 
-			fi ## if node-project
+                        fi ## if node-project
 
-	
-	ntc "Project path is: $project_path"
+        
+        ntc "Project path is: $project_path"
 
-	## this directory should be present, but we want to make sure.
-	mkdir -p /var/git
+        ## this directory should be present, but we want to make sure.
+        mkdir -p /var/git
 
-	chown git:codepad /var/git
-	cd /var/git
+        chown git:codepad /var/git
+        cd /var/git
 
-	git config --global user.name 'codepad'
-	git config --global user.email codepad@$(hostname)
-	git config --global push.default simple
+        git config --global user.name 'codepad'
+        git config --global user.email codepad@$(hostname)
+        git config --global push.default simple
 
-	su codepad -s /bin/bash -c "git config --global user.name 'codepad'"
-	su codepad -s /bin/bash -c "git config --global user.email codepad@$(hostname)"
-	su codepad -s /bin/bash -c "git config --global push.default simple"
+        su codepad -s /bin/bash -c "git config --global user.name 'codepad'"
+        su codepad -s /bin/bash -c "git config --global user.email codepad@$(hostname)"
+        su codepad -s /bin/bash -c "git config --global push.default simple"
 
-	## init bare git repository
-	if [ -z "$(ls /var/git)" ]
-	then
-		git init --bare
-		echo $project_type-project > description
-	else
-		ntc "Git repo not empty."
-	fi
-	
-	cd /srv
+        ## init bare git repository
+        if [ -z "$(ls /var/git)" ]
+        then
+                git init --bare
+                echo $project_type-project > description
+        else
+                ntc "Git repo not empty."
+        fi
+        
+        cd /srv
 
-	git clone /var/git 2> /dev/null
+        git clone /var/git 2> /dev/null
 
-	chown -R git:git /srv/git
-	mv /srv/git/.git $project_path
-	rm -rf /srv/git
+        chown -R git:git /srv/git
+        mv /srv/git/.git $project_path
+        rm -rf /srv/git
 
-	chown -R git:codepad $project_path/.git
-	chmod -R 775 $project_path/.git
-	chown -R git:codepad /var/git
-	chmod -R 775 /var/git
+        chown -R git:codepad /var/git
+        chmod -R 775 /var/git
 
-	cd $project_path
+        cd $project_path
 
-	git add . -A
-	git commit -m Inital_commit
+        git add . -A
+        git commit -m Inital_commit
 
-	git push
+        git push
+        
+        chown -R git:codepad $project_path/.git
+        chmod -R 775 $project_path/.git
 
-	### TODO allow node to run on port 80
-	## iptables to forward port 8000 to port 80
- 	#iptables -t nat -L
+        ### TODO allow node to run on port 80
+        ## iptables to forward port 8000 to port 80
+         #iptables -t nat -L
 
-	yum -y install iptables-services
+        yum -y install iptables-services
 
-	iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
-	iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
-	#iptables -t nat -A PREROUTING -p tcp --dport 250 -j REDIRECT --to-ports 9001
+        iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
+        iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
+        #iptables -t nat -A PREROUTING -p tcp --dport 250 -j REDIRECT --to-ports 9001
 
-	iptables-save > /etc/sysconfig/iptables
+        iptables-save > /etc/sysconfig/iptables
 
-	systemctl start iptables.service
-	systemctl enable iptables.service
+        systemctl start iptables.service
+        systemctl enable iptables.service
 
 ## shortcut to restart codepad
 set_file /bin/rc '#!/bin/bash
@@ -398,10 +403,17 @@ tail /var/log/codepad/log
 chmod +x /bin/rc
 
 
-	msg "Codepad: https://dev.$C/admin admin:$adminpass"	
+        msg "Codepad: https://dev.$C/admin admin:$adminpass"        
 
 ok
 fi ## codepad
 
 
 fi
+
+man '
+    Install, and set up codepad a collaborative code editor, or better said a collaborative online development environment.
+    It should be reached on the dev. subdomain with https - this however needs to enabled on the host. (pound-enable-dev)
+    Default is to create a node project, and a basic hello world application. 
+    Homepage: http://D250.hu
+'

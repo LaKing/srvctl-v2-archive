@@ -5,7 +5,7 @@ then ## no identation.
 
 
 ## add new host
-hint "add VE [USERNAME]" "Add new container."
+hint "add VE [USERNAME]" "Add new LXC container."
 if [ "$CMD" == "add" ] && $onHS
 then
 
@@ -45,7 +45,14 @@ then
         lxc-create -n $C -t fedora-srv
 
         log "Container created."
-        ## TODO check, if it really is.
+        
+        if  [ -f $SRV/$C/rootfs/etc/hostname ]
+        then
+              log "Container created."
+        else
+              err "Container not created!"
+              exit
+        fi
 
         ## mark as dev site
         if [ ${ARG:0:4} == "dev." ]
@@ -86,6 +93,9 @@ then
         mkdir -p $rootfs/var/srvctl
         mkdir -p $rootfs/etc/srvctl
 
+        ## srvctl 2.x installation dir
+        mkdir -p $rootfs/$install_dir
+
 set_file $rootfs/etc/srvctl/config '## srvctl generated
 ## MYSQL / MARIADB conf file that stores the mysql root password - in containers
 MDF="'$MDF'"
@@ -103,8 +113,8 @@ HOSTIPv4="'$HOSTIPv4'"
 
         ## add symlink to the srvctl application.
         ## outdated with 2.x, this was it for 1.x ln -s /var/srvctl/srvctl $rootfs/bin/srvctl
-        ln -sf $install_dir/srvctl.sh /bin/srvctl
-        ln -sf $install_dir/srvctl.sh /bin/sc
+        ln -sf $install_dir/srvctl.sh $rootfs//bin/srvctl
+        ln -sf $install_dir/srvctl.sh $rootfs//bin/sc
 
         ## As of June 2014, systemd-journald is running amok in the containers. To prevent 100% CPU usage, it has to be disabled.
         ## To undo, you may run: rm $rootfs/etc/systemd/system/systemd-journald.service
@@ -296,3 +306,14 @@ ok
 fi ## srvctl add
 
 fi
+
+man '
+    This will add a new LXC container, also called virtual enviroment or VE - to a srvctl host. Each container is unique, and runs a complete OS.
+    The name of the VE has to be a domain name, and might be a .local domain or a subdomain. Developer domains can be prefixed with dev. 
+    An optional username can be given to define the owner of the VE. Multiple users can have access to the VE, defined in the containers users file.
+    Each container will be configured with SSH keypairs, all authorized users can have root-access to a VE from the user account of the srvctl host.
+    Logged in users can access files of the containers with ssh - usually in a two step hop, or directly with NFS folders mounted to their home/VE directories.
+    The srvctl-client script can be used to sync, backup, upload files. Proper SSH port forwarding allows SFTP access directly from remote user computers.
+    Containers will be configured as web and mail servers. The srvctl command will be available on every VE, and can be used to configure further.
+    
+'

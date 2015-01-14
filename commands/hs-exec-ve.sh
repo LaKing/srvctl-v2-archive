@@ -8,6 +8,7 @@ hint "exec-all 'CMD [..]'" "Execute a command on all running containers."
 if [ "$CMD" == "exec-all" ]
 then
 
+
 argument comm
 
  for C in $(lxc-ls)
@@ -16,7 +17,8 @@ argument comm
 
         if $is_running
         then
-        ssh $C "$comm"
+            #ssh $C $comm - but we take all - max 8 - arguments
+            ssh $C "$2 $3 $4 $5 $6 $7 $8 $9"
         fi
 
         get_ip
@@ -30,6 +32,12 @@ argument comm
 
 ok
 fi
+
+man '
+    It is possible to iterate trough all running containers, and run a command.
+    The command will be executed via ssh, as root, starting in the /root folder.
+    Enclose the command into a string to use certain operators, like &&
+'
 
 ## exec-all backup-db
 hint "exec-all-backup-db" "Execute a db backup on all running containers."
@@ -56,6 +64,9 @@ then
 
 ok
 fi
-
+man '
+    This command will run srvctl backup-db on all running containers.
+    It will create backups of all MariaDB databases, in the VE, located at /root/backup - in sql format.
+'
 
 fi

@@ -115,7 +115,7 @@ mv srvctl-$nv.tar.gz rpmbuild/SOURCES/
 echo 'Summary: Command line tool to manage Fedora servers and container farms.
 Name: srvctl
 Version: '$nv'
-Release: 1%{?dist}
+Release: 1
 URL:     http://D250.hu
 License: GPLv3
 Group: System Environment/Base

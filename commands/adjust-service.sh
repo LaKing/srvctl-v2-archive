@@ -1,65 +1,62 @@
 #!/bin/bash
 
 ## start or restart service
-hint "SERVICE OP" "start|stop|restart|status a service via systemctl.  +|-|!|?"
-if [ "$2" == "start" ] || [ "$2" == "+" ] 
-then
-        if [ -f "/usr/lib/systemd/system/$1.service" ]
-        then
+hint "SERVICE OP | OP SERVICE" "start|stop|restart|status a service via systemctl.  +|-|!|?"
 
-        systemctl enable $1.service
-        systemctl start  $1.service
-        systemctl status $1.service
+OP=$2
+SERVICE=$1
+
+if [ "$1" == "start" ] || [ "$1" == "+" ] || [ "$1" == "restart" ] || [ "$1" == "!" ] || [ "$1" == "stop" ]  || [ "$1" == "-" ] || [ "$1" == "status" ]  || [ "$1" == "?" ]
+then
+    OP=$1
+    SERVICE=$2
+fi
+
+if [ ! -f "/usr/lib/systemd/system/$SERVICE.service" ]
+then
+    exit
+fi
+
+if [ "$OP" == "start" ] || [ "$OP" == "+" ] 
+then
+        systemctl enable $SERVICE.service
+        systemctl start  $SERVICE.service
+        systemctl status $SERVICE.service
 
         ok
-        fi
-
 fi ## start
 
 
-if [ "$2" == "restart" ] || [ "$2" == "!" ] 
+if [ "$OP" == "restart" ] || [ "$OP" == "!" ] 
 then
-        if [ -f "/usr/lib/systemd/system/$1.service" ]
-        then
-
-        systemctl enable  $1.service
-        systemctl restart $1.service
-        systemctl status  $1.service
+        systemctl enable  $SERVICE.service
+        systemctl restart $SERVICE.service
+        systemctl status  $SERVICE.service
 
         ok
-        fi
-
 fi ## restart
 
 
-if [ "$2" == "stop" ]  || [ "$2" == "-" ] 
+if [ "$OP" == "stop" ]  || [ "$OP" == "-" ] 
 then
-        if [ -f "/usr/lib/systemd/system/$1.service" ]
-        then
-
-        systemctl disable $1.service
-        systemctl stop $1.service
-        systemctl status $1.service
+        systemctl disable $SERVICE.service
+        systemctl stop $SERVICE.service
+        systemctl status $SERVICE.service
 
         ok
-        fi
-
 fi ## disable
 
 
-if [ "$2" == "status" ]  || [ "$2" == "?" ] 
+if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
 then
-        if [ -f "/usr/lib/systemd/system/$1.service" ]
-        then
-        systemctl status $1.service
+        systemctl status $SERVICE.service
         ok
-        fi
-
 fi ## stop
 
 man '
-    This is a shorthand syntax for frequent server operations.
+    This is a shorthand syntax for frequent operations on services.
     the following are equivalent:
+        
         systemctl status example.service
         sc example ?
         
