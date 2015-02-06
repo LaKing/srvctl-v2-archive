@@ -326,6 +326,8 @@ fi ## Install LXC
         mkdir -p $SRV
         mkdir -p $TMP
         #mkdir -p /var/srvctl/share
+        ## TODO FIX HERE
+        mkdir -p /var/srvctl
         mkdir -p /etc/srvctl
 
         ## this will save a little space. 
@@ -374,7 +376,7 @@ fi ## Install LXC
         
 
 ## @update-install
-if [ ! -f $fedora_template ] || $all_arg_set
+if [ ! -f $srvctl_template ] || $all_arg_set
 then
         log "Create Custom template: $srvctl_template"
 
