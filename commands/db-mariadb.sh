@@ -163,6 +163,7 @@ then
         if [ "$CMD" == "add-phpmyadmin" ] 
         then
 
+                yum -y install php
                 yum -y install phpmyadmin
 
 

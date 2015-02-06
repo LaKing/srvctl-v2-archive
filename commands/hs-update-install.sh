@@ -1035,6 +1035,8 @@ fi ## set aliases.db
 ## TODO: this information is submitted to the cyrus sasl devel mailing list. keep an eye on it.
 ## for now we will aply a customization in the next step.
 
+## to verify openssl SNI use the following command:
+## openssl s_client -servername container.ve -connect localhost:443
 
 ## IMAP4S proxy
 if [ ! -f /etc/perdition/perdition.conf ] || $all_arg_set

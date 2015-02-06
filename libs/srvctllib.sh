@@ -92,6 +92,7 @@ function create_certificate { ## for container $C
         distinguished_name     = req_distinguished_name
         attributes             = req_attributes
         prompt                 = no
+        x509_extensions        = v3_req
         output_password        = $ssl_password
 
         [ req_distinguished_name ]
@@ -103,7 +104,15 @@ function create_certificate { ## for container $C
         CN                     = $C
         emailAddress           = webmaster@$C
 
-         [ req_attributes ]
+        [v3_req]
+        keyUsage = keyEncipherment, dataEncipherment
+        extendedKeyUsage = serverAuth
+        subjectAltName = @alt_names
+        [alt_names]
+        DNS.1 = $C
+        DNS.2 = *.$C         
+        
+        [ req_attributes ]
         challengePassword              = A challenge password"
 
         #### create certificate for https ### good howto: http://www.akadia.com/services/ssh_test_certificate.html        

@@ -12,46 +12,47 @@ then
     SERVICE=$2
 fi
 
-if [ ! -f "/usr/lib/systemd/system/$SERVICE.service" ]
+if [ -f "/usr/lib/systemd/system/$SERVICE.service" ]
 then
-    exit
-fi
+    
 
-if [ "$OP" == "start" ] || [ "$OP" == "+" ] 
-then
+    if [ "$OP" == "start" ] || [ "$OP" == "+" ] 
+    then
         systemctl enable $SERVICE.service
         systemctl start  $SERVICE.service
         systemctl status $SERVICE.service
 
         ok
-fi ## start
+    fi ## start
 
 
-if [ "$OP" == "restart" ] || [ "$OP" == "!" ] 
-then
+    if [ "$OP" == "restart" ] || [ "$OP" == "!" ] 
+    then
         systemctl enable  $SERVICE.service
         systemctl restart $SERVICE.service
         systemctl status  $SERVICE.service
 
         ok
-fi ## restart
+    fi ## restart
 
 
-if [ "$OP" == "stop" ]  || [ "$OP" == "-" ] 
-then
+    if [ "$OP" == "stop" ]  || [ "$OP" == "-" ] 
+    then
         systemctl disable $SERVICE.service
         systemctl stop $SERVICE.service
         systemctl status $SERVICE.service
 
         ok
-fi ## disable
+    fi ## disable
 
 
-if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
-then
+    if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
+    then
         systemctl status $SERVICE.service
         ok
-fi ## stop
+    fi ## status
+
+fi
 
 man '
     This is a shorthand syntax for frequent operations on services.
