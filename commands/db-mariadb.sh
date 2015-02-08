@@ -3,6 +3,9 @@
 if $onVE
 then ## no identation.
 
+## To delete all backups older then 10 days 
+##  find $BACKUP_POINT -type d -mtime +4 | xargs rm -rf
+
 
 if [ "$test_mariadb" == "active" ]
 then
