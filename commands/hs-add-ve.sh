@@ -45,6 +45,7 @@ then
         lxc-create -n $C -t fedora-srv
 
         log "Container created."
+        echo $NOW > $SRV/$C/creation-date
         
         if  [ -f $SRV/$C/rootfs/etc/hostname ]
         then

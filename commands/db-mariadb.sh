@@ -126,9 +126,9 @@ then
 
                 log "Creating backup of Mysql/Mariadb databases."
 
-                old_backup=$(ls -d /root/backup/* 2> /dev/null)
+                old_backup=$(ls -d /srv/backup-db/* 2> /dev/null)
 
-                BACKUP_POINT="/root/backup/"$(date +%Y_%m_%d__%H_%M_%S)
+                BACKUP_POINT="/srv/backup-db/"$(date +%Y_%m_%d__%H_%M_%S)
                 mkdir -p $BACKUP_POINT
 
                 ## All Databases into a single file?

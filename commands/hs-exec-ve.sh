@@ -66,7 +66,7 @@ ok
 fi
 man '
     This command will run srvctl backup-db on all running containers.
-    It will create backups of all MariaDB databases, in the VE, located at /root/backup - in sql format.
+    It will create backups of all MariaDB databases in the VE, sql format.
 '
 
 fi
