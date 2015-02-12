@@ -43,13 +43,13 @@ function man {
 ## (TODO: userspace implementation)
 if [ "$UID" -ne "0" ]
 then
-    echo "The srvctl script needs root privileges. Running srvctl-client now! $(whoami)"
+    echo "The srvctl script needs root privileges. Running srvctl-client now!"
     ## we only run the client script. 
     if (( "$UID" < 1000 ))
     then
         echo "system user: $(whoami)"
     else
-        source $install_dir/srvctl-client.sh
+        source $install_dir/srvctl-client.sh $1
     fi
     exit
 fi

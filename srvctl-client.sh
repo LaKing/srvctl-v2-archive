@@ -44,8 +44,9 @@ then
 else
 
     read -r -p "Connection hostname: " H
-    H=$(echo $H | grep -P '(?=^.{6,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
-    ## FGDN hostname check '
+    
+    ##H=$(echo $H | grep -P '(?=^.{6,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
+    ## FGDN hostname check ' - doesent work on wind
 
     if [ -z "$H" ]
     then
