@@ -198,14 +198,22 @@ then
                    </IfModule>
                 </Directory>
                 "
-                systemctl reload httpd.service
+                
+                
+                ## set params in php.ini, ...          
+                sed_file /etc/php.ini ";date.timezone =" "date.timezone = $php_timezone"
+                sed_file /etc/php.ini  "upload_max_filesize = 2M" "upload_max_filesize = 25M" 
+                sed_file /etc/php.ini  "post_max_size = 8M" "post_max_size = 25M"                
+                
+                
+                systemctl restart httpd.service
         ok
         fi
 
 
 else
 
-        hint "install-mariadb        " "install MariaDB (mysql) database."
+        hint "install-mariadb" "install MariaDB (mysql) database."
         if [ "$CMD" == "install-mariadb" ] 
         then        
 

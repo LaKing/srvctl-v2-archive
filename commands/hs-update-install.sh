@@ -49,10 +49,12 @@ then
         get_password
 
 set_file /etc/srvctl/config "## srvctl config 
-## Use with "" if value contains spaces.
+## Use string if value contains spaces.
 
-## use latst version or the keyword 'git' 
-#LXC_VERSION=1.0.4
+## use the latst version, options are 'yum' 'git' 'zip' 'src' 
+LXC_INSTALL='yum'
+## eventually specify the version - mandatory for zip, optional for yum
+#LXC_VERSION=1.1.0
 
 ## logfile
 #LOG=/var/log/srvctl.log
@@ -70,7 +72,7 @@ ssl_password=ssl_pass_$password
 #CMP=Unknown
 
 ## Company domain name - use your own
-#CDN=Unknown
+#CDN=$(hostname)
 
 ## CC as Certificate creation
 #CCC=HU
@@ -166,7 +168,7 @@ then
         log "Installing LXC!"
         msg $CDN
 
-        if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "zip" ]
+        if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "tar" ]
         then
                 ## packages needed for compilation and for running
                 log "Install Development Tools"
@@ -189,7 +191,7 @@ then
                         log "Installing using existing /root/lxc source."
                 fi
 
-                if [ "$LXC_INSTALL" == "zip" ]
+                if [ "$LXC_INSTALL" == "tar" ]
                 then
 
                         if [ $LXC_VERSION == '' ]
@@ -204,13 +206,15 @@ then
                         fi
 
                         ## use a version-release
-                        if [ ! -f /root/lxc-$LXC_VERSION.zip ] 
+                        if [ ! -f "/root/lxc-$LXC_VERSION.tar.gz" ] 
                         then 
                                 msg "Downloading LXC $LXC_VERSION"
-                                wget -O /root/lxc-$LXC_VERSION.zip https://github.com/lxc/lxc/archive/lxc-$LXC_VERSION.zip
+                                wget -O /root/lxc-$LXC_VERSION.tar.gz https://linuxcontainers.org/downloads/lxc/lxc-$LXC_VERSION.tar.gz
+                                tar -zxvf /root/lxc-$LXC_VERSION.tar.gz
+                                ## wget -O /root/lxc-$LXC_VERSION.zip https://github.com/lxc/lxc/archive/lxc-$LXC_VERSION.zip
                         fi
                         
-                        unzip /root/lxc-$LXC_VERSION.zip
+                        #unzip /root/lxc-$LXC_VERSION.zip
                         mv /root/lxc-lxc-$LXC_VERSION /root/lxc
                 fi
          

@@ -43,12 +43,11 @@ then
         printf ${yellow}"%-48s"${NC} "HOSTNAME"
         printf ${yellow}"%-14s"${NC} "IP-LOCAL"
         printf ${yellow}"%-3s"${NC} "IN"
-        printf ${yellow}"%-3s"${NC} "MX"        
-        printf ${yellow}"%-5s"${NC} "DISK"
-        printf ${yellow}"%-16s"${NC} "USERs"
         printf ${yellow}"%-5s"${NC} "HTTP"
         printf ${yellow}"%-4s"${NC} "RES"
-
+        printf ${yellow}"%-3s"${NC} "MX"        
+        printf ${yellow}"%-5s"${NC} "DISK"
+        printf ${yellow}"%-32s"${NC} "USERs"
 
         echo ''
 
@@ -59,16 +58,18 @@ then
         get_info
         get_ip
         get_dig_A
+        get_pound_state
+        get_http_response
         get_dig_MX
         get_disk_usage
         get_users
-        get_pound_state
-        get_http_response
 
         echo ''
  done
 
         echo ''
+ok        
+fi
 
 man '
     A detailed, thus slower query of all containers, displaying fields in the following order:
@@ -76,14 +77,72 @@ man '
         HOSTNAME - the container name.
         IP-LOCAL - the internal IPv4 address of the container.
         IN - nslookup check for the IN A DNS record. In case of no OK the container can be reached trough ve.host-hostname.
+        HTTP - query pound status information.
+        RES - http-reponse status code, when querying the container. It should be 200.
         MX - nslookup ncheck for the IN MX DNS record. in case of OK mail is intercepted and forwarded to the container.
         DISK - summarizes total diskspace usage by the container.
         USERs - list of usernames granted root access to the container.
-        HTTP - query pound status information.
-        RES - http-reponse status code, when querying the container. It should be 200.
+        
 '
 
+## report status of all details
+hint "status-usage [username]" "Container usage status report."
+if [ "$CMD" == "status-usage" ] 
+then
+
+
+ echo ''
+ printf ${yellow}"%-48s"${NC} "HOSTNAME"
+ printf ${yellow}"%-5s"${NC} "DISK"
+ printf ${yellow}"%-5s"${NC} "LOGS"
+
+ echo ''
+
+    if [ ! -z "$2" ] && [ -d "/home/$2" ]
+    then
+      for C in $(lxc-ls)
+      do      
+        if ! [ -z "$(head -n 1 $SRV/$C/users | grep $2)" ]
+        then
+            get_info
+            get_disk_usage
+            get_logs_usage
+
+            echo ''
+        fi
+      done
+    else   
+
+     for U in $(ls /home)
+     do
+      echo ''
+      echo "--- $U ---"
+      echo ''
+      for C in $(lxc-ls)
+      do       
+        if ! [ -z "$(head -n 1 $SRV/$C/users | grep $U)" ]
+        then
+            get_info
+            get_disk_usage
+            get_logs_usage
+
+            echo ''
+        fi
+      done
+     done
+    fi
+ 
+
+echo ''
 ok        
 fi
 
-fi
+
+fi ## of onHS
+
+man '
+    Usage status of containers.
+        HOSTNAME - the container name.
+        DISK - summarizes total diskspace usage by the container.
+        LOGs - Log size gives a good approximation for network traffic.  
+'

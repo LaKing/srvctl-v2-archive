@@ -12,15 +12,15 @@ ENABLE_CDDN=true
 
 ####################################################
 ## Configuration defaults - Overwritten in config!
-##
+## keep it consistent in update-install
 ##(TODO: or rpm / yum if latest version will be available in a repo, so not yet .)
 
 ## srvctl config 
 ## Use with "" if value contains spaces.
 
-## use the latst version, options are 'yum' 'git' 'zip' 'src' 
+## use the latst version, options are 'yum' 'git' 'tar' 'src' 
 LXC_INSTALL='yum'
-## eventually specify the version - mandatory for zip, optional for yum
+## eventually specify the version - mandatory for tar, optional for yum
 LXC_VERSION=''
 
 ## logfile

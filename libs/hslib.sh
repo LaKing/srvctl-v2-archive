@@ -96,6 +96,13 @@ function get_disk_usage {
         printf ${yellow}"%-5s"${NC} $du
 }
 
+function get_logs_usage {
+
+        du=$(du -hs $SRV/$C/rootfs/var/log | head -c 4 )
+
+        printf ${yellow}"%-5s"${NC} $du
+}
+
 function get_dig_A {
 
         dig_A=$(dig +time=1 +short $C)        
@@ -132,15 +139,18 @@ function get_users {
 
         users=$(cat $SRV/$C/users | sed ':a;N;$!ba;s/\n/|/g')
 
-        printf ${yellow}"%-16s"${NC} ${users:0:16}
+        printf ${yellow}"%-32s"${NC} ${users:0:32}
 }
 
 function get_http_response {
-
+    
+    resp="---"
+    resp_color=$red
+    
         set_is_running
         if $is_running
         then
-
+                            
                 ## TODO better check's.
                 #indexpage_curl=$(curl -s $C)
                 #indexpage_tag=$(echo $indexpage_curl | grep "<title>")
@@ -148,17 +158,14 @@ function get_http_response {
 
                 curli=$(curl -s -I http://$C | head -n 1)
                 resp=${curli:9:3}        
-        
+                        
                 if [ "$resp" == "200" ]
                 then 
                   resp_color=$green
-                else
-                  resp_color=$red
                 fi
-
-                printf ${resp_color}"%-4s"${NC} "$resp"
-        
         fi
+        
+        printf ${resp_color}"%-4s"${NC} "$resp"
 }
 
 function generate_exports {
