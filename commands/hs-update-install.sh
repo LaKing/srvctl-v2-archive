@@ -423,8 +423,7 @@ then
         ## cosmetical TODO remove second #!/bin/bash
 
         ## disable the root password redefining force
-        sed_file $srvctl_template 'chroot $rootfs_path passwd -e root' 'echo "" 
-        ## srvctl-disabled: chroot $rootfs_path passwd -e root'
+        sed_file $srvctl_template 'chroot $rootfs_path passwd -e root' 'echo "" ## srvctl-disabled: chroot $rootfs_path passwd -e root'
         sed_file $srvctl_template 'Container rootfs and config have been created.' 'Container rootfs and config have been created."'
         ## and do not display the dialog for that subject
         sed_file $srvctl_template 'Edit the config file to check/enable networking setup.' 'exit 0'
