@@ -1,6 +1,6 @@
 #!/bin/bash
-# Last update:2015.02.16-06:15:31
-# version 2.1.1
+# Last update:2015.02.16-06:30:39
+# version 2.0.3
 #
 # Server Controll script for Fedora with LXC containers
 #
@@ -41,7 +41,7 @@ if $onHS
 then
         ## yum and source builds work with different directories.
         lxc_usr_path="/usr"
-        if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "zip" ]
+        if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "tar" ]
         then
                 lxc_usr_path="/usr/local"
 

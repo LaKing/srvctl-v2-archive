@@ -211,11 +211,15 @@ then
                                 msg "Downloading LXC $LXC_VERSION"
                                 wget -O /root/lxc-$LXC_VERSION.tar.gz https://linuxcontainers.org/downloads/lxc/lxc-$LXC_VERSION.tar.gz
                                 tar -zxvf /root/lxc-$LXC_VERSION.tar.gz
+                                mv /root/lxc-$LXC_VERSION /root/lxc
+                                
+                                ## This seems to be absolete
                                 ## wget -O /root/lxc-$LXC_VERSION.zip https://github.com/lxc/lxc/archive/lxc-$LXC_VERSION.zip
+                                ##unzip /root/lxc-$LXC_VERSION.zip
                         fi
                         
-                        #unzip /root/lxc-$LXC_VERSION.zip
-                        mv /root/lxc-lxc-$LXC_VERSION /root/lxc
+                        
+                        
                 fi
          
                 cd /root/lxc
