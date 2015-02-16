@@ -205,19 +205,24 @@ then
                                 rm -rf lxc
                         fi
 
+
+
                         ## use a version-release
                         if [ ! -f "/root/lxc-$LXC_VERSION.tar.gz" ] 
                         then 
                                 msg "Downloading LXC $LXC_VERSION"
                                 wget -O /root/lxc-$LXC_VERSION.tar.gz https://linuxcontainers.org/downloads/lxc/lxc-$LXC_VERSION.tar.gz
-                                tar -zxvf /root/lxc-$LXC_VERSION.tar.gz
-                                mv /root/lxc-$LXC_VERSION /root/lxc
-                                
-                                ## This seems to be absolete
-                                ## wget -O /root/lxc-$LXC_VERSION.zip https://github.com/lxc/lxc/archive/lxc-$LXC_VERSION.zip
-                                ##unzip /root/lxc-$LXC_VERSION.zip
                         fi
                         
+                        if [ ! -d "/root/lxc "]
+                        then
+                                tar -zxvf /root/lxc-$LXC_VERSION.tar.gz
+                                mv /root/lxc-$LXC_VERSION /root/lxc
+                        fi
+                                    
+                                ## This seems to be absolete
+                                ## wget -O /root/lxc-$LXC_VERSION.zip https://github.com/lxc/lxc/archive/lxc-$LXC_VERSION.zip
+                                ##unzip /root/lxc-$LXC_VERSION.zip                    
                         
                         
                 fi
@@ -380,8 +385,6 @@ fi ## Install LXC
         fedora_template="$lxc_usr_path/share/lxc/templates/lxc-fedora"
         srvctl_template="$lxc_usr_path/share/lxc/templates/lxc-fedora-srv"
 
-        ## rpm, based install
-        
 
 ## @update-install
 if [ ! -f $srvctl_template ] || $all_arg_set
@@ -420,7 +423,8 @@ then
         ## cosmetical TODO remove second #!/bin/bash
 
         ## disable the root password redefining force
-        sed_file $srvctl_template 'chroot $rootfs_path passwd -e root' '## srvctl-disabled: chroot $rootfs_path passwd -e root'
+        sed_file $srvctl_template 'chroot $rootfs_path passwd -e root' 'echo "" 
+        ## srvctl-disabled: chroot $rootfs_path passwd -e root'
         sed_file $srvctl_template 'Container rootfs and config have been created.' 'Container rootfs and config have been created."'
         ## and do not display the dialog for that subject
         sed_file $srvctl_template 'Edit the config file to check/enable networking setup.' 'exit 0'
@@ -437,8 +441,7 @@ then
         ## Non-fatal POSTIN scriptlet failure in rpm package 1:dovecot-2.2.13-1.fc20.x86_64
         ## therefore it should be installed once the container started.
 
-        ## httpd needs to be installed here, other wise it failes with cpio set_file_cap error.redsnapper921
-
+        ## httpd needs to be installed here, other wise it failes with cpio set_file_cap error.
 
         ## After modifocation of the last line, in a live filesystem, /usr/local/var/cache/lxc/fedora needs to be purged.
         log "Clearing yum cache for container creation."
