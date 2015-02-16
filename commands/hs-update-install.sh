@@ -214,7 +214,7 @@ then
                                 wget -O /root/lxc-$LXC_VERSION.tar.gz https://linuxcontainers.org/downloads/lxc/lxc-$LXC_VERSION.tar.gz
                         fi
                         
-                        if [ ! -d "/root/lxc "]
+                        if [ ! -d "/root/lxc" ]
                         then
                                 tar -zxvf /root/lxc-$LXC_VERSION.tar.gz
                                 mv /root/lxc-$LXC_VERSION /root/lxc
