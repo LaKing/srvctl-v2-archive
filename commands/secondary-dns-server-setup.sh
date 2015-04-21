@@ -1,6 +1,9 @@
 #!/bin/bash
 
-hint "sec-dns" "Set up as a secondary DNS server"
+if ! $isUSER && ! $LXC_SERVER
+then
+
+hint "update-install-sec-dns" "Set up as a secondary DNS server"
 if [ "$CMD" == "sec-dns" ]
 then        
         yum -y install bind
@@ -35,3 +38,4 @@ man '
     This command will download configuration files from the primary host, and set up a secondary DNS server.
     A company domain name needs to be defined in /etc/srvctl/config - ideally this is the primary host.
 '
+fi

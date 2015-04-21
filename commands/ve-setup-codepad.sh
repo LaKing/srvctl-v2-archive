@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if $onVE
+if $onVE  && $isROOT
 then ## no identation.
 
 hint "setup-codepad [apache|node]" "Install codepad and start a new project."

@@ -8,29 +8,38 @@ hint "exec-all 'CMD [..]'" "Execute a command on all running containers."
 if [ "$CMD" == "exec-all" ]
 then
 
+    if [ -z "$2" ]
+    then
+        err "No command specified to execute on containers."
+        exit
+    fi
 
-argument comm
-
- for C in $(lxc-ls)
- do
-        set_is_running
-
-        if $is_running
-        then
-            #ssh $C $comm - but we take all - max 8 - arguments
-            ssh $C "$2 $3 $4 $5 $6 $7 $8 $9"
-        fi
-
-        get_ip
-        get_pound_state
-        get_state
-        get_info
-
-        echo ''        
-
- done
-
-ok
+    sudomize 
+    
+        for C in $(lxc_ls)
+        do                 
+            set_is_running
+    
+            get_ip
+            get_pound_state
+            get_state
+            get_info
+            echo ''        
+            if $is_running
+            then
+                ## execute everything after the "exec-all" part of the argument
+                ssh root@$C "${ARGS:9}"
+                if [ ! "$?" == "0" ]
+                then
+                    err "Command returned an error."
+                fi
+            fi
+            echo ''
+    
+        done
+        
+    ok
+    
 fi
 
 man '
@@ -44,23 +53,23 @@ hint "exec-all-backup-db" "Execute a db backup on all running containers."
 if [ "$CMD" == "exec-all-backup-db" ]
 then
 
- for C in $(lxc-ls)
- do
+    sudomize
+    
+    for C in $(lxc_ls)
+    do     
         set_is_running
-
-        if $is_running
-        then
-        ssh $C "srvctl backup-db"
-        fi
-
         get_ip
         get_pound_state
         get_state
         get_info
-
+    
+        if $is_running
+        then
+            ssh $C "srvctl backup-db"
+        fi
         echo ''        
+    done
 
- done
 
 ok
 fi

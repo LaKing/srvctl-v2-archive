@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if $onHS
+if $onHS && ! $isUSER
 then ## no identation.
 
 ## just to make sure, LXC is installed for real - TODO check this
@@ -51,10 +51,13 @@ then
 set_file /etc/srvctl/config "## srvctl config 
 ## Use string if value contains spaces.
 
+## Is this a server, eg containerfarm?
+LXC_SERVER=true
+
 ## use the latst version, options are 'yum' 'git' 'zip' 'src' 
 LXC_INSTALL='yum'
 ## eventually specify the version - mandatory for zip, optional for yum
-#LXC_VERSION=1.1.0
+#LXC_VERSION=$LXC_VERSION
 
 ## logfile
 #LOG=/var/log/srvctl.log
@@ -99,7 +102,10 @@ ssl_password=ssl_pass_$password
 
 
 "
-        msg "Generated default /etc/srvctl/config for customization. Please edit, and restart the update-install process. Exiting."
+        msg "Generated default /etc/srvctl/config for customization. Please edit, .. "
+        sleep 3
+        mcedit /etc/srvctl/config
+        msg "The update-install process needs to start over. Exiting."
         exit
 
         fi
@@ -194,7 +200,7 @@ then
                 if [ "$LXC_INSTALL" == "tar" ]
                 then
 
-                        if [ $LXC_VERSION == '' ]
+                        if [ "$LXC_VERSION" == "" ]
                         then
                                 err 'LXC_VERSION not specified! CAN NOT use a release! exiting.'
                                 exit 10
@@ -205,7 +211,7 @@ then
                                 rm -rf lxc
                         fi
 
-
+                        dbg "LXC_VERSION: $LXC_VERSION"
 
                         ## use a version-release
                         if [ ! -f "/root/lxc-$LXC_VERSION.tar.gz" ] 
@@ -275,6 +281,30 @@ then
         log "Configure libvirt network"
 
 ## Networking with libvirt
+        
+        ## ipcalc is provided by initscripts.
+        yum -y install sipcalc
+        
+        ## network config validation
+
+        if [ ! -z $(ipcalc -c -4 $HOSTIPv4) ]
+        then
+            err "Invalid srvctl config: HOSTIPv4 $HOSTIPv4"
+            exit
+        fi
+
+        if [ ! -z $(ipcalc -c -6 $HOSTIPv6) ]
+        then
+            err "Invalid srvctl config: HOSTIPv6 $HOSTIPv6"
+            exit
+        fi
+
+        if [ ! -z $(ipcalc -c -6 $RANGEv6) ]
+        then
+            err "Invalid srvctl config RANGEv6 $RANGEv6"
+            exit
+        fi
+        
         yum -y install libvirt-daemon-driver-network libvirt-daemon-config-network libvirt-daemon-config-nwfilter
 
         ## DHCP is only for manually created containers. srvctl containers should use static ip addresses.
@@ -302,8 +332,24 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
   <ip address="10.10.0.1" netmask="255.255.0.0"></ip>
 </network>
 '
+# <ip family="ipv6" address="'$RANGEv6'" prefix="'$PREFIXv6'"></ip>
 
-## TODO, .. consider to set a new bridge for ipv6
+## TODO, .. consider to set a new bridge for ipv6 - or set up a route ...
+## ipv4 needs NAT (forward) but ipv6 does not ...
+
+#<network ipv6='yes'>
+#  <name>primary</name>
+#  <uuid>00000000-0000-2010-0010-000000000001</uuid>
+#  <bridge name="srv-net"/>
+#  <mac address="00:00:10:10:00:01"/>
+#  <forward/>
+#  <ip address="10.10.0.1" netmask="255.255.0.0"></ip>
+#  <ip family="ipv6" address="2001: ... :1" prefix="64" />
+#</network>
+
+
+
+
 
         ln -s /etc/libvirt/qemu/networks/primary.xml /etc/libvirt/qemu/networks/autostart/primary.xml 2> /dev/null
 
@@ -865,120 +911,8 @@ scache    unix  -       -       n       -       1       scache
 fi ## postfix
 ## @update-install
 
-
-if [ ! -f /etc/aliases.db ] || $all_arg_set
-then
-
-log "Set /etc/aliases.db"
-
-## We will mainly use these files to copy over to clients. Main thing is: info should not be aliased.
-set_file /etc/aliases '
-#
-#  Aliases in this file will NOT be expanded in the header from
-#  Mail, but WILL be visible over networks or from /bin/mail.
-#
-#        >>>>>>>>>>        The program "newaliases" must be run after
-#        >> NOTE >>        this file is updated for any changes to
-#        >>>>>>>>>>        show through to sendmail.
-#
-
-# Basic system aliases -- these MUST be present.
-mailer-daemon:        postmaster
-postmaster:        root
-
-# General redirections for pseudo accounts.
-bin:                root
-daemon:                root
-adm:                root
-lp:                root
-sync:                root
-shutdown:        root
-halt:                root
-mail:                root
-news:                root
-uucp:                root
-operator:        root
-games:                root
-gopher:                root
-ftp:                root
-nobody:                root
-radiusd:        root
-nut:                root
-dbus:                root
-vcsa:                root
-canna:                root
-wnn:                root
-rpm:                root
-nscd:                root
-pcap:                root
-apache:                root
-webalizer:        root
-dovecot:        root
-fax:                root
-quagga:                root
-radvd:                root
-pvm:                root
-amandabackup:        root
-privoxy:        root
-ident:                root
-named:                root
-xfs:                root
-gdm:                root
-mailnull:        root
-postgres:        root
-sshd:                root
-smmsp:                root
-postfix:        root
-netdump:        root
-ldap:                root
-squid:                root
-ntp:                root
-mysql:                root
-desktop:        root
-rpcuser:        root
-rpc:                root
-nfsnobody:        root
-
-ingres:                root
-system:                root
-toor:                root
-manager:        root
-dumper:                root
-abuse:                root
-
-newsadm:        root #news
-newsadmin:        root #news
-usenet:                root #news
-ftpadm:                root #ftp
-ftpadmin:        root #ftp
-ftp-adm:        root #ftp
-ftp-admin:        root #ftp
-www:                webmaster
-webmaster:        root
-noc:                root
-security:        root
-hostmaster:        root
-#info:                postmaster
-#marketing:        postmaster
-#sales:                postmaster
-#support:        postmaster
-
-
-# trap decode to catch security attacks
-decode:                root
-
-# Person who should get roots mail
-#root:                marc
-'
-
-## TODO alternatives set postfix as default MTA - or newaliases wont work.
+make_aliases_db ''
 newaliases
-
-
-
-fi ## set aliases.db
-
-
 
 ## To create proper SMTPD Auth proxy method http://www.postfix.org/SASL_README.html
 ## saslauthd can verify the SMTP client credentials by using them to log into an IMAP server. 
@@ -1381,7 +1315,30 @@ log "Running updates"
 freshclam
 yum -y update
 
-## TODO, configure firewalld
+## configure firewalld
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=https
+firewall-cmd --permanent --add-service=imaps
+firewall-cmd --permanent --add-service=pop3s
+firewall-cmd --permanent --add-service=openvpn
+
+set_file /stc/firewalld/services/smtps.xml '<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Mail - Secure (SMTPS)</short>
+  <description>This option allows incoming secure SMTP mail delivery. (added by srvctl) </description>
+  <port protocol="tcp" port="465"/>
+</service>
+'
+firewall-cmd --permanent --add-service=smtps
+
+firewall-cmd --reload
+
+## configure openvpn
+yum -y install openvpn
+yum -y install easy-rsa
+
+cp -ai /usr/share/easy-rsa/2.0 ~/srvctl-openvpn-rsa
+## TODO continiue here
 
 ok
 fi ## update-install

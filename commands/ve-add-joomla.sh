@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if $onVE
+if $onVE && $isROOT
 then ## no identation.
 
         hint "add-joomla [path]" "Install the latest Joomla! "
@@ -33,7 +33,7 @@ then ## no identation.
                 #### - download joomla!
                 ## from git
                 cd /root  
-                yum install git
+                yum -y install git
                 git clone https://github.com/joomla/joomla-cms.git
                 rm -rf $wd/.git
                 cp -u -f -r $wd/* $dir

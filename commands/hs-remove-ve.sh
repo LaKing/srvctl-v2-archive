@@ -9,7 +9,9 @@ hint "remove VE" "Remove a container."
 if [ "$CMD" == "remove" ]
 then
 
-        argument C 
+        argument C
+        sudomize
+        authorize
 
         nfs_unmount
 

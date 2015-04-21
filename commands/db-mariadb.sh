@@ -6,14 +6,13 @@ then ## no identation.
 ## To delete all backups older then 10 days 
 ##  find $BACKUP_POINT -type d -mtime +4 | xargs rm -rf
 
-
 if [ "$test_mariadb" == "active" ]
 then
           
 
         setup_mariadb
 
-        hint "mysql [CMD..]        " "Enter mariadb/mysql as root, or execute SQL command."
+        hint "mysql [CMD..]" "Enter mariadb/mysql as root, or execute SQL command."
         if  [ "$CMD" == "mysql" ]
         then
                 if [ -z "$2" ]
@@ -30,6 +29,8 @@ then
         then
 
                 argument db
+                
+                ## TODO check if file exists
 
                 mysql $MDA < $db
 
@@ -226,6 +227,7 @@ else
              msg "Maria-db inactive."
         ok
         fi 
+
 fi ## MariaDB related fuctions
 fi
 

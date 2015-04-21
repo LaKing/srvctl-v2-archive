@@ -7,21 +7,24 @@ then ## no identation.
 hint "status" "Report status of containers."
 if [ "$CMD" == "status" ] 
 then
-        echo ''
+    sudomize
+    
+    echo ''
 
-        printf ${yellow}"%-10s"${NC} "RESPONSE"
-        printf ${yellow}"%-48s"${NC} "HOSTNAME"
+    printf ${yellow}"%-10s"${NC} "RESPONSE"
+    printf ${yellow}"%-48s"${NC} "HOSTNAME"
         
-        echo ''
+    echo ''
 
- for C in $(lxc-ls)
- do
+    for C in $(lxc_ls)
+    do
         get_state
         get_info
 
         echo ''
- done
-        echo ''
+    done
+    
+    echo ''
 ok        
 fi ## status
 
@@ -32,8 +35,11 @@ man '
 
 ## report status of all details
 hint "status-all" "Detailed container status report."
-if [ "$CMD" == "status-all" ] 
+if [ "$CMD" == "status-all" ]
 then
+
+        sudomize
+
         echo "Hostname: "$(hostname)
         echo "Uptime:   "$(uptime)
         free -h | head -n 2
@@ -50,9 +56,9 @@ then
         printf ${yellow}"%-32s"${NC} "USERs"
 
         echo ''
-
- for C in $(lxc-ls)
- do
+    
+    for C in $(lxc_ls)
+    do
 
         get_state
         get_info
@@ -65,9 +71,9 @@ then
         get_users
 
         echo ''
- done
+    done
 
-        echo ''
+    echo ''
 ok        
 fi
 
@@ -90,49 +96,47 @@ hint "status-usage [username]" "Container usage status report."
 if [ "$CMD" == "status-usage" ] 
 then
 
+    sudomize
 
- echo ''
- printf ${yellow}"%-48s"${NC} "HOSTNAME"
- printf ${yellow}"%-5s"${NC} "DISK"
- printf ${yellow}"%-5s"${NC} "LOGS"
+    echo ''
+    printf ${yellow}"%-48s"${NC} "HOSTNAME"
+    printf ${yellow}"%-5s"${NC} "DISK"
+    printf ${yellow}"%-5s"${NC} "LOGS"
 
- echo ''
+    echo ''
 
     if [ ! -z "$2" ] && [ -d "/home/$2" ]
     then
-      for C in $(lxc-ls)
-      do      
-        if ! [ -z "$(head -n 1 $SRV/$C/users | grep $2)" ]
-        then
-            get_info
-            get_disk_usage
-            get_logs_usage
-
-            echo ''
-        fi
-      done
+        for C in $(lxc-ls)
+        do      
+            if ! [ -z "$(head -n 1 $SRV/$C/users | grep $2)" ]
+            then
+                get_info
+                get_disk_usage
+                get_logs_usage
+                echo ''
+            fi
+        done
     else   
 
-     for U in $(ls /home)
-     do
-      echo ''
-      echo "--- $U ---"
-      echo ''
-      for C in $(lxc-ls)
-      do       
-        if ! [ -z "$(head -n 1 $SRV/$C/users | grep $U)" ]
-        then
-            get_info
-            get_disk_usage
-            get_logs_usage
-
+        for U in $(ls /home)
+        do
             echo ''
-        fi
-      done
-     done
+            echo "--- $U ---"
+            echo ''
+            for C in $(lxc-ls)
+            do       
+                if ! [ -z "$(head -n 1 $SRV/$C/users | grep $U)" ]
+                then
+                    get_info
+                    get_disk_usage
+                    get_logs_usage
+                    echo ''
+                fi
+            done
+        done
     fi
  
-
 echo ''
 ok        
 fi

@@ -21,7 +21,7 @@ ENABLE_CDDN=true
 ## use the latst version, options are 'yum' 'git' 'tar' 'src' 
 LXC_INSTALL='yum'
 ## eventually specify the version - mandatory for tar, optional for yum
-LXC_VERSION=''
+LXC_VERSION='1.1.0'
 
 ## logfile
 LOG=/var/log/srvctl.log
@@ -70,29 +70,52 @@ debug=false
 
 ##########################################################
 ## These where the sourceable variables - used in update-install too!
-## Import custom configuration directives now, t oapply customized variables.
-source /etc/srvctl/config 2> /dev/null
+## Import custom configuration directives now, to apply customized variables.
+if [ -f "/etc/srvctl/config" ]
+then
+    source /etc/srvctl/config 
+    #2> /dev/null
+fi
 ##
 ##########################################################
+onHS=false
+onVE=false
+isUSER=false
+isROOT=false
 
-## Some way to figure out, .. is this script running in the srvctl container, or on the host system?
-if mount | grep -q 'on /var/srvctl' 
+LXC_SERVER=false
+
+if [ -f "/var/srvctl/locale-archive" ] 
 then
-  ## We are in a container of srvctl for sure
-  #echo CONTAINER $(hostname)
-  onHS=false
-  onVE=true
-else
-  ## We are propably on the host
-  #echo HOST $(hostname)
-  onHS=true
-  onVE=false
+    LXC_SERVER=true
+    ## Some way to figure out, .. is this script running in the srvctl container, or on the host system?
+    if mount | grep -q 'on /var/srvctl type' 
+    then
+      ## We are in a container of srvctl for sure
+      #echo CONTAINER $(hostname)
+      onHS=false
+      onVE=true
+    else
+      ## We are propably on the host
+      #echo HOST $(hostname)
+      onHS=true
+      onVE=false
+    fi
 fi
 
-## we use the format srvctl or sc command argument [plus-arguments]
+## we use the format srvctl or sc command argument [plus-argument]
+## command
 CMD=$1
+## argument
 ARG=$2
+## optional single argument
+OPA=$3
+## all arguments
+ARGS="$@"
 ## Current start directory
 CWD=$(pwd)
 
+
 ##cd /root
+
+

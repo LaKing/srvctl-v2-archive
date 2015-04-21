@@ -1,4 +1,6 @@
 #!/bin/bash
+if ! $isUSER
+then
 
 hint "add-user USERNAME" "Add a new user to the system."
 if [ "$CMD" == "add-user" ]
@@ -22,3 +24,5 @@ man '
     Only the root user of the host can add ssh public keys for users.
 '
 ## TODO redesign publickey storage.
+
+fi

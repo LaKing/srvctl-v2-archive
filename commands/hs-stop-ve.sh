@@ -21,6 +21,8 @@ if [ "$CMD" == "stop" ] || [ "$CMD" == "disable" ]
 then
 
         argument C
+        sudomize
+        authorize
 
         nfs_unmount
 
@@ -51,7 +53,10 @@ fi ## stop
 hint "stop-all" "Stop all containers." 
 if [ "$CMD" == "stop-all" ]
 then
-        for C in $(lxc-ls)
+    
+    sudomize
+
+        for C in $(lxc_ls)
         do
 
                 nfs_unmount

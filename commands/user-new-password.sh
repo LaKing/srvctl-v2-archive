@@ -1,24 +1,27 @@
 #!/bin/bash
 
+if ! $isUSER
+then
+
 hint "new-password [USERNAME]" "Set a new password for user."
 if [ "$CMD" == "new-password" ]
 then
 
-        _u=$(echo $CWD | cut -d '/' -f 3)
+        U=$(echo $CWD | cut -d '/' -f 3)
         
-        if ! [ -d "/home/$_u" ] || [ -z "$_u" ] || ! [ -z "$2" ]
+        if ! [ -d "/home/$U" ] || [ -z "$U" ] || ! [ -z "$2" ]
         then
-                argument _u
+                argument U
         fi
 
-        if [ -d "/home/$_u" ]
+        if [ -d "/home/$U" ]
         then
-                bak /home/$_u/.password
+                bak /home/$U/.password
         
                 get_password
-                echo $password > /home/$_u/.password
+                echo $password > /home/$U/.password
 
-                update_password $_u
+                update_password $U
 
                 if $onVE
                 then 
@@ -33,3 +36,5 @@ man '
     Set a new user password, and regenerate user password hashes.
 '
 ## TODO, regenerate/update container configs
+
+fi

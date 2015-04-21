@@ -11,9 +11,6 @@ then
 
         argument C 
 
-        ## to lower case
-        
-
         ## if thi sis a dev site, use the domain without the dev. prefix
         if [ ${ARG:0:4} == "dev." ]
         then
@@ -36,6 +33,9 @@ then
           exit 10
         fi
 
+        ## authorize
+        sudomize
+
         ## increase the counter
         counter=$(($(cat /etc/srvctl/counter)+1))
         echo $counter >  /etc/srvctl/counter
@@ -43,17 +43,16 @@ then
         log "Create container. #$counter"
         ## templates are usually in /usr/local/share/lxc/templates, lxc-fedora-srv has to be installed!
         lxc-create -n $C -t fedora-srv
-
-        log "Container created."
-        echo $NOW > $SRV/$C/creation-date
         
-        if  [ -f $SRV/$C/rootfs/etc/hostname ]
+        if [ "$?" == "0" ] && [ -f $SRV/$C/rootfs/etc/hostname ]
         then
               log "Container created."
         else
               err "Container not created!"
               exit
         fi
+        
+        echo $NOW > $SRV/$C/creation-date
 
         ## mark as dev site
         if [ ${ARG:0:4} == "dev." ]
@@ -129,9 +128,10 @@ HOSTIPv4="'$HOSTIPv4'"
 
 ## Postfix
 
-        ## Container should have the same aliases as the host. (Important here is to disable info@domain)
-        rsync -a /etc/aliases $rootfs/etc
-        rsync -a /etc/aliases.db $rootfs/etc
+        ## Container should have the same aliases as the host. (Important here is to disable info@domain) TODO remove, as its outdated
+        #rsync -a /etc/aliases $rootfs/etc
+        #rsync -a /etc/aliases.db $rootfs/etc
+        make_aliases_db $rootfs
 
         echo '
 
@@ -160,6 +160,7 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
         ## TODO remove this as it is part of regenerate_etc_hosts
         #echo "$C #"  >> /etc/postfix/relaydomains
         #postmap /etc/postfix/relaydomains
+        
 
         ln -s '/usr/lib/systemd/system/postfix.service' $rootfs'/etc/systemd/system/multi-user.target.wants/postfix.service'
 
@@ -236,6 +237,11 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 
         ## what user?
         U=$3
+        if [ ! -z "$SUDO_USER" ]
+        then
+            U=$SUDO_USER
+        fi
+                
         echo "$U" > $SRV/$C/users
 
         if [ ! -z "$U" ]
@@ -282,6 +288,7 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 ## Fedora 20 and fedora 21 as well.
 ## TODO bugcheck - does dovecot hang on postinit script?
  
+        ssh $C "newaliases"
         ssh $C "yum -y install dovecot"
         ssh $C "systemctl enable dovecot.service"
         ssh $C "systemctl start dovecot.service"

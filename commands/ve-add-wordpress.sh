@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if $onVE
+if $onVE  && $isROOT
 then ## no identation.
 
         hint "add-wordpress [path]" "Install Wordpress. Optionally to a folder (URI)."

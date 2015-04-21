@@ -9,16 +9,18 @@ hint "reboot VE" "Restart a container."
 if [ "$CMD" == "reboot" ]
 then
         argument C
+        sudomize
+        authorize
 
         set_is_running
 
         if $is_running
         then
-                printf ${yellow}"%-10s"${NC} "REBOOT!"
+                say_info "REBOOT!"
                 get_info
 
                 nfs_unmount
-                  ssh $C reboot        
+                  ssh $C reboot 2> /dev/null              
                 wait_for_ve_connection $C
                   nfs_share
         else 
@@ -41,23 +43,26 @@ hint "reboot-all" "Restart all containers."
 if [ "$CMD" == "reboot-all" ]
 then
 
-        for C in $(lxc-ls)
+        sudomize
+
+        for C in $(lxc_ls)
         do
 
                 set_is_running
 
                 if $is_running
                 then
-                        printf ${yellow}"%-10s"${NC} "REBOOT!"
+                        say_info "REBOOT!"
                         get_info
 
-                        nfs_unmonut
-                        ssh $C reboot        
+                        nfs_unmount
+                        ssh $C reboot 2> /dev/null      
                         wait_for_ve_connection $C
                         nfs_share
                 else 
-                get_info
                 get_state
+                get_info
+                
                 fi
 
                 echo ''        

@@ -22,9 +22,12 @@ function set_is_running {
         fi
 }
 
+function say_info {
+    printf ${yellow}"%-10s"${NC} $1
+}
 
 function get_info {
-
+        ## container $C name
         printf ${NC}"%-48s"${NC} $C
 }
 

@@ -39,19 +39,27 @@ function man {
     echo 1 > /dev/null
 }
 
-## If user is root or runs on root privileges, continiue. 
-## (TODO: userspace implementation)
 if [ "$UID" -ne "0" ]
 then
-    echo "The srvctl script needs root privileges. Running srvctl-client now!"
-    ## we only run the client script. 
-    if (( "$UID" < 1000 ))
+    if $LXC_SERVER
     then
-        echo "system user: $(whoami)"
-    else
-        source $install_dir/srvctl-client.sh $1
+        ## Authorize this user!
+        LOG="$(realpath ~)/.srvctl.log"
+        isUSER=true
+        #exit
+    else    
+        ## we only run the client script. 
+        if (( "$UID" < 1000 ))
+        then
+            echo "Permission denied for system user: $(whoami)"
+        else
+            echo "Running the srvctl-client now!"
+            source $install_dir/srvctl-client.sh $1
+        fi
+        exit
     fi
-    exit
+else
+    isROOT=true
 fi
 
 

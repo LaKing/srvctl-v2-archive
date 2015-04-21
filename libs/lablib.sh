@@ -22,7 +22,7 @@ function bak {
     ## create a backup of the file, with the same name, same location .bak extension
     ## filename=$1
 if [ -f $1 ]
-then	
+then        
     echo $MSG" (bak)" >> $1.bak
     cat $1 >> $1.bak
     #echo $1" has a .bak file"
@@ -66,19 +66,19 @@ function add_conf {
     if [ -f "$1" ]
     then
 
-	    if grep -q "$2" $1; then
-	     echo ''
-	     #echo $1" already has "$2
-	    else
-	     #echo "adding "$2
-	      if [ -f $1 ];
-	       then bak $1
-	      fi
-	     echo "$2" >> $1
-	    fi
-	
+            if grep -q "$2" $1; then
+             echo ''
+             #echo $1" already has "$2
+            else
+             #echo "adding "$2
+              if [ -f $1 ];
+               then bak $1
+              fi
+             echo "$2" >> $1
+            fi
+        
     else 
-	echo "File not found! $1"
+        echo "File not found! $1"
     fi
 }
 
@@ -101,11 +101,11 @@ function log {
 
 function dbg {
     ## debug message
-	if $debug
-	then
-	    echo -e ${yellow}'#'$BASH_LINENO' '${FUNCNAME[1]}': '$1${NC}
-	    echo $NOW': '$1 >> $LOG
-	fi
+        if $debug
+        then
+            echo -e ${yellow}'#'$BASH_LINENO' '${FUNCNAME[1]}': '$1${NC}
+            echo $NOW': '$1 >> $LOG
+        fi
 }
 
 function err {

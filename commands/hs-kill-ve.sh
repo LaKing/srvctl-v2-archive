@@ -5,25 +5,26 @@ then ## no identation.
 
 
 ## kill
-hint "kill VE" "Force all containers to stop."
+hint "kill VE" "Force a container to stop."
 if [ "$CMD" == "kill" ]
 then
         argument C
-
+        sudomize
+        authorize
+        
         set_is_running
 
         if $is_running
         then
-                  printf ${yellow}"%-10s"${NC} "KILLING"
+                say_info "KILLING"
                 get_info
                 nfs_unmount
-                lxc-stop -k -n $C
-                        
+                lxc-stop -k -n $C    
         else
                 get_state
-                get_info
-                echo ''        
+                get_info       
         fi
+        echo ''
 ok
 fi
 
@@ -36,24 +37,23 @@ man '
 hint "kill-all" "Force all containers to stop."
 if [ "$CMD" == "kill-all" ]
 then
-
-        for C in $(lxc-ls)
+        sudomize
+    
+        for C in $(lxc_ls)
         do
                 set_is_running
 
                 if $is_running
                 then
-                          printf ${yellow}"%-10s"${NC} "KILLING"
+                        say_info "KILLING"
                         get_info
                         nfs_unmount
-                        lxc-stop -k -n $C
-                        
+                        lxc-stop -k -n $C                      
                 else
                         get_state
-                        get_info
-                        echo ''        
+                        get_info        
                 fi
-
+        echo ''
         done
 
 ok

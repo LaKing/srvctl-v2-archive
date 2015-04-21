@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if $onVE
+if $onVE && $isROOT
 then ## no identation.
 
 

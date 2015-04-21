@@ -1,10 +1,17 @@
 #!/bin/bash
 
+if $isROOT
+then 
+## no identation
+
 ## start or restart service
 hint "SERVICE OP | OP SERVICE" "start|stop|restart|status a service via systemctl.  +|-|!|?"
 
-OP=$2
-SERVICE=$1
+if [ "$2" == "start" ] || [ "$2" == "+" ] || [ "$2" == "restart" ] || [ "$2" == "!" ] || [ "$2" == "stop" ]  || [ "$2" == "-" ] || [ "$2" == "status" ]  || [ "$2" == "?" ]
+then
+    OP=$2
+    SERVICE=$1
+fi 
 
 if [ "$1" == "start" ] || [ "$1" == "+" ] || [ "$1" == "restart" ] || [ "$1" == "!" ] || [ "$1" == "stop" ]  || [ "$1" == "-" ] || [ "$1" == "status" ]  || [ "$1" == "?" ]
 then
@@ -12,17 +19,17 @@ then
     SERVICE=$2
 fi
 
-if [ -f "/usr/lib/systemd/system/$SERVICE.service" ]
+if [ ! -z "$SERVICE" ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/$SERVICE.service" ] 
 then
-    
-
+  
+  if $isROOT   
+  then
+  
     if [ "$OP" == "start" ] || [ "$OP" == "+" ] 
     then
         systemctl enable $SERVICE.service
         systemctl start  $SERVICE.service
-        systemctl status $SERVICE.service
 
-        ok
     fi ## start
 
 
@@ -30,9 +37,7 @@ then
     then
         systemctl enable  $SERVICE.service
         systemctl restart $SERVICE.service
-        systemctl status  $SERVICE.service
 
-        ok
     fi ## restart
 
 
@@ -40,17 +45,13 @@ then
     then
         systemctl disable $SERVICE.service
         systemctl stop $SERVICE.service
-        systemctl status $SERVICE.service
 
-        ok
     fi ## disable
-
-
-    if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
-    then
-        systemctl status $SERVICE.service
-        ok
-    fi ## status
+ 
+  fi
+  
+  systemctl status $SERVICE.service
+  ok
 
 fi
 
@@ -68,3 +69,4 @@ man '
         
 '
 
+fi ## isROOT

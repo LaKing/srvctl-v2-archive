@@ -5,6 +5,32 @@ then ## no identation.
 
 ### regenerate-related functions
 
+function regenerate_sudo_configs {
+ 
+    sudoconf=/etc/sudoers.d/srvctl
+    echo "## srvctl-regenerated sudo file" > $sudoconf
+    echo '' >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add *" >> $sudoconf   
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh exec-all *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh exec-all-backup-db" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh kill *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh kill-all" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh reboot *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh reboot-all" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh remove *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh start *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh start-all" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh stop *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh stop-all" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh disable *" >> $sudoconf
+      
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh status" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh status-all" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh status-usage" >> $sudoconf
+                
+}
+
+
 function regenerate_config_files {
 
         ## scan for imported containers         
@@ -262,7 +288,10 @@ function regenerate_pound_files {
         ## $_C is the local version of $C
         for _C in $(lxc-ls)
         do
-
+                if [ ! -d "$SRV/$_C/cert" ]
+                then
+                    create_certificate $_C
+                fi
 
                 # echo "@ "$_C
                 cfg_dir=/var/pound/$_C
@@ -279,36 +308,35 @@ function regenerate_pound_files {
                         # echo "# "$d
                         if [ ! -f $d/pound.pem ]
                         then
-                                ## TODO check if this is overcomplicated
                                 ## No ready-to-go pound.pem found, attemting to generate one. 
+                                
                                 ## either from some.key and some.crt 
                                 cat $d/*.crt 2> /dev/null >> $d/pound.pem
                                 echo '' >> $d/pound.pem
                                 cat $d/*.key 2> /dev/null >> $d/pound.pem
                                 echo '' >> $d/pound.pem
+                                
                                 ## or from a concrete key.pem and crt.pem
                                 cat $d/crt.pem 2> /dev/null >> $d/pound.pem
                                 echo '' >> $d/pound.pem
                                 cat $d/key.pem 2> /dev/null >> $d/pound.pem
                                 echo '' >> $d/pound.pem
+                                
                                 ## and a ca-bundle.
                                 cat $d/ca-bundle.pem 2> /dev/null >> $d/pound.pem        
                         fi
                         
-                        flag_ca_bundle=" "
-                        if [ -f $d/ca-bundle.pem ]
-                        then
-                                flag_ca_bundle=" -CAfile $d/ca-bundle.pem "
-                        fi
+                        ## As the update-install process adds the ca-bundle, we can check against it ...
+                        cert_status_ca=$(openssl verify -CAfile /etc/pound/pound.pem $d/pound.pem 2> /dev/null | tail -n 1 | tail -c 3)
+                        ## Or check for self-signed / or cert that contains the ca-files itself.
+                        cert_status_ss=$(openssl verify $d/pound.pem $d/pound.pem 2> /dev/null | tail -n 1 | tail -c 3)
 
-                        cert_status=$(openssl verify $flag_ca_bundle $d/pound.pem 2> /dev/null | tail -n 1 | tail -c 3)
-
-                        if [ "$cert_status" == "OK" ]
+                        if [ "$cert_status_ca" == "OK" ] || [ "$cert_status_ss" == "OK" ] 
                         then 
-                                 ## echo "VALID CERT FOUND"
+                                # echo "VALID CERT FOUND"
                                 echo 'Cert "'$d'/pound.pem"' >> /var/pound/https-certificates.cfg
                         else
-                                ## echo "CERT INVALID"
+                                # echo "CERT INVALID"
                                 bak $d/pound.pem
                                 rm -rf $d/pound.pem
                         fi
@@ -801,7 +829,7 @@ function generate_user_structure ## for user $U, Container $C
                 then
                         update_password_hash $U
 
-                        if ! [ -f /home/$U/$C/mnt/.password.sha512 ]
+                        if [ ! -f /home/$U/$C/mnt/.password.sha512 ] && [ -f /home/$U/.password ]
                         then
                                 ln /home/$U/.password.sha512 /home/$U/$C/mnt/.password.sha512
                         fi
@@ -1006,4 +1034,242 @@ __c=0
 }
 
 
+## constants for generate_lxc_config
+## we do some expansion on the IP address, and extract the network prefix.
+if [ "$RANGEv6" != "::1" ] 
+then
+    IPv6_RANGE=$(sipcalc -6 $RANGEv6 2>/dev/null | fgrep Expanded | cut -d '-' -f 2 | xargs)
+    IPv6_RANGE_NETBLOCK=$(echo $IPv6_RANGE | cut -d : -f 1):$(echo $IPv6_RANGE | cut -d : -f 2):$(echo $IPv6_RANGE | cut -d : -f 3):$(echo $IPv6_RANGE | cut -d : -f 4)
 fi
+
+function generate_lxc_config {
+
+## argument container name.
+_c=$1
+
+ntc "Generating lxc configarion files for $_c"
+
+_counter=$(cat $SRV/$_c/config.counter)
+
+_mac=$(to_mac $_counter)
+_ip4=$(to_ip $_counter)        
+
+## four digit hex part only
+_ip6=$(to_ipv6 $_counter)
+
+if [ "$RANGEv6" != "::1" ] 
+then
+
+    __IPv6_1='lxc.network.ipv6.gateway=auto'
+    __IPv6_2='lxc.network.ipv6='$IPv6_RANGE_NETBLOCK':0:1010:'$_ip6':1'
+fi
+
+## note currently working only with range 64 ip addresses.
+
+#lxc.network.type = veth
+#lxc.network.flags = up
+#lxc.network.link = inet-br
+#lxc.network.hwaddr = 00:00:00:aa:'$_mac'
+#lxc.network.ipv4 = 192.168.'$_ip4'/8
+#lxc.network.name = inet-'$_counter'
+
+set_file $SRV/$_c/config '## Template for srvctl created fedora container #'$_counter' '$_c' '$NOW'
+
+## system
+lxc.rootfs = '$SRV'/'$_c'/rootfs
+lxc.include = '$lxc_usr_path'/share/lxc/config/fedora.common.conf
+lxc.utsname = '$_c'
+lxc.autodev = 1
+
+## extra mountpoints
+lxc.mount = '$SRV'/'$_c'/fstab
+
+## networking IPv4
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.link = srv-net
+lxc.network.hwaddr = 00:00:10:10:'$_mac'
+lxc.network.ipv4 = 10.10.'$_ip4'/8
+lxc.network.name = srv-'$_counter'
+lxc.network.ipv4.gateway = auto
+'
+
+## IPv6
+## four digit hex part only
+_ip6=$(to_ipv6 $_counter)
+
+if [ "$RANGEv6" != "::1" ] 
+then
+    echo '## networking IPv6' >> $SRV/$_c/config
+    echo 'lxc.network.ipv6.gateway = auto' >> $SRV/$_c/config
+    echo 'lxc.network.ipv6='$IPv6_RANGE_NETBLOCK':0:1010:'$_ip6':1' >> $SRV/$_c/config
+fi
+
+
+
+## this is there since srvctl 1.x
+echo "/var/srvctl $SRV/$_c/rootfs/var/srvctl none ro,bind 0 0" > $SRV/$_c/fstab
+## in srvctl 2.x we add the folowwing
+echo "$install_dir $SRV/$_c/rootfs/$install_dir none ro,bind 0 0" >> $SRV/$_c/fstab
+
+
+set_file $SRV/$_c/rootfs/etc/resolv.conf "# Generated by srvctl
+search local
+nameserver 10.10.0.1
+"
+
+## err $C? .. $_c !
+echo "10.10."$_ip4 > $SRV/$_c/config.ipv4
+
+}
+
+function set_file_limits {
+
+    ## You can increase the amount of open files and thus the amount of client connections by using "ulimit -n ". 
+    ## For example, to allow pound to accept 5,000 connections and forward 5,000 connection to back end servers (10,000 total) use "ulimit -n 10000".
+    ulimit -n 100000
+
+    ## Hint from Tamás Papp to fix Error: Too many open files
+    sysctl fs.inotify.max_user_watches=81920 >> /dev/null
+    sysctl fs.inotify.max_user_instances=1024 >> /dev/null
+}
+
+function create_named_zone {
+
+        ## argument domain ($C or alias)
+        D=$1
+
+        mkdir -p /var/named/srvctl
+        chown -R named:named /var/named/srvctl
+
+        named_conf=/var/named/srvctl/$D.conf
+        named_slave_conf=/var/named/srvctl/$D.slave.conf
+        named_zone=/var/named/srvctl/$D.zone
+
+        if [ ! -f $named_conf ]
+        then
+## TODO convert to single string and command, this is ugly.
+                echo '## srvctl named.conf '$D > $named_conf
+                echo 'zone "'$D'" {' >> $named_conf
+                echo '        type master;'  >> $named_conf
+                echo '        file "'$named_zone'";' >> $named_conf
+                echo '};' >> $named_conf
+        fi
+
+        if [ ! -f $named_slave_conf ]
+        then
+                echo '## srvctl named.slave.conf '$D > $named_slave_conf
+                echo 'zone "'$D'" {' >> $named_slave_conf
+                echo '        type slave;'  >> $named_slave_conf
+                echo '        masters {'$HOSTIPv4';};'  >> $named_slave_conf
+                echo '        file "'$named_zone'";' >> $named_slave_conf
+                echo '};' >> $named_slave_conf
+        fi
+
+        if [ ! -f $named_zone ]
+        then
+                
+
+                serial_file=/var/named/serial-counter.txt
+
+                if [ ! -f $serial_file ]
+                then
+                  serial='1'        
+                  echo $serial > $serial_file
+                else        
+                  serial=$(($(cat $serial_file)+1))
+                  echo $serial >  $serial_file
+                fi
+
+                set_file $named_zone '$TTL 1D
+@        IN SOA        @ hostmaster.'$CDN'. (
+                                        '$serial'        ; serial
+                                        1D        ; refresh
+                                        1H        ; retry
+                                        1W        ; expire
+                                        3H )        ; minimum
+        IN         NS        ns1.'$CDN'.
+        IN         NS        ns2.'$CDN'.
+*        IN         A        '$HOSTIPv4'
+@        IN         A        '$HOSTIPv4'
+@        IN        MX        10        mail
+        AAAA        ::1'
+
+## TODO add IPv6 support
+
+        fi
+
+        chown named:named $named_conf
+        chown named:named $named_slave_conf
+        chown named:named $named_zone
+
+        ## TODO create a nice file structure and re-enable this.
+        #if [ ! -L $SRV/$C/$D.named.conf ]
+        #then
+        #   ln -s $named_conf $SRV/$C/$D.named.conf
+        #fi
+
+        #if [ ! -L $SRV/$C/$D.named.zone ]
+        #then
+        #   ln -s $named_zone $SRV/$C/$D.named.zone
+        #fi
+}
+
+function wait_for_ve_online {
+
+        ## wait for the container to get up check via keyscan
+        __llimit=300        
+        __n=0
+
+        echo -n '..'
+
+        while [  $__n -lt $__llimit ] 
+        do
+                sleep 1
+                res=$(ssh-keyscan -t rsa -H $1 2> /dev/null)
+
+                if [ "${res:0:3}" == '|1|' ]
+                then
+                        __n=$__llimit 
+                else
+                        echo -n '.'
+                fi
+
+                 let __n=__n+1 
+
+        done
+
+        echo -n " online "
+}
+
+
+function wait_for_ve_connection {
+
+        ## wait for the container to get up check via ssh connect
+        __llimit=300
+        __n=0
+
+        echo -n '..'
+
+        while [  $__n -lt $__llimit ] 
+        do
+                sleep 1
+                res=$(ssh $1 exit 2> /dev/null)
+
+                if [ ! "$?" -gt 0 ]
+                then
+                        __n=$__llimit
+                else
+                        echo -n '.'
+                fi
+
+                 let __n=__n+1 
+
+        done
+
+
+        echo -n " connected "
+}
+
+
+fi ## if onHS

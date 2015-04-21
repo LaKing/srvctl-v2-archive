@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if $onHS
+if $onHS && $isROOT
 then ## no identation.
 
 ## regenerate configs 
-hint "regenerate [all]" "Regenerate configuration files, and restart affected services."
-if [ "$CMD" == "regenerate" ]
+hint "regenerate [all]" "Regenerate configuration files, and restart affected services. (!)"
+if [ "$CMD" == "regenerate" ] || [ "$CMD" == "!" ]
 then
 
         if [ "$2" == "all" ]
@@ -35,7 +35,8 @@ then
 
         regenerate_logfiles
         
-        
+        regenerate_sudo_configs
+         
 ok
 fi ## regenerate
 

@@ -14,7 +14,9 @@
 ## - map ports to localhost
 ## - backup databases 
 ## - upload, download, sync files 
-## - clcone git repos
+## - clone git repos
+
+## argument is a hostname (VE name)
 
 ## If user is root or runs on root privileges, continiue. (TODO: userspace implementation)
 if [ "$UID" == "0" ]
@@ -60,9 +62,9 @@ else
 
     if [ -z "$U" ]
     then
-        echo "Invalid input"
-        exit
+        U=$(whoami)
     fi
+    echo "Using $U@$H"
 
     echo -n "Use interactive mode by default? "
     read -s -r -p "[y/N] " -n 1 -i "y" key

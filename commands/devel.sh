@@ -2,7 +2,7 @@
 
 ## disabled command
 
-if $onHS && $debug
+if $onHS && $debug && $isROOT
 then ## no identation.
 
 hint "reset-install" "This is a developer command - only in debug mode - that will remove all srvctl data including configuration files."
@@ -37,6 +37,3 @@ fi
 
 fi
 
-man '
-    This is a special command for srvctl development. Disable it in production.
-'
