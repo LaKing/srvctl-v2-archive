@@ -23,11 +23,7 @@ then
           exit 11
         fi
 
-        ## $C - container / domain name
-        C=$(echo $C | grep -P '(?=^.{6,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
-        ## Is'nt it a FQDN?
-
-        if [ -z "$C" ]
+        if ! $(is_fqdn $C)
         then
           err "$C failed the domain regexp check. Exiting."
           exit 10
@@ -237,9 +233,9 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 
         ## what user?
         U=$3
-        if [ ! -z "$SUDO_USER" ]
+        if [ ! -z "$SC_SUDO_USER" ]
         then
-            U=$SUDO_USER
+            U=$SC_SUDO_USER
         fi
                 
         echo "$U" > $SRV/$C/users

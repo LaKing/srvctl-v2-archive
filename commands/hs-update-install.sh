@@ -122,29 +122,15 @@ ssl_password=ssl_pass_$password
                         create_certificate /root
                 fi
 
-                if [ -f /root/ca-bundle.pem ]
-                then
-                        no_ca_bundle_hashmark=''
-                        cert_status=$(openssl verify -CAfile /root/ca-bundle.pem /root/crt.pem | tail -n 1 | tail -c 3)
+                        cert_status=$(openssl verify -CAfile /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt /root/crt.pem | tail -n 1 | tail -c 3)
 
                         if [ ! "$cert_status" == "OK" ]
                         then
-                                err "Requirement-check, error: certificate check failed with /root/ca-bundle.pem /root/crt.pem - Exiting"
+                                err "Requirement-check, error: certificate check for /root/crt.pem - Exiting"
                                 exit
 
                         fi
-                else
-                        msg "No ca-bundle.pem found."
-                        no_ca_bundle_hashmark='# '
-                        cert_status=$(openssl verify /root/crt.pem | tail -n 1 | tail -c 3)
 
-                        if [ ! "$cert_status" == "OK" ]
-                        then
-                                err "Requirement-check, error: certificate check failed. /root/crt.pem - Exiting"
-                                exit
-
-                        fi
-                fi
 ## authorized keys. own hosts should have custom values that add into the config when regenerating.
                 
                 if [ ! -f /root/.ssh/own_hosts ] && [ -f /root/.ssh/known_hosts ]
@@ -549,6 +535,9 @@ ListenHTTPS
 
     ## The certificate from root.
     Cert "/etc/pound/pound.pem"
+    
+    ## CA certificates
+    Cert "/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt"
 
     Include "/var/pound/https-includes.cfg"
 
@@ -834,7 +823,7 @@ relay_domains = $mydomain, hash:/etc/postfix/relaydomains
 
 ## SENDING
 ## SMTPS
-'$no_ca_bundle_hashmark'smtpd_tls_CAfile =    /etc/postfix/ca-bundle.pem
+smtpd_tls_CAfile =    /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
 smtpd_tls_cert_file = /etc/postfix/crt.pem
 smtpd_tls_key_file =  /etc/postfix/key.pem
 smtpd_tls_security_level = may

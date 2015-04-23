@@ -289,7 +289,6 @@ function add_user {
         fi
 }
 
-
 function  get_randomstr {
     randomstr=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 }
@@ -337,7 +336,7 @@ function sudomize {
     fi
 }
 
-function authorize { ## usage of container $C
+function authorize { ## sudo access container $C for current user
     _aok=false
     
     if [ ! -z "$SC_SUDO_USER" ]

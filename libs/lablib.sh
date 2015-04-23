@@ -115,6 +115,18 @@ function err {
     SUCC=$SUCC" "$1
 }
 
+function is_fqdn() {
+    ## check if argument is a FQDN - fully qualified domain name
+    local fqdn_test=$(echo $1 | grep -P '(?=^.{6,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
+    # '
+            if [ -z "$fqdn_test" ]
+            then
+              return 1
+            else
+              return 0
+            fi
+}
+
 
 
 ## Lablib functions end here.

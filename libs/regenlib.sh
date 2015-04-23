@@ -27,18 +27,21 @@ function regenerate_sudo_configs {
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh status" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh status-all" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh status-usage" >> $sudoconf
-                
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh import-crt *" >> $sudoconf    
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh import-ca *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-user *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-publickey *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh show-csr *" >> $sudoconf
 }
 
 
 function regenerate_config_files {
 
         ## scan for imported containers         
-        for _S in $(ls $SRV)
+        for _C in $(ls $SRV)
         do            
-            ## is this folder a FQDN?
-            _C=$(echo $_S | grep -P '(?=^.{6,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
-            if [ -z "$_C" ]
+
+            if ! $(is_fqdn $_C)
             then
               continue
             fi
@@ -327,7 +330,7 @@ function regenerate_pound_files {
                         fi
                         
                         ## As the update-install process adds the ca-bundle, we can check against it ...
-                        cert_status_ca=$(openssl verify -CAfile /etc/pound/pound.pem $d/pound.pem 2> /dev/null | tail -n 1 | tail -c 3)
+                        cert_status_ca=$(openssl verify -CAfile /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt $d/pound.pem 2> /dev/null | tail -n 1 | tail -c 3)
                         ## Or check for self-signed / or cert that contains the ca-files itself.
                         cert_status_ss=$(openssl verify $d/pound.pem $d/pound.pem 2> /dev/null | tail -n 1 | tail -c 3)
 
@@ -726,7 +729,7 @@ function regenerate_root_configs {
 
         if [ ! -f /root/.ssh/authorized_keys ]
         then
-          err "WARNING - NO authorized_keys FOR ROOT!"
+          msg "WARNING - NO authorized_keys FOR ROOT!"
           #echo '' >> /root/.ssh/authorized_keys
         fi
 
@@ -920,6 +923,7 @@ function regenerate_users_structure {
                 fi
         done
 
+        ## TODO check why ...
         systemctl restart firewalld.service
 
 }

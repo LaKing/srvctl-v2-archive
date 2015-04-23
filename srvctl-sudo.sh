@@ -8,8 +8,11 @@ then
 fi
 
 ## limited init
-install_dir=/usr/share/srvctl
+isROOT=true
+install_bin=$(realpath "$BASH_SOURCE")
+install_dir=${install_bin:0:-15}
 source $install_dir/init.sh
+isROOT=true
 
 ## silent log entry
 echo "$NOW : [$SUDO_USER@$(hostname) $(pwd)]# $0 $@" >> $LOG
