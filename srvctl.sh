@@ -1,5 +1,5 @@
 #!/bin/bash
-# Last update:2015.04.23-19:36:16
+# Last update:2015.05.26-04:07:25
 # version 2.2.4
 #
 # Server Controll script for Fedora with LXC containers
@@ -32,7 +32,7 @@ do
 done
  
 log "[$(whoami)@$(hostname) $(pwd)]# $0 $@"
-msg "$(head $0 -n 3 | grep version)"
+#msg "$(head $0 -n 3 | grep version)"
 SUCC=""
  
 ## hint provides a sort of help functionality - initialize empty

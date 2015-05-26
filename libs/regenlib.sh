@@ -32,6 +32,7 @@ function regenerate_sudo_configs {
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-user *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-publickey *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh show-csr *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh top" >> $sudoconf
 }
 
 

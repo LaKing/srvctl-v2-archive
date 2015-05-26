@@ -23,6 +23,13 @@ then
             fi
             echo "$line" >> $tmp_file
         done
+        
+        if [ ! -f "$tmp_file" ]
+        then
+            err "Could not write $tmp_file"
+            exit
+        fi
+        
     else
         if [ -z "$SC_SUDO_USER" ]
         then
@@ -67,6 +74,10 @@ then
     rm -rf $tmp_file
 
 fi
+
+man '
+    Public keys allow passwordless ssh access. Srvctl manages key and access to servers and containers.
+'
 
 fi # onHS
 

@@ -57,6 +57,14 @@ then ## no identation.
 
                 ## save these params to the wp folder
                 f=$dir/wp-config.php
+                
+                if [ -f "$f" ]
+                then
+                    msg "There is already a config file. Creating a backup."
+                    bak $f
+                fi
+
+                
                 echo "<?php" > $f
                 echo "// srvctl wordpress wp-config" >> $f
                 echo "define('DB_NAME', '$db_name');" >> $f

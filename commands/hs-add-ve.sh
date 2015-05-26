@@ -10,11 +10,15 @@ if [ "$CMD" == "add" ] && $onHS
 then
 
         argument C 
+        isDEV=false
+
+        ## TODO verify if a domain alias already exists
 
         ## if thi sis a dev site, use the domain without the dev. prefix
-        if [ ${ARG:0:4} == "dev." ]
+        if [ ${C:0:4} == "dev." ]
         then
-                C=${ARG:4}
+                C=${C:4}
+                isDEV=true      
         fi
 
         ## check for human mistake
@@ -51,7 +55,7 @@ then
         echo $NOW > $SRV/$C/creation-date
 
         ## mark as dev site
-        if [ ${ARG:0:4} == "dev." ]
+        if $isDEV
         then
                 echo "true" > $SRV/$C/pound-enable-dev
         fi
@@ -291,7 +295,7 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 
         
         ## if this is a dev. site install codepad
-        if [ ${ARG:0:4} == "dev." ]
+        if $isDEV
         then
                 msg "Setup codepad"
                 ssh $C "srvctl setup-codepad"

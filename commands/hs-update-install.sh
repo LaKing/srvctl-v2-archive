@@ -844,6 +844,10 @@ smtpd_sasl_local_domain = '$CDN'
 
 ## Max 25MB mail size
 message_size_limit=26214400 
+
+## virus scanner
+content_filter=smtp-amavis:[127.0.0.1]:10024
+
 ' >> $pc
         fi ## add postfix directives
 
@@ -886,6 +890,27 @@ virtual   unix  -       n       n       -       -       virtual
 lmtp      unix  -       -       n       -       -       lmtp
 anvil     unix  -       -       n       -       1       anvil
 scache    unix  -       -       n       -       1       scache
+
+## virus scanner
+smtp-amavis unix -    -    n    -    2 smtp
+    -o smtp_data_done_timeout=1200
+    -o smtp_send_xforward_command=yes
+    -o disable_dns_lookups=yes
+127.0.0.1:10025 inet n    -    n    -    - smtpd
+    -o content_filter=
+    -o local_recipient_maps=
+    -o relay_recipient_maps=
+    -o smtpd_restriction_classes=
+    -o smtpd_client_restrictions=
+    -o smtpd_helo_restrictions=
+    -o smtpd_sender_restrictions=
+    -o smtpd_recipient_restrictions=permit_mynetworks,reject
+    -o mynetworks=127.0.0.0/8
+    -o strict_rfc821_envelopes=yes
+    -o smtpd_error_sleep_time=0
+    -o smtpd_soft_error_limit=1001
+    -o smtpd_hard_error_limit=1000
+
 '
 
         cat /root/ca-bundle.pem > /etc/postfix/ca-bundle.pem 2> /dev/null
@@ -1303,6 +1328,33 @@ log "Running updates"
 
 freshclam
 yum -y update
+ 
+## http://www.server-world.info/en/note?os=Fedora_21&p=mail&f=6
+
+yum -y install amavisd-new
+yum -y install clamav-server-systemd
+
+systemctl start amavisd.service
+systemctl status amavisd.service
+
+systemctl start spamassassin
+systemctl status spamassassin
+
+systemctl enable spamassassin
+/sbin/chkconfig amavisd on
+/sbin/chkconfig clamd.amavisd on
+
+systemctl start clamd@amavisd 
+## TODO enable it for real
+#systemctl enable clamd@amavisd 
+
+## /etc/amavisd/amavisd.conf
+sed_file "$mydomain = 'example.com';   # a convenient default for other settings"
+sed_file "# $myhostname = 'host.example.com';  # must be a fully-qualified domain name!"
+
+# $notify_method  = 'smtp:[127.0.0.1]:10025';
+# $forward_method = 'smtp:[127.0.0.1]:10025';  # set to undef with milter!
+
 
 ## configure firewalld
 firewall-cmd --permanent --add-service=http

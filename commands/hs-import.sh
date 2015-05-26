@@ -29,6 +29,10 @@ then
 ok
 fi
 
+man '
+    The certificate signing request to be used for signing. mandatory for HTTPS connections.
+'
+
 hint "import-crt [CRT]" "Import a signed certificate for secure https connections of the VE."
 
 if [ "$CMD" == "import-crt" ]
@@ -55,31 +59,50 @@ then
             msg "Import CRT from file-path."
         fi
         
-        tmp_file=$ARG
+        imp_file=$ARG
 
         if [ ! -f "$ARG" ]
         then
-            tmp_file=$CWD/$ARG
+            imp_file=$CWD/$ARG
         fi
     
-        if [ ! -f "$tmp_file" ]
+        if [ ! -f "$imp_file" ]
         then
-            err "Certificate not found. $tmp_file"
+            err "Certificate not found. $imp_file"
             exit
+        else
+            cat $imp_file > $tmp_file
         fi
     fi  
 
-
-    crt_subject=$(openssl x509 -subject -noout -in $tmp_file)
-    dbg "$crt_subject"
-    crt_cn=$(echo $crt_subject | grep -o -P '(?<=CN=).*(?=/)')
-
-    if [ -z "$crt_cn" ]
+ #dbg "@&@ USER:$USER SUDO:$SC_SUDO_USER isROOT: $isROOT"
+ 
+    _path=''
+    if $isROOT
     then
-        err "No domain name could be extracted from the CN name field of the certificate."
+        _path=$SRV
+    else
+        _path="/home/$USER/$SC_SUDO_USER"
+    fi
+    
+    C=''
+
+    crt_subject=$(openssl x509 -subject -noout -in $tmp_file 2> /dev/null)
+    
+    if [ -z "$crt_subject" ]
+    then
+        err "Not a certificate."
         exit
     fi
-
+    
+    
+    #dbg "$crt_subject"
+    ## example subject= /OU=Domain Control Validated/OU=Gandi Standard SSL/CN=otvoreni.market
+    
+    ## SUBSTRACT COMMON NAME from certificate - TODO work on this
+    crt_cn=$(echo $crt_subject | grep -o -P '(?<=CN=).*(?=/)')
+    
+    
     if [ "${crt_cn:0:2}" == "*." ]
     then
         crt_cn="${crt_cn:2}"
@@ -90,31 +113,67 @@ then
         crt_cn="${crt_cn:4}"
     fi
     
-    ## container name is extracted from the certificate
-    C=$crt_cn
-    
-    if [ ! -d "$SRV/$C" ]
+    if [ -d "$_path/$crt_cn" ] && ! [ -z "$crt_cn" ]
     then
-        err "Could not find container $C"
-        exit
+        ## looks like an existing domain was found
+        C="$crt_cn"
+    fi        
+    
+    if [ -z "$C" ]
+    then
+        
+        crt_altnames=$(openssl x509 -text -in $tmp_file | grep -A 1 "X509v3 Subject Alternative Name:" | tail -n 1 | xargs)
+        IFS=', ' read -a array <<< "$crt_altnames"
+
+        ## try to find a matching pair
+        for element in "${array[@]}"
+        do
+            crt_an="${element:4}"
+
+            if [ "${crt_an:0:2}" == "*." ]
+            then
+                crt_an="${crt_an:2}"
+            fi
+    
+            if [ "${crt_an:0:4}" == "www." ]
+            then
+                crt_an="${crt_an:4}"
+            fi        
+        
+            if [ -d "$_path/$crt_an" ]
+            then
+                ## looks like an existing domain was found
+                C="$crt_an"
+                break
+            fi        
+        
+        done
     fi
     
+    if [ -z "$C" ]
+    then
+        "Could not find a matching container. $crt_cn $crt_altnames"
+    fi
+    
+    ## container name is extracted from the certificate
+        
     if ! $isROOT
     then
-        dbg "@SUDOMIZE USER:$USER SUDO:$SC_SUDO_USER isROOT: $isROOT"
+        #dbg "@SUDOMIZE USER:$USER SUDO:$SC_SUDO_USER isROOT: $isROOT"
         sudo $install_dir/srvctl-sudo.sh import-crt $tmp_file
         exit
     fi
     
     authorize
+        #dbg "AUTHORIZED"
 
-    if [ ! -z "$crt_cn" ]
+    if [ ! -d "$SRV/$C" ] || [ -z "$C" ]
     then
-        msg "Certificate for $crt_cn"
-    else
+        err "Could not find container $C"
         exit
+    else 
+        msg "Using container $C"
     fi
-
 
     cat $tmp_file > $SRV/$C/cert/$C.import.crt
     rm -rf $tmp_file
@@ -143,7 +202,8 @@ then
         systemctl status pound.service
         #echo 'Cert "'$SRV/$C/cert'/pound.pem"' >> /var/pound/https-certificates.cfg
     else
-        err "Could not verify the certificate. $cert_status"
+        err "Could not verify the certificate."
+        openssl verify -CAfile /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt $SRV/$C/cert/$C.import.pem
         # echo "CERT INVALID"
         bak $SRV/$C/cert/import.pem
         rm -rf $SRV/$C/cert/import.pem

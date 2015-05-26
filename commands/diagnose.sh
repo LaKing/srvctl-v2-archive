@@ -1,10 +1,10 @@
 #!/bin/bash
 
-hint "diagnose" "Run a set of diagnostic commands."
-if [ "$CMD" == "diagnose" ]
-then        
+hint "scan" "Run virus diagnostic commands"
+if [ "$CMD" == "scan" ]
+then
         msg "VIRUS CHECK"
-        karantene_path="$(realpath ~)"
+        karantene_path="$(realpath ~)/srvctl-quarantine"
         mkdir -p $karantene_path
         
         if $isUSER
@@ -12,10 +12,20 @@ then
             clamscan -r --move=$karantene_path ~
         else
             freshclam 
-            clamscan -r --move=$karantene_path /home
+            #clamscan -r --move=$karantene_path /home
             clamscan -r --move=$karantene_path /srv
-            clamscan -r --move=$karantene_path /var/www
+            #clamscan -r --move=$karantene_path /var/www
         fi
+fi
+man '
+    Set of troubleshooting commands. 
+    Scan for viruses with clamscan, and put them innto a quarantine folder.
+'
+
+hint "diagnose" "Run a set of diagnostic commands."
+if [ "$CMD" == "diagnose" ]
+then        
+
         #echo "Postfix: "$(systemctl is-active postfix.service)        
         #echo "Dovecot: "$(systemctl is-active dovecot.service)
 
@@ -27,6 +37,7 @@ then
         systemctl status postfix.service
         systemctl status pound.service
         systemctl status fail2ban.service
+        systemctl status clamd.amavisd.service
         fail2ban-client status
 
         msg "NETWORK PORTS and PROTOCOLLS"
@@ -56,9 +67,13 @@ then
         msg "CONNECTED SHELL USERS"
         w
         
+        if [ ! -z "$(curl http://www.spamhaus.org/query/bl?ip=$HOSTIPv4 2> /dev/null | grep "$HOSTIPv4 is listed")" ]
+        then
+            err "CHECK $HOSTIPv4 AT spamhouse.org -  http://www.spamhaus.org/query/bl?ip=$HOSTIPv4"
+        fi
 ok
 fi
 man '
     Set of troubleshooting commands. 
-    Scan for viruses first, then display status messages, and list important network port statuses.
+    Display status messages of services, and list important network port statuses.
 '

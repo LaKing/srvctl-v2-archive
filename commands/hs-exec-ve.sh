@@ -8,7 +8,7 @@ hint "exec-all 'CMD [..]'" "Execute a command on all running containers."
 if [ "$CMD" == "exec-all" ]
 then
 
-    if [ -z "$2" ]
+    if [ -z "$ARG" ]
     then
         err "No command specified to execute on containers."
         exit
@@ -77,5 +77,43 @@ man '
     This command will run srvctl backup-db on all running containers.
     It will create backups of all MariaDB databases in the VE, sql format.
 '
+
+## exec-all backup-db
+hint "top" "Show table of processes on all running containers."
+if [ "$CMD" == "top" ]
+then
+
+    sudomize
+    
+    tmp_file=$TMP/root-top
+    if ! [ -z "$SC_SUDO_USER" ]
+    then
+        tmp_file=$TMP/$SC_SUDO_USER-top
+    fi
+        
+    echo "" > $tmp_file
+    
+    
+    for C in $(lxc_ls)
+    do     
+        set_is_running    
+        if $is_running
+        then
+            echo $C
+            echo "--- $C ---" >> $tmp_file
+            ssh -t $C "top -b -n 1" >> $tmp_file
+        fi
+               
+    done
+    
+ cat $tmp_file
+
+ok
+fi
+man '
+    This command will run top with one run on all running containers.
+    top may help to identify hanging or resource intensive processes.
+'
+
 
 fi
