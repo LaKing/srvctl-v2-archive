@@ -56,8 +56,8 @@ then
                 SQL="CREATE DATABASE IF NOT EXISTS $db_name"
                 ntc "$SQL"
                 mysql $MDA -e "$SQL"
-
-
+                
+                ## *.*  - ?
                 SQL="GRANT ALL ON *.* TO '$db_usr'@'localhost' IDENTIFIED BY '$db_pwd'; flush privileges;"
                 ntc "$SQL"
                 mysql $MDA -e "$SQL"

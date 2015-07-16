@@ -352,10 +352,13 @@ function regenerate_pound_files {
                 _http_port=80
                 _https_port=443
                 _host=$_C
+
                 ## used in the second part on redirects
                 _http_mark='http'                                                                                
                 _https_mark='https'
 
+                ## a-b-c.domain.org notation
+                _DC=$(echo $_C | tr '.' '-')
                 
 
                 if [ -f $SRV/$_C/pound-host ]
@@ -378,11 +381,14 @@ function regenerate_pound_files {
                 then
 
                         ## Direct Developer DomainName - useful if your domain is not registered / dns has problems
-                        if $ENABLE_DDDN
-                        then
+                        ## Note: always enabled.
+                        #if $ENABLE_DDDN
+                        #then
+                                
+                        
                                 set_file $cfg_dir/dddn-http-service '## srvctl dddn-http-service '$_C' '$_ip' 
                                 Service
-                                          HeadRequire "Host: '$_C'.'$DDN'"
+                                          HeadRequire "Host: '$_DC'.'$DDN'"
                                           BackEnd
                                               Address '$_C'
                                               Port    '$_http_port'
@@ -392,7 +398,7 @@ function regenerate_pound_files {
  
                                 set_file $cfg_dir/dddn-https-service '## srvctl dddn-https-service '$_C' '$_ip'
                                 Service
-                                          HeadRequire "Host: '$_C'.'$DDN'"
+                                          HeadRequire "Host: '$_DC'.'$DDN'"
                                           BackEnd
                                               Address '$_C'
                                               Port    '$_https_port'
@@ -403,7 +409,7 @@ function regenerate_pound_files {
 
                                 echo 'Include "'$cfg_dir/dddn-http-service'"' >> /var/pound/http-dddn-domains.cfg
                                 echo 'Include "'$cfg_dir/dddn-https-service'"' >> /var/pound/https-dddn-domains.cfg
-                        fi 
+                        #fi 
 
 
                         ## Directly addressed alternative pound domain on custom port
@@ -452,7 +458,6 @@ function regenerate_pound_files {
                                 echo 'Include "'$cfg_dir/altdomain-https-service'"' >> /var/pound/https-domains.cfg
                         fi
                         
-
                         if [ -f $SRV/$_C/pound-enable-dev ]
                         then
                                 set_file $cfg_dir/dev-http-service '## srvctl dev-http-service '$_C' '$_ip'
@@ -571,7 +576,7 @@ function regenerate_pound_files {
                         do
                                 ## dnl will count the dots in the domain - for priorizing domains with more dots
                                 dnl=$(echo $A | grep -o "\." | grep -c "\.")
-
+# TODO: BUGGED!!!!
 
                                 if [ -f $SRV/$_C/pound-redirect ] && [ ! -z $(cat $SRV/$_C/pound-redirect) ]
                                 then
@@ -1150,6 +1155,14 @@ function create_named_zone {
         named_conf=/var/named/srvctl/$D.conf
         named_slave_conf=/var/named/srvctl/$D.slave.conf
         named_zone=/var/named/srvctl/$D.zone
+        
+        mail_server="mail"
+
+        if [ -f "$SRV/$C/dns-mx-record" ] && [ ! -z "$(cat $SRV/$C/dns-mx-record)" ]
+        then
+            ## TODO validate entry.
+            mail_server="$(cat $SRV/$C/dns-mx-record | xargs)."            
+        fi
 
         if [ ! -f $named_conf ]
         then
@@ -1197,7 +1210,7 @@ function create_named_zone {
         IN         NS        ns2.'$CDN'.
 *        IN         A        '$HOSTIPv4'
 @        IN         A        '$HOSTIPv4'
-@        IN        MX        10        mail
+@        IN        MX        10        '${mail_server,,}'
         AAAA        ::1'
 
 ## TODO add IPv6 support

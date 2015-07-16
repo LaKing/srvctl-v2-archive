@@ -258,7 +258,7 @@ function update_password {
                 ## generate new password
                 get_password
                 echo $password > /home/$_u/.password
-                log "User: $_u password: $password set on "$(hostname)
+                log "Password is $password for $_u@"$(hostname)
         else
                 ## use existing password
                 password=$(cat /home/$_u/.password)

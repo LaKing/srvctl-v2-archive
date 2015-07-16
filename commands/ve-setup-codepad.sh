@@ -3,8 +3,8 @@
 if $onVE  && $isROOT
 then ## no identation.
 
-hint "setup-codepad [apache|node]" "Install codepad and start a new project."
-if [ "$CMD" == "setup-codepad" ]
+hint "setup-codepad [apache|node]" "Install etherpad and codepad and start a new project. The command setup-codepad-release will use the latest etherpad release instead of git."
+if [ "$CMD" == "setup-codepad" ] || [ "$CMD" == "setup-codepad-release" ]
 then
 
                 project_type=$2
@@ -38,12 +38,28 @@ then
                         git pull
 
                         npm update ep_codepad
-                        npm update ep_cursortrace
 
-                else        
-                        cd /srv        
-                        git clone git://github.com/ether/etherpad-lite.git
+                else 
                 
+                       cd /srv
+                       
+                       if [ "$CMD" == "setup-codepad" ]
+                       then     
+                            cd /srv        
+                            git clone git://github.com/ether/etherpad-lite.git
+                       fi
+                       
+                       if [ "$CMD" == "setup-codepad-release" ]
+                       then   
+                            ## insead of git, we could use a latest release as that is more stable.
+                            version="$(npm info ep_codepad | grep description)"
+                            version=${version:30:5}
+                        
+                            wget https://github.com/ether/etherpad-lite/archive/$version.zip
+                            unzip $version.zip
+                            mv /srv/etherpad-lite-$version /srv/etherpad-lite
+                        fi
+                        
                         cd /srv/etherpad-lite 
                         npm install ep_codepad
                         #npm install ep_cursortrace
@@ -415,5 +431,5 @@ man '
     Install, and set up codepad a collaborative code editor, or better said a collaborative online development environment.
     It should be reached on the dev. subdomain with https - this however needs to enabled on the host. (pound-enable-dev)
     Default is to create a node project, and a basic hello world application. 
-    Homepage: http://D250.hu
+    Homepage: http://codepad.etherpad.org/ and http://D250.hu
 '

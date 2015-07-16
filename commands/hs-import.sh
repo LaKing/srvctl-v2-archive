@@ -77,6 +77,10 @@ then
 
  #dbg "@&@ USER:$USER SUDO:$SC_SUDO_USER isROOT: $isROOT"
  
+    msg "--- Certificate ---"
+    openssl x509 -text -in $tmp_file
+    msg "-------------------"
+ 
     _path=''
     if $isROOT
     then
@@ -152,7 +156,8 @@ then
     
     if [ -z "$C" ]
     then
-        "Could not find a matching container. $crt_cn $crt_altnames"
+       msg "Could not find a matching container. $crt_cn $crt_altnames"
+       exit
     fi
     
     ## container name is extracted from the certificate
