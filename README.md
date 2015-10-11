@@ -69,5 +69,5 @@ As the software packages under it change, this script is always under constructi
 Recommended only for administrators / experts, who know what they do! Use it on your own risk!
 If you use or plan to use this script you should contact me for support.
 
-[Absolute README link](http://srvctl.d250.hu/)
+[current srvctl documentation](http://srvctl.d250.hu/)
 
