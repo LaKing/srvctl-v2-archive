@@ -54,17 +54,22 @@ function secure_mariadb {
                 if [ "$?" -ne 0 ]
                 then
                         err 'CONNECTION FAILED using '$MDF
-                        MDA="-u root" 
+                        MDA="-u root"
+                        
+                        mysql $MDA -e exit 2> /dev/null
+        
+                        if [ "$?" -ne 0 ]
+                        then
+                            err 'CONNECTION FAILED without password'
+                        else
+                            err "CONNECTED without password, and not with $MDF"
+                        fi    
+                        
+                else
+                        msg "CONNECTION to mysql is OK"
                 fi
                 
-                mysql $MDA -e exit 2> /dev/null
 
-                if [ "$?" -ne 0 ]
-                then
-                        err 'CONNECTION FAILED without password'
-                else
-                        err "CONNECTED without password, and not with $MDF"
-                fi
 
         else
         
