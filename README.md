@@ -1,11 +1,15 @@
 Fedora srvctl
 ==============
 
-srvctl can manage LXC containers
-- Web configuration
-- Mail configuration
-- User configuratin
-- CMS installation
+My implementation of a virtual serverfarm manager, controlling the host and some VE's.
+
+srvctl can manage LXC containers on Fedora
+- Webserver-farm configuration
+- Mailserver-farm configuration
+- User access configuration
+- CMS installation on containers
+.. and so on.
+
 
 As of version 2.0.0 - fedora 21
 
@@ -13,8 +17,6 @@ On the host:
 ```
 [root@localhost.localdomain /root]# /usr/bin/sc 
 # srvctl version 2.0.0
-No Command.
-Usage: srvctl command [argument]
 list of currently active commands:
   version                               Display what srvctl version we are using.       
   SERVICE OP                            start|stop|restart|status a service via systemctl.  +|-|!|?
@@ -45,8 +47,6 @@ On the guest, the VE
 ```
 [root@test.me /root/srvctl]# /usr/bin/sc
 # srvctl version 2.0.0
-No Command.
-Usage: srvctl command [argument]
 list of currently active commands:
   version                               Display what srvctl version we are using.       
   SERVICE OP                            start|stop|restart|status a service via systemctl.  +|-|!|?
@@ -63,11 +63,11 @@ list of currently active commands:
 
 ```
 
-All bash scripts are for Fedora based systems, but eventually can be ported to other distributions too.
-
-Think of it as a virtual serverfarm manager, controlling the host and some VE's.
+All bash scripts are for Fedora based systems.
 
 As the software packages under it change, this script is always under construction.
-Recommended for administrators / experts, who know what they do! Use it on your own risks!
+Recommended only for administrators / experts, who know what they do! Use it on your own risk!
 If you use or plan to use this script you should contact me for support.
+
+[Absolute README link](http://srvctl.d250.hu/)
 
