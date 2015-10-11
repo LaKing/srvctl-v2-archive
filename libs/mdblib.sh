@@ -12,10 +12,10 @@ function check_mariadb_connection {
 
         if [ "$?" -ne 0 ]
         then
-                err 'CONNECTION FAILED to mariadb '$MDA
+                err "CONNECTION FAILED to mariadb $MDA"
                 exit
         else
-                msg '.. mysql connected'
+                msg ".. mysql connected"
         fi
 }
 
