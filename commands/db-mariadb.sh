@@ -22,6 +22,8 @@ then
         hint "mysql [CMD..]" "Enter mariadb/mysql as root, or execute SQL command."
         if  [ "$CMD" == "mysql" ]
         then
+                check_mariadb_connection
+                
                 if [ -z "$2" ]
                 then
                         mysql $MDA
@@ -34,7 +36,8 @@ then
         hint "import-db DATABASE" "Import a mysql database."
         if [ "$CMD" == "import-db" ] 
         then
-
+                check_mariadb_connection
+                
                 argument db
                 
                 ## TODO check if file exists
@@ -51,6 +54,8 @@ then
         hint "add-db DATABASE" "Add a new database."
         if [ "$CMD" == "add-db" ] 
         then
+                check_mariadb_connection
+        
                 #MDA="--defaults-file=$MDF -u root"
 
                 argument db_name
@@ -129,9 +134,10 @@ then
         fi ## reset-db-root-password
 
         hint "backup-db [clean]" "Create a backup of the Mysql/MariaDB database, Optionally clean older backups."
-        if [ "$CMD" == "backup-db" ] 
+        if [ "$CMD" == "backup-db" ]             
         then
-
+                check_mariadb_connection
+                
                 log "Creating backup of Mysql/Mariadb databases."
 
                 old_backup=$(ls -d /srv/backup-db/* 2> /dev/null)

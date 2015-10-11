@@ -12,7 +12,7 @@ function check_mariadb_connection {
 
         if [ "$?" -ne 0 ]
         then
-                err 'CONNECTION FAILED'
+                err 'CONNECTION FAILED to mariadb'
                 exit
         else
                 msg '.. mysql connected'
@@ -104,7 +104,9 @@ function secure_mariadb {
 
 ## Add new database
 function add_mariadb_db {
-
+    
+        check_mariadb_connection
+        
         ## input $dbd database-definition - basically the database name.
         ## $MDA MaridaDB / MysqlDatabase - Argument        
 
@@ -128,10 +130,20 @@ function add_mariadb_db {
         SQL="CREATE DATABASE IF NOT EXISTS $db_name;"
         ntc "$SQL"
         mysql $MDA -e "$SQL"
+        
+        if ! [ "$?" -ne 0 ]
+        then
+            err "CONNECTION FAILED. Could not use mariadb, ... $MDA"
+        fi
 
         SQL="GRANT ALL ON $db_name.* TO '$db_usr'@'localhost' IDENTIFIED BY '$db_pwd'; flush privileges;"
         ntc "$SQL"
         mysql $MDA -e "$SQL"
+        
+        if ! [ "$?" -ne 0 ]
+        then
+            err "CONNECTION FAILED. Could not use mariadb, ... $MDA"
+        fi
 
         ## save these params to etc
         f=/etc/mysqluser.conf
