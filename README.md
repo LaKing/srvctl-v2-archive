@@ -71,3 +71,6 @@ If you use or plan to use this script you should contact me for support.
 
 [current srvctl documentation](http://srvctl.d250.hu/)
 
+[rpm files](ftp://d250.hu/fedora-release/)
+However, currently, updating rpm's does not work.
+
