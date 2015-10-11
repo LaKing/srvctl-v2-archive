@@ -7,7 +7,7 @@ then ## no identation.
         if [ "$CMD" == "add-joomla" ]
         then        
 
-                setup_mariadb
+                secure_mariadb
 
                 URI=$2
 
@@ -165,3 +165,5 @@ man '
     Use the github release of Joomla! Create configuration files.
     http://www.joomla.org/
 '
+
+

@@ -8,7 +8,7 @@ then ## no identation.
         then
                 pm install wordpress
 
-                setup_mariadb
+                secure_mariadb
 
                 URI=$2
 
@@ -158,3 +158,5 @@ man '
     Install the latest wordpress from wordpress.org, and create configuration files.
     Homepage: https://wordpress.org/
 '
+
+

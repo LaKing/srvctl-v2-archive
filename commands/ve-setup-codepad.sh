@@ -19,7 +19,7 @@ then
 
                 msg $project_type-project
 
-                setup_mariadb
+                secure_mariadb
 
                 ## install packages
                 pm install nodejs

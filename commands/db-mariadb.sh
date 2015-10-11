@@ -11,7 +11,14 @@ then
           
 
         setup_mariadb
-
+        
+        hint "secure-mariadb" "Add a root password, remove test database."
+        if  [ "$CMD" == "secure-mariadb" ]
+        then
+                secure_mariadb
+        ok
+        fi
+        
         hint "mysql [CMD..]" "Enter mariadb/mysql as root, or execute SQL command."
         if  [ "$CMD" == "mysql" ]
         then
