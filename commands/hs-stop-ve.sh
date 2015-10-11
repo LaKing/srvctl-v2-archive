@@ -42,7 +42,7 @@ then
         
         if [ "$CMD" == "disable" ]
         then
-                echo $NOW > $SRV/$C/disabled
+                echo $NOW > $SRV/$C/settings/disabled
         fi
         echo ''                
 
@@ -55,11 +55,15 @@ if [ "$CMD" == "stop-all" ]
 then
     
     sudomize
-
+        for C in $(lxc_ls)
+        do
+            nfs_unmount
+        done 
+        
         for C in $(lxc_ls)
         do
 
-                nfs_unmount
+                #nfs_unmount
 
                 set_is_running
 
@@ -67,8 +71,8 @@ then
                 then
                         printf ${yellow}"%-10s"${NC} "SHUTDOWN"
                         get_info
-                        nfs_unmount
-                        ssh $C shutdown -P now
+                        #nfs_unmount
+                        ssh $C shutdown -P now &
                 else 
                         get_state
                         get_info
@@ -76,6 +80,26 @@ then
 
                 echo ''        
 
+        done
+        
+        container_running=true  
+        while $container_running
+        do
+            container_running=false
+            sleep 10       
+            msg "Waiting for all containers to stop .."
+            for C in $(lxc_ls)
+            do
+                info=$(lxc-info -s -n $C)
+                state=${info:16}
+
+                if [ "$state" == "RUNNING" ]
+                then
+                    echo $C
+                    container_running=true
+                fi
+            done
+        
         done        
 
 ok
@@ -86,3 +110,5 @@ man '
 '
 
 fi
+
+

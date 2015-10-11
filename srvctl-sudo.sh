@@ -13,6 +13,7 @@ install_bin=$(realpath "$BASH_SOURCE")
 install_dir=${install_bin:0:-15}
 source $install_dir/init.sh
 isROOT=true
+isSUDO=true
 
 ## silent log entry
 echo "$NOW : [$SUDO_USER@$(hostname) $(pwd)]# $0 $@" >> $LOG
@@ -37,7 +38,13 @@ then
 fi
 
 ##
+
+## obsolete
 SC_SUDO_USER=$SUDO_USER
+
+#the real thing
+SC_USER=$SUDO_USER
+
 
 ## init libs
 for libfile in $install_dir/libs/*
@@ -67,3 +74,4 @@ done
 
 ## return to the directory we started from.
 cd $CWD >> /dev/null 2> /dev/null
+

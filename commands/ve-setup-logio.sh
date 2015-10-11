@@ -8,8 +8,8 @@ hint "setup-logio" "Install log.io, a web-browser based realtime log monitoring 
 if [ "$CMD" == "setup-logio" ]
 then
                 ## install packages
-                yum -y install nodejs
-                yum -y install npm
+                pm install nodejs
+                pm install npm
 
                 cd /srv
 
@@ -137,20 +137,7 @@ whoami > /var/log/logio/who
 chmod 770 /srv/logio.sh
 chown root:srv /srv/logio.sh
 
-set_file /lib/systemd/system/logio.service '## srvctl generated
-[Unit]
-Description=Log.io, a web-browser based realtime log monitoring tool..
-After=syslog.target network.target
-
-[Service]
-Type=simple
-ExecStart=/srv/logio.sh
-User=srv
-Group=srv
-
-[Install]
-WantedBy=multi-user.target
-'
+source $install_dir/ve-install/unitfiles.sh
 
         systemctl enable logio.service
         systemctl start logio.service
@@ -173,3 +160,5 @@ man '
     It should be reached on the log. subdomain with http - this however needs to enabled on the host. (pound-enable-log)
     Homepage: http://logio.org/
 '
+
+

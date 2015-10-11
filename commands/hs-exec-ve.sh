@@ -84,12 +84,8 @@ if [ "$CMD" == "top" ]
 then
 
     sudomize
-    
-    tmp_file=$TMP/root-top
-    if ! [ -z "$SC_SUDO_USER" ]
-    then
-        tmp_file=$TMP/$SC_SUDO_USER-top
-    fi
+    tmp_file=$TMP/$SC_USER-top
+
         
     echo "" > $tmp_file
     
@@ -117,3 +113,5 @@ man '
 
 
 fi
+
+

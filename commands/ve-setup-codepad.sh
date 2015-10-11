@@ -22,11 +22,11 @@ then
                 setup_mariadb
 
                 ## install packages
-                yum -y install nodejs
-                yum -y install npm
-                yum -y install gzip git-core curl python openssl-devel
-                yum -y install postgresql-devel
-                yum -y install wget                
+                pm install nodejs
+                pm install npm
+                pm install gzip git-core curl python openssl-devel
+                pm install postgresql-devel
+                pm install wget                
 
                 npm -g install nodemon
                 
@@ -121,7 +121,7 @@ then
     "project_path": "'$project_path'",
     "log_path": "'$log_path'",
     "play_url": "http://'$C'",
-    "push_action": "cd '$project_path' && git add . && git commit -m codepad-auto && git push"
+    "push_action": "cd '$project_path' && git add -A . && git commit -m codepad-auto && git push"
   },
   "title": "'$C'",
   "favicon": "favicon.ico",
@@ -200,21 +200,7 @@ done
 ## // TODO: After mysql
 
                 ## proper way is to create a service to run codepad
-                set_file /lib/systemd/system/codepad.service '## srvctl generated
-[Unit]
-Description=Codepad, the etherpad-lite based collaborative code editor.
-After=syslog.target network.target
-After=mariadb.service
-
-[Service]
-Type=simple
-ExecStart=/srv/codepad.sh
-User=codepad
-Group=codepad
-
-[Install]
-WantedBy=multi-user.target
-'
+                source $install_dir/ve-install/unitfiles.sh
 
 
                 systemctl daemon-reload
@@ -232,61 +218,105 @@ WantedBy=multi-user.target
                         cat /etc/pki/tls/certs/localhost.crt > /var/node/crt.pem
                         chown node:node /var/node
 
-                        ## create sample js file
+
+                        npm -g install serve-static
+                        npm -g install finalhandler
+
+                        ## create sample js webserver
 
                         set_file /srv/node-project/server.js '/* srvctl generated hello-node sample file */
 
-console.log("START");
+ /* srvctl generated hello-node sample file */
 
-/*
-// CONSOLE-hello-world Sheep-counting 
-function sleep(callback) {
-  var now = new Date().getTime();
-  while(new Date().getTime() < now + 1000) {
-   // do nothing
-  }
-  callback();
-}
- 
-console.log("Counting sheeps, .. ");
-for(var i = 1; i < 50; i++) {
-  sleep(function() {console.log(i)});
-}
-*/
+ console.log("START");
 
-// HTTP-hello-world
-// Load the http module to create an http server.
-var http = require("http");
+ /*
+ // CONSOLE-hello-world Sheep-counting 
+ function sleep(callback) {
+   var now = new Date().getTime();
+   while(new Date().getTime() < now + 1000) {
+    // do nothing
+   }
+   callback();
+ }
+  
+ console.log("Counting sheeps, .. ");
+ for(var i = 1; i < 50; i++) {
+   sleep(function() {console.log(i)});
+ }
+ */
 
-// Configure our HTTP server to respond with Hello World to all requests.
-var server = http.createServer(function (request, response) {
-  response.writeHead(200, {"Content-Type": "text/plain"});
-  response.end("Hello World\n");
-});
-
-// Listen on port 8000, IP defaults to 127.0.0.1
-server.listen(8080);
-
-// HTTPS-hello-world
-var https = require("https");
-var fs = require("fs");
-
-var options = {
-  key: fs.readFileSync("/var/node/key.pem"),
-  cert: fs.readFileSync("/var/node/crt.pem")
-};
-
-https.createServer(options, function (req, res) {
-  res.writeHead(200);
-  res.end("Hello secure world\n");
-}).listen(8443);
-
-// Put a friendly message on the terminal
-console.log("Server running at http://'$C'/ and at https://'$C'/");
+ // static file server and a dynamic test response
 
 
-console.log("END");
+ // npm install serve-static
+ // npm install finalhandler
+
+ // static file server
+ var finalhandler = require("finalhandler");
+ var serveStatic = require("serve-static");
+ var serve = serveStatic("static", {
+     "index": ["index.html", "index.htm"]
+ });
+
+ // HTTP-hello-world
+ // Load the http module to create an http server.
+ var http = require("http");
+
+ // Configure our HTTP server to respond with Hello World to all requests.
+ var http_server = http.createServer(function(req, res) {
+
+
+     if (req.url == "/test") {
+         res.writeHead(200, {
+             "Content-Type": "text/plain"
+         });
+         res.end("Hello test");
+     } else {
+         var done = finalhandler(req, res);
+         serve(req, res, done);
+     }
+ });
+
+ // Listen on port 8000, IP defaults to 127.0.0.1
+ http_server.listen(8080);
+
+ // HTTPS-hello-world
+ var https = require("https");
+ var fs = require("fs");
+
+ var options = {
+     key: fs.readFileSync("/var/node/key.pem"),
+     cert: fs.readFileSync("/var/node/crt.pem")
+ };
+
+ var https_server = https.createServer(options, function(req, res) {
+
+     if (req.url == "/test") {
+         res.writeHead(200, {
+             "Content-Type": "text/plain"
+         });
+         res.end("Hello secure test");
+     } else {
+         var done = finalhandler(req, res);
+         serve(req, res, done);
+     }
+ });
+
+ https_server.listen(8443);
+
+ // Put a friendly message on the terminal
+ console.log("Server running at http://kelevra.d250.hu/ and at https://kelevra.d250.hu/");
+
+
+ console.log("END");
 '
+
+                        ## create sample static content
+                        mkdir -p /srv/node-project/static
+                        set_file /srv/node-project/static/index.html 'Hello static world'
+                        
+
                         ## prepare logging capabilities
                         mkdir -p /var/log/node-project
                         chown node:codepad /var/log/node-project
@@ -301,33 +331,20 @@ chmod 750 /var/log/node-project
 
 whoami > /var/log/node-project/who
 
+export NODE_PATH="/usr/lib/node_modules"
+
 cd /srv/node-project
 
 nodemon /srv/node-project/server.js 1> /var/log/node-project/log 2> /var/log/node-project/err
 '
 
-                        set_file /lib/systemd/system/node-project.service '## srvctl generated
-[Unit]
-Description=Development node-project.
-After=syslog.target network.target
-
-[Service]
-Type=simple
-ExecStart=/srv/node-project/run.sh
-User=node
-Group=node
-
-# Restart=always
-# SyslogIdentifier=node-project
-# Environment=NODE_ENV=production
-
-[Install]
-WantedBy=multi-user.target
-'        
+source $install_dir/ve-install/unitfiles.sh
+     
                                 ## prepare data dir
                                 chown -R node:codepad /srv/node-project
                                 chmod -R 664 /srv/node-project
                                 chmod 774 /srv/node-project
+                                chmod 774 /srv/node-project/static
                                 chmod 774 /srv/node-project/run.sh
 
                                 ## this is needed for nodemon
@@ -391,7 +408,7 @@ WantedBy=multi-user.target
         ## iptables to forward port 8000 to port 80
          #iptables -t nat -L
 
-        yum -y install iptables-services
+        pm install iptables-services
 
         iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
         iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
@@ -415,7 +432,6 @@ sleep 2
 cat /var/log/codepad/err
 tail /var/log/codepad/log
 '
-
 chmod +x /bin/rc
 
 
@@ -433,3 +449,4 @@ man '
     Default is to create a node project, and a basic hello world application. 
     Homepage: http://codepad.etherpad.org/ and http://D250.hu
 '
+

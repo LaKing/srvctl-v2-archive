@@ -14,6 +14,7 @@ then
         authorize
 
         nfs_unmount
+        backup_unmount
 
         lxc-stop -k -n $ARG
 
@@ -69,3 +70,4 @@ man '
 '
 
 fi
+

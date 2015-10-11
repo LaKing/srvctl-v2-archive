@@ -1,12 +1,12 @@
 #!/bin/bash
 
-if ! $isUSER && ! $LXC_SERVER
+if $isROOT && ! $LXC_SERVER && ! $onVE
 then
 
 hint "update-install-sec-dns" "Set up as a secondary DNS server"
-if [ "$CMD" == "sec-dns" ]
+if [ "$CMD" == "update-install-sec-dns" ]
 then        
-        yum -y install bind
+        pm install bind
 
         systemctl stop named.service
 
@@ -23,8 +23,9 @@ then
         mkdir -p /etc/srvctl
         mkdir -p /var/named/srvctl
         chown -R named:named /var/named/srvctl
-
-        rsync -a /root/dns/etc/srvctl/named.slave.conf.global.r2.d250.hu /etc/srvctl
+        
+        #rsync -a /root/dns/etc/srvctl/named.slave.conf.global.r2.d250.hu /etc/srvctl
+        rsync -a /root/dns/etc/srvctl /etc
         rsync -a /root/dns/var/named/srvctl /var/named
 
         rm -rf /var/named/srvctl/*.zone

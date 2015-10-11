@@ -6,7 +6,7 @@ then ## no identation.
         hint "add-wordpress [path]" "Install Wordpress. Optionally to a folder (URI)."
         if [ "$CMD" == "add-wordpress" ]
         then
-                yum -y install wordpress
+                pm install wordpress
 
                 setup_mariadb
 
@@ -33,8 +33,8 @@ then ## no identation.
                 fi
 
                 ## for dependencies.
-                yum -y install unzip
-                yum -y install wordpress
+                pm install unzip
+                pm install wordpress
 
                 ## set params in php.ini, ...          
                 sed_file /etc/php.ini ";date.timezone =" "date.timezone = $php_timezone"

@@ -1,25 +1,48 @@
 #!/bin/bash
 
-hint "scan" "Run virus diagnostic commands"
-if [ "$CMD" == "scan" ]
+if $onHS
 then
-        msg "VIRUS CHECK"
-        karantene_path="$(realpath ~)/srvctl-quarantine"
-        mkdir -p $karantene_path
+
+hint "scan" "Run scan or phpscan and clamscan to diagnose infections even while the container is offline."
+if [ "$CMD" == "scan" ] || [ "$CMD" == "phpscan" ]
+then
+        sudomize
+        source $install_dir/libs/phpscan.sh
+        mkdir -p /var/log/phpscan
         
-        if $isUSER
-        then
-            clamscan -r --move=$karantene_path ~
-        else
-            freshclam 
-            #clamscan -r --move=$karantene_path /home
-            clamscan -r --move=$karantene_path /srv
-            #clamscan -r --move=$karantene_path /var/www
-        fi
+        for C in $(lxc_ls)
+        do
+            msg "PHPSCAN $C"
+            phpscan $SRV/$C/rootfs/var/www/html /var/log/phpscan/$C.log
+        done
+ok
+fi
+
+if [ "$CMD" == "scan" ] || [ "$CMD" == "clamscan" ]
+then
+        sudomize
+        
+        msg "Running freshclam"
+        freshclam
+        for C in $(lxc_ls)
+        do 
+            msg "CLAMAV-SCAN $C"
+        
+            karantene_path="$SRV/$C/rootfs/root/clamav-quarantine"
+            mkdir -p $karantene_path
+            for u in $(ls $SRV/$C/rootfs/home)
+            do
+                ntc $u@$C
+                clamscan -r --move=$karantene_path /$SRV/$C/rootfs/home/$u/Maildir
+            done
+        done
+
+ok
 fi
 man '
-    Set of troubleshooting commands. 
-    Scan for viruses with clamscan, and put them innto a quarantine folder.
+    Set of troubleshooting commands.
+    Detect malicious PHP files with phpscan, files with a score above 1000 are really suspicious!
+    Scan emails for viruses with clamscan, and put them innto a quarantine folder.
 '
 
 hint "diagnose" "Run a set of diagnostic commands."
@@ -77,3 +100,6 @@ man '
     Set of troubleshooting commands. 
     Display status messages of services, and list important network port statuses.
 '
+
+fi ## onHS
+

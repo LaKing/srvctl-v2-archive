@@ -8,7 +8,7 @@ hint "regenerate [all]" "Regenerate configuration files, and restart affected se
 if [ "$CMD" == "regenerate" ] || [ "$CMD" == "!" ]
 then
 
-        if [ "$2" == "all" ]
+        if [ "$ARG" == "all" ]
         then
            all_arg_set=true
         fi
@@ -44,7 +44,7 @@ man '
     In case some srvctl configuration files, or data files are changed, it is required to regenerate runtime configurations.
     Configuration files are mostly located in /root/srvctl-users and /srv/VE/ but data may reside in users home folders.
     For all critical configuration files .bak backup files will be created. Regenerated important system configuration files include:
-    /etc/hosts, /etc/relydomains, /root/.ssh/known_hosts, all /home/USER/.ssh/known_hosts, all /home/USER/.ssh/authorized_keys
+    /etc/hosts, /etc/relydomains, etc, ...
     NFS shares are mounted if missing. Note, direct mount-shares in /mnt are presistent, and reside in the users /home folders.
     Important srvctl VE configuration files located in the /srv/VE/ folder, used as base-data in the regeneration process include:
         aliases - newline seperated list of domain names that are considered alternate domain names for the container.
@@ -65,3 +65,4 @@ man '
 '
 
 fi
+

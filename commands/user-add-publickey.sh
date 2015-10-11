@@ -31,10 +31,9 @@ then
         fi
         
     else
-        if [ -z "$SC_SUDO_USER" ]
-        then
-            msg "Import public key from file-path."
-        fi
+
+        msg "Import public key from file-path."
+        
         
         tmp_file=$ARG
 
@@ -59,13 +58,13 @@ then
         ## TODO check public key format, eg ssh-rsa AAAB..xyz comment@sd
         ## TODO append comment
         
-        if [ -z "$SC_SUDO_USER" ]
+        if [ "$SC_USER" == "root" ]
         then
             cat $tmp_file >> /root/.ssh/authorized_keys
             msg "Key added to root's authorized keys."
         else
-            cat $tmp_file >> /root/srvctl-users/authorized_keys/$SC_SUDO_USER
-            msg "Key added to $SC_SUDO_USER"
+            cat $tmp_file >> /root/srvctl-users/authorized_keys/$SC_USER
+            msg "Key added to $SC_USER"
         fi
     fi    
     
@@ -80,4 +79,6 @@ man '
 '
 
 fi # onHS
+
+
 

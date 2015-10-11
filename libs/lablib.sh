@@ -127,6 +127,32 @@ function is_fqdn() {
             fi
 }
 
+## exit if failed
+function exif {
+    if [ "$?" != "0" ]
+    then 
+        err "Error."
+        exit 1;
+    fi
+}
+
+## choose a package manager based on relese
+function pm {
+
+    if (( $FEDORA < 22 )) 
+    then
+        echo yum -y $@
+        yum -y $@
+        exif
+    else
+        echo dnf -y $@
+        dnf -y $@
+        exif
+    fi   
+}
+
+
 
 
 ## Lablib functions end here.
+

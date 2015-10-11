@@ -31,10 +31,10 @@ then
      
         add_user $U 
      
-        if [ -f "$SRV/$C/users" ] 
+        if [ -f "$SRV/$C/settings/users" ] 
         then
             has=false
-            for _i in $(cat $SRV/$C/users)
+            for _i in $(cat $SRV/$C/settings/users)
             do
                 if [ "$U" == "$_i" ]
                 then
@@ -44,9 +44,9 @@ then
             
             if ! $has
             then
-                echo $U >> $SRV/$C/users
-                echo "$SC_SUDO_USER +> $C" >> /home/$U/.parent_users
-                log "$SC_SUDO_USER added $U to container $C"
+                echo $U >> $SRV/$C/settings/users
+                echo "$SC_USER +> $C" >> /home/$U/.parent_users
+                log "$SC_USER added $U to container $C"
             else
                 msg "$U has access to container $C"
                 exit
@@ -62,4 +62,7 @@ man '
     This command will set up a new user account. It will generate a password, and password hashes for VE applications.
     A single user may have access to all containers and their CMSs, with the same password. The generated password is stored in plaintext.
 '
+
+
+
 

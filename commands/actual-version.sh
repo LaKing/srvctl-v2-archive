@@ -18,6 +18,7 @@ then
         msg 'LXC: '$(lxc-info --version)' installed'
     fi
     msg_yum_version_installed Pound
+    pound -V 2> /dev/null | grep Version
     msg_yum_version_installed postfix
     msg_yum_version_installed perdition
     msg_yum_version_installed fail2ban
@@ -32,3 +33,4 @@ man '
     Display kernel version, srvctl version
     Pound, postfix, perdition, fail2ban, bind, clamav versions
 '
+

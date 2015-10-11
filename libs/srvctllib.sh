@@ -190,8 +190,9 @@ function create_certificate { ## for container $C
 
 
 function create_keypair { ## for user $U
+        U=$1
 
-        mkdir /home/$U/.ssh
+        mkdir -p /home/$U/.ssh
 
         ## create ssh keypair
         if [ ! -f /home/$U/.ssh/id_rsa.pub ]; then
@@ -265,7 +266,7 @@ function update_password {
         fi
 
         ## set password on the system
-        echo $password | passwd $_u --stdin 2> /dev/null
+        echo $password | passwd $_u --stdin 2> /dev/null 1> /dev/null
 
         ## save
         echo $password > /home/$_u/.password
@@ -276,17 +277,13 @@ function update_password {
 
 function add_user {
 
-        _u=$1
+    U=$1
+    #msg "add_user $U"
+    adduser $U 2> /dev/null
+    update_password $U
+    create_keypair $U
+    chown -R $U:$U /home/$U 2> /dev/null
 
-        if [ ! -d "/home/$_u" ]; then
-
-                adduser $_u
-
-                update_password $_u
-
-                create_keypair
-
-        fi
 }
 
 function  get_randomstr {
@@ -304,12 +301,12 @@ function lxc_ls {
     ## special lxc-ls that honors the call via sudo
     for _lsi in $(lxc-ls)
     do
-            if [ ! -z "$SC_SUDO_USER" ]
+            if $isSUDO
             then
                 _skp=true
-                for _uti in $(cat $SRV/$_lsi/users)
+                for _uti in $(cat $SRV/$_lsi/settings/users)
                 do
-                    if [ "$_uti" == "$SC_SUDO_USER" ]
+                    if [ "$_uti" == "$SC_USER" ]
                     then
                         _skp=false
                         break
@@ -339,11 +336,11 @@ function sudomize {
 function authorize { ## sudo access container $C for current user
     _aok=false
     
-    if [ ! -z "$SC_SUDO_USER" ]
+    if $isSUDO
     then   
-        for _uti in $(cat $SRV/$C/users)
+        for _uti in $(cat $SRV/$C/settings/users)
         do
-                    if [ "$_uti" == "$SC_SUDO_USER" ]
+                    if [ "$_uti" == "$SC_USER" ]
                     then
                         _aok=true
                         break
@@ -352,7 +349,7 @@ function authorize { ## sudo access container $C for current user
         
         if ! $_aok
         then
-            err "Permission denied. $SC_SUDO_USER@$C"
+            err "Permission denied. $SC_USER@$C"
             exit
         fi
     fi  
@@ -469,7 +466,6 @@ decode:                root
 
 fi ## set aliases
 }
-
 
 ## srvctl functions end here.
 ## additional configuration checks.

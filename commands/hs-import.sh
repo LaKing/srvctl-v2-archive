@@ -54,10 +54,9 @@ then
             echo "$line" >> $tmp_file
         done
     else
-        if [ -z "$SC_SUDO_USER" ]
-        then
-            msg "Import CRT from file-path."
-        fi
+
+        msg "Import CRT from file-path."
+
         
         imp_file=$ARG
 
@@ -75,7 +74,7 @@ then
         fi
     fi  
 
- #dbg "@&@ USER:$USER SUDO:$SC_SUDO_USER isROOT: $isROOT"
+ #dbg "@&@ USER:$USER SUDO:$SC_USER isROOT: $isROOT"
  
     msg "--- Certificate ---"
     openssl x509 -text -in $tmp_file
@@ -86,7 +85,7 @@ then
     then
         _path=$SRV
     else
-        _path="/home/$USER/$SC_SUDO_USER"
+        _path="/home/$USER/$SC_USER"
     fi
     
     C=''
@@ -164,7 +163,7 @@ then
         
     if ! $isROOT
     then
-        #dbg "@SUDOMIZE USER:$USER SUDO:$SC_SUDO_USER isROOT: $isROOT"
+        #dbg "@SUDOMIZE USER:$USER SUDO:$SC_USER isROOT: $isROOT"
         sudo $install_dir/srvctl-sudo.sh import-crt $tmp_file
         exit
     fi
@@ -291,3 +290,5 @@ man '
 fi #isROOT
 
 fi #onHS
+
+

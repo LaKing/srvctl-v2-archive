@@ -29,7 +29,7 @@ function setup_mariadb {
 
 		## TODO connection check
 		msg "Install Mysql/MariaDB."	
-		yum -y install mariadb-server
+		pm install mariadb-server
 		systemctl enable mariadb.service
 		systemctl start mariadb.service
 

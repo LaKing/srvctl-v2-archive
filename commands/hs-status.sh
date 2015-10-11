@@ -91,25 +91,48 @@ man '
         
 '
 
-## report status of all details
-hint "status-usage [username]" "Container usage status report."
-if [ "$CMD" == "status-usage" ] 
+## report status of disk usage
+hint "usage" "Container usage status report."
+if [ "$CMD" == "usage" ] 
 then
+
+    function print_header {
+
+        echo ''
+        printf ${yellow}"%-48s"${NC} "HOSTNAME"
+        printf ${yellow}"%-5s"${NC} "DISK"
+        printf ${yellow}"%-5s"${NC} "LOGS"
+        echo ''
+    }
 
     sudomize
 
-    echo ''
-    printf ${yellow}"%-48s"${NC} "HOSTNAME"
-    printf ${yellow}"%-5s"${NC} "DISK"
-    printf ${yellow}"%-5s"${NC} "LOGS"
-
-    echo ''
-
-    if [ ! -z "$2" ] && [ -d "/home/$2" ]
+    if $isSUDO 
     then
-        for C in $(lxc-ls)
+    
+        msg "Statistiscs for container-owner $SC_USER"
+        
+        print_header
+
+        for C in $(lxc_ls)
+        do       
+            if ! [ -z "$(head -n 1 $SRV/$C/settings/users | grep $SC_USER)" ]
+            then
+                get_info
+                get_disk_usage
+                get_logs_usage
+                echo ''
+            fi
+        done  
+        echo ''
+        
+        msg "Usage statistics for accessible containers."
+    
+        print_header
+    
+        for C in $(lxc_ls)
         do      
-            if ! [ -z "$(head -n 1 $SRV/$C/users | grep $2)" ]
+            if [ "$(cat $SRV/$C/settings/users | grep $SC_USER)" == "$SC_USER" ] && [ -z "$(head -n 1 $SRV/$C/settings/users | grep $SC_USER)" ]
             then
                 get_info
                 get_disk_usage
@@ -117,16 +140,18 @@ then
                 echo ''
             fi
         done
-    else   
-
+    else
+        msg "Statistiscs for container-owners"
+        print_header
+        ## root called this
         for U in $(ls /home)
         do
             echo ''
-            echo "--- $U ---"
-            echo ''
-            for C in $(lxc-ls)
+            msg "$U"
+
+            for C in $(lxc_ls)
             do       
-                if ! [ -z "$(head -n 1 $SRV/$C/users | grep $U)" ]
+                if [ "$(head -n 1 $SRV/$C/settings/users)" == "$U" ]
                 then
                     get_info
                     get_disk_usage
@@ -134,13 +159,26 @@ then
                     echo ''
                 fi
             done
+            echo ''
         done
+
+
     fi
  
 echo ''
 ok        
 fi
 
+hint "list" "List containers and their internal IP information."
+if [ "$CMD" == "list" ] 
+then
+        for C in $(lxc_ls)
+        do 
+            echo "#$(cat $SRV/$C/config.counter)    $(cat $SRV/$C/config.ipv4)    $C "
+        done
+echo ''
+ok        
+fi
 
 fi ## of onHS
 
@@ -150,3 +188,5 @@ man '
         DISK - summarizes total diskspace usage by the container.
         LOGs - Log size gives a good approximation for network traffic.  
 '
+
+

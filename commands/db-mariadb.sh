@@ -167,8 +167,8 @@ then
         if [ "$CMD" == "add-phpmyadmin" ] 
         then
 
-                yum -y install php
-                yum -y install phpmyadmin
+                pm install php
+                pm install phpmyadmin
 
 
                 ## grant access.
@@ -177,6 +177,7 @@ then
                 #sed_file /etc/httpd/conf.d/phpMyAdmin.conf "       Require ip ::1" "       #Require ip ::1"
 
                 ## instead, use this custom conf for Apache 2.4
+                ## use only https
                 set_file /etc/httpd/conf.d/phpMyAdmin.conf "# phpMyAdmin - Web based MySQL browser written in php
 
                 Alias /phpMyAdmin /usr/share/phpMyAdmin
@@ -198,6 +199,12 @@ then
                      </RequireAny>
                    </IfModule>
                 </Directory>
+                
+                 RewriteEngine On
+                 RewriteCond %{SERVER_PORT} !^443$
+                 RewriteRule ^/phpMyAdmin(.*)$ http://%{HTTP_HOST}
+                 RewriteRule ^/phpmyadmin(.*)$ http://%{HTTP_HOST}
+
                 "
                 
                 
@@ -236,3 +243,5 @@ man '
     Import or create databases, backup databases, and reset passwords. The mysql root password is stored locally, for all operations.
     PhpMyAdmin can be installed for graphical administration. 
 '
+
+

@@ -68,7 +68,7 @@ function get_state {
                 ms=$state
         fi
 
-        if [ -f $SRV/$C/disabled ]
+        if [ -f $SRV/$C/settings/disabled ]
         then
                 ms='-------'
                 msc=$green
@@ -114,7 +114,12 @@ function get_dig_A {
         then
                 printf ${yellow}"%-3s"${NC} "OK"
         else
-                printf ${red}"%-3s"${NC} "??"
+                if [ -z "$dig_A" ]
+                then
+                    printf ${red}"%-3s"${NC} " ?"
+                else
+                    printf ${red}"%-3s"${NC} "!?"
+                fi
         fi
 
 
@@ -132,15 +137,20 @@ function get_dig_MX {
         then
                 printf ${yellow}"%-3s"${NC} "OK"
         else
-                printf ${red}"%-3s"${NC} "??"
+                if [ -z "$dig_MX" ]
+                then
+                    printf ${red}"%-3s"${NC} " ?"
+                else
+                    printf ${red}"%-3s"${NC} "!?"
+                fi
         fi
 }
 
 function get_users {
 
-        touch $SRV/$C/users
+        touch $SRV/$C/settings/users
 
-        users=$(cat $SRV/$C/users | sed ':a;N;$!ba;s/\n/|/g')
+        users=$(cat $SRV/$C/settings/users | sed ':a;N;$!ba;s/\n/|/g')
 
         printf ${yellow}"%-32s"${NC} ${users:0:32}
 }
@@ -236,9 +246,9 @@ function nfs_mount {
 function nfs_share {
         ## container $C
 
-        if [ -f $SRV/$C/users ]
+        if [ -f $SRV/$C/settings/users ]
         then
-                for U in $(cat $SRV/$C/users)
+                for U in $(cat $SRV/$C/settings/users)
                 do
                         nfs_mount
                 done
@@ -272,4 +282,7 @@ function nfs_unmount {
                         done
                 done
 }
+
+
+
 

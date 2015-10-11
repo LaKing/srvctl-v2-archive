@@ -5,7 +5,7 @@ then ## no identation.
 
 
 ## add new host
-hint "add VE [USERNAME]" "Add new LXC container."
+hint "add VE [USERNAME(s)]" "Add new LXC container. use the dev. subdomain prefix to create a developer container. "
 if [ "$CMD" == "add" ] && $onHS
 then
 
@@ -22,11 +22,17 @@ then
         fi
 
         ## check for human mistake
-        if [ -d $SRV/$C ]; then
+        if [ -d $SRV/$C ]
+        then
           err "$SRV/$C already exists! Exiting"
           exit 11
         fi
-
+        
+        if ! $(is_fqdn $C)
+        then
+            C="$C.$(hostname)"
+        fi
+        
         if ! $(is_fqdn $C)
         then
           err "$C failed the domain regexp check. Exiting."
@@ -40,8 +46,10 @@ then
         counter=$(($(cat /etc/srvctl/counter)+1))
         echo $counter >  /etc/srvctl/counter
 
-        log "Create container. #$counter"
+        log "Create container $C #$counter"
         ## templates are usually in /usr/local/share/lxc/templates, lxc-fedora-srv has to be installed!
+        
+        echo "lxc-create -n $C -t fedora-srv"
         lxc-create -n $C -t fedora-srv
         
         if [ "$?" == "0" ] && [ -f $SRV/$C/rootfs/etc/hostname ]
@@ -49,15 +57,17 @@ then
               log "Container created."
         else
               err "Container not created!"
-              exit
+              exit 30
         fi
-        
+
+        mkdir -p $SRV/$C/settings
+            
         echo $NOW > $SRV/$C/creation-date
 
         ## mark as dev site
         if $isDEV
         then
-                echo "true" > $SRV/$C/pound-enable-dev
+                echo "true" > $SRV/$C/settings/pound-enable-dev
         fi
 
         #mkdir -p $SRV/$C 
@@ -165,12 +175,6 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
         ln -s '/usr/lib/systemd/system/postfix.service' $rootfs'/etc/systemd/system/multi-user.target.wants/postfix.service'
 
 
-## NFS
-        generate_exports $C        
-
-        ## enable nfs
-        ln -s '/usr/lib/systemd/system/nfs.service' $rootfs'/etc/systemd/system/multi-user.target.wants/nfs.service'
-
 ## Apache
 
         ## enable the webserver
@@ -235,28 +239,50 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 
         systemctl restart named.service
 
-        ## what user?
-        U=$3
-        if [ ! -z "$SC_SUDO_USER" ]
-        then
-            U=$SC_SUDO_USER
-        fi
-                
-        echo "$U" > $SRV/$C/users
+## Node / npm
+        ## npm root -g => /usr/lib/node_modules
+        echo 'export NODE_PATH="/usr/lib/node_modules"' > /etc/profile.d/npm.sh
+        
 
-        if [ ! -z "$U" ]
+## what user?
+
+        if $isSUDO
         then
-                add_user $U
-                generate_user_configs
-                generate_user_structure
+            echo "$SC_USER" >> $SRV/$C/settings/users
+            U=$SC_USER
+            add_user $U
+            generate_user_configs
+            generate_user_structure
         fi
+
+        ## add users from argument
+        for U in "${@:3}"
+        do
+            msg "Add user $U"                
+            echo "$U" >> $SRV/$C/settings/users
+            add_user $U
+            generate_user_configs
+            generate_user_structure
+        done        
+        
+        mkdir -p $backup_path/$C
+
+
+## NFS
+        generate_exports $C        
+
+        ## enable nfs
+        ln -s '/usr/lib/systemd/system/nfs.service' $rootfs'/etc/systemd/system/multi-user.target.wants/nfs.service'
+
 
 ##         #### START #### 
 
-        log "Starting container $C - $IPv4 $U"        
-
+        log "Starting container $C - $IPv4 $U" 
+                   
+        echo "lxc-start -o $SRV/$C/lxc.log -n $C -d"
         lxc-start -o $SRV/$C/lxc.log -n $C -d 
-
+        
+        cat $SRV/$C/lxc.log
 
         ## wait for the container to get up 
         ## was based on $IPv4
@@ -302,11 +328,7 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
         fi
 
 
-        if [ ! -z "$U" ]
-        then
-                nfs_mount
-
-        fi
+        nfs_share
 
         msg "$C ready."
 
@@ -325,3 +347,7 @@ man '
     Containers will be configured as web and mail servers. The srvctl command will be available on every VE, and can be used to configure further.
     
 '
+
+
+
+

@@ -21,7 +21,7 @@ then
 
                 nfs_unmount
                   ssh $C reboot 2> /dev/null              
-                wait_for_ve_connection $C
+                wait_for_ve_online $C
                   nfs_share
         else 
                 get_state
@@ -78,3 +78,4 @@ man '
 '
 
 fi
+
