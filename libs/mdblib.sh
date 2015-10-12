@@ -8,6 +8,13 @@ test_mariadb=$(systemctl is-active mariadb.service)
 
 function check_mariadb_connection {
     
+        if [ -f "$MDF" ]
+        then
+            MDA="--defaults-file=$MDF -u root"
+        else
+            MDA="-u root"
+        fi
+        
         mysql $MDA -e exit 2> /dev/null
 
         if [ "$?" -ne 0 ]
@@ -37,12 +44,6 @@ function setup_mariadb {
 
         fi
         
-        if [ -f "$MDF" ]
-        then
-            MDA="--defaults-file=$MDF -u root"
-        else
-            MDA="-u root"
-        fi
 }
 
 function secure_mariadb {
