@@ -144,19 +144,9 @@ function add_mariadb_db {
         ntc "$SQL"
         mysql $MDA -e "$SQL"
         
-        if ! [ "$?" -ne 0 ]
-        then
-            err "CONNECTION FAILED. Could not use mariadb, ... $MDA"
-        fi
-
         SQL="GRANT ALL ON $db_name.* TO '$db_usr'@'localhost' IDENTIFIED BY '$db_pwd'; flush privileges;"
         ntc "$SQL"
         mysql $MDA -e "$SQL"
-        
-        if ! [ "$?" -ne 0 ]
-        then
-            err "CONNECTION FAILED. Could not use mariadb, ... $MDA"
-        fi
 
         ## save these params to etc
         f=/etc/mysqluser.conf
