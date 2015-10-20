@@ -83,9 +83,6 @@ then
         echo "php_timezone: $php_timezon"
         echo "debug: $debug"
         #echo ": $"
-        echo ": $"
-        echo ": $"
-        echo ": $"
         echo ""
 
         msg "FULL STATUS MESSAGES"
