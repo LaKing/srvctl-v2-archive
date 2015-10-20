@@ -39,7 +39,7 @@ then
           exit 10
         fi
 
-        if [ -z "$(ip addr show srv-net 2> /dev/null | grep "state UP")" ]
+        if [ -z "$(ip addr show srv-net 2> /dev/null | grep UP)" ]
         then
             err "srv-net is not present. ... run update-install then reboot?"
             exit 12
