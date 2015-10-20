@@ -207,7 +207,7 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
         systemctl status libvirtd.service
         
         #### RESTART REQUIRED HERE, if libvirt networks got modified.
-        if [ -z "$(ip addr show srv-net 2> /dev/null | grep "state UP")" ]
+        if [ -z "$(ip addr show srv-net 2> /dev/null | grep "UP")" ]
         then
                 err "srv-net not found. It will be active after reboot."
                 log "LXC Installed. Please reboot, and run this command again to continiue. Exiting."
