@@ -1,10 +1,11 @@
 #!/bin/bash
 
-echo DEBUG:@update-install
+echo DEBUG:@update-install1
 
 if ! $onVE && ! $isUSER
 then ## no identation.
 
+echo DEBUG:@update-install2
 
 hint "update-install [all]" "This will update the current OS to be a srvctl-configured containerfarm host installation."
 if [ "$CMD" == "update-install" ]
