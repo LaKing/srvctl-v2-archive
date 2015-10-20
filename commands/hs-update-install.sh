@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo DEBUG:@update-install1
+echo DEBUG:@update-install1 $onVE $isUSER
 
 if ! $onVE && ! $isUSER
 then ## no identation.
