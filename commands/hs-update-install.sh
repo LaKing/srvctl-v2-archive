@@ -1,11 +1,9 @@
 #!/bin/bash
 
-echo DEBUG:@update-install1 $onVE $isUSER
-
-if ! $onVE && ! $isUSER
+if $isROOT
 then ## no identation.
 
-echo DEBUG:@update-install2
+
 
 hint "update-install [all]" "This will update the current OS to be a srvctl-configured containerfarm host installation."
 if [ "$CMD" == "update-install" ]
@@ -16,6 +14,13 @@ then
         if [ "$2" == "all" ]
         then
            all_arg_set=true
+        fi
+
+        if $onVE
+        then
+            msg "Exiting - onVE"
+            ok
+            exit
         fi
 
 
@@ -237,6 +242,7 @@ man '
     Custom files for pound will reside in /var/www/html, and they might be customized.      
 '
 fi ## onHS
+
 
 
 
