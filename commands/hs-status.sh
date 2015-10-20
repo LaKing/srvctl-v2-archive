@@ -183,6 +183,7 @@ then
         do 
             get_info
             get_ip
+            echo ''
         done
 echo ''
 ok        
