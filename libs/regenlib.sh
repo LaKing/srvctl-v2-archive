@@ -339,6 +339,8 @@ function generate_user_structure ## for user $U, Container $C
                 ## kill all L tunnels
                 ## kill $(ps ax | grep "ssh " | grep " -L " | cut -f 1 -d " ")
 
+                ## another method for rsync-ing container data
+                ## rsync -avz -e "ssh -A user@host ssh" root@container.ve:/srv/node-project /srv
 
 
 function regenerate_users_structure {

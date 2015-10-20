@@ -4,7 +4,7 @@ if ! $onVE && ! $isUSER
 then ## no identation.
 
 
-hint "update-install [all]" "This will update srvctl to a containerfarm host installation."
+hint "update-install [all]" "This will update the current OS to be a srvctl-configured containerfarm host installation."
 if [ "$CMD" == "update-install" ]
 then
 

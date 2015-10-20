@@ -21,13 +21,13 @@ then
         then
             argument C
             run_backup
-            msg "$C - backup up to date."
+            msg "$C - backup complete."
         else
             for C in $(lxc_ls)
             do
                 msg $C
                 run_backup
-                msg "$C - backup up to date."
+                msg "$C - backup complete."
             done
         fi
         
@@ -75,6 +75,7 @@ then
         if [ -d $SRV/$C ]
         then
             err "There is a container $C - exiting"
+            ## TODO - remove the container?
             exit 112
         fi
         
