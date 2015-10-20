@@ -226,8 +226,8 @@ source $install_dir/hs-install/antivirus.sh
 source $install_dir/hs-install/firewall.sh
 
 ## make sure symlink exist
-ln -s /usr/share/srvctl/srvctl.sh /bin/srvctl
-ln -s /usr/share/srvctl/srvctl.sh /bin/sc
+ln -s /usr/share/srvctl/srvctl.sh /bin/srvctl 2> /dev/null
+ln -s /usr/share/srvctl/srvctl.sh /bin/sc 2> /dev/null
 
 msg ".. update-install process complete."
 
