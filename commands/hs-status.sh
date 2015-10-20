@@ -169,12 +169,20 @@ echo ''
 ok        
 fi
 
+man '
+    Usage status of containers.
+        HOSTNAME - the container name.
+        DISK - summarizes total diskspace usage by the container.
+        LOGs - Log size gives a good approximation for network traffic.  
+'
+
 hint "list" "List containers and their internal IP information."
 if [ "$CMD" == "list" ] 
 then
         for C in $(lxc_ls)
         do 
-            echo "#$(cat $SRV/$C/config.counter)    $(cat $SRV/$C/config.ipv4)    $C "
+            get_info
+            get_ip
         done
 echo ''
 ok        
@@ -182,11 +190,6 @@ fi
 
 fi ## of onHS
 
-man '
-    Usage status of containers.
-        HOSTNAME - the container name.
-        DISK - summarizes total diskspace usage by the container.
-        LOGs - Log size gives a good approximation for network traffic.  
-'
+
 
 
