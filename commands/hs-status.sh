@@ -188,6 +188,9 @@ then
 echo ''
 ok        
 fi
+man '
+    A Quick list of all containers.
+'
 
 fi ## of onHS
 
