@@ -223,8 +223,6 @@ msg ".. update-install process complete."
 ok
 fi ## update-install
 
-fi ## onHS
-
 man '
     This command will run the srvctl installation scripts, thus inicailize the host as a container-farm.
     With the [all] option set, all srvctl-related existing configurations will be regenerated, and updated. 
@@ -235,5 +233,8 @@ man '
     A company domain name should be set in the config file, and a logo.png and a favicon.ico should be at that domain.
     Custom files for pound will reside in /var/www/html, and they might be customized.      
 '
+fi ## onHS
+
+
 
 

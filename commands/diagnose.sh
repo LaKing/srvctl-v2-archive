@@ -80,7 +80,7 @@ then
         echo "PREFIXv6: $PREFIXv6"
         echo "dns_share: $dns_share"
         echo "backup_path: $backup_path"
-        echo "php_timezone: $php_timezon"
+        echo "php_timezone: $php_timezone"
         echo "debug: $debug"
         #echo ": $"
         echo ""
