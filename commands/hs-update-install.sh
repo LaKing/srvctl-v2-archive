@@ -225,8 +225,39 @@ source $install_dir/hs-install/antivirus.sh
 #source $install_dir/hs-install/openvpn.sh
 source $install_dir/hs-install/firewall.sh
 
+## make sure symlink exist
+ln -s /usr/share/srvctl/srvctl.sh /bin/srvctl
+ln -s /usr/share/srvctl/srvctl.sh /bin/sc
 
 msg ".. update-install process complete."
+
+
+## regenerate all configs
+all_arg_set=true
+
+        regenerate_counter
+
+        regenerate_config_files
+
+        regenerate_etc_hosts 
+
+        regenerate_known_hosts
+
+        regenerate_pound_files
+
+        regenerate_root_configs
+
+        regenerate_users 
+
+        regenerate_users_configs
+
+        regenerate_users_structure
+
+        regenerate_dns
+
+        regenerate_logfiles
+        
+        regenerate_sudo_configs
 
 ok
 fi ## update-install
