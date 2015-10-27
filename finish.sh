@@ -29,11 +29,7 @@ then
   msg "list of currently active commands:" 
 
 
-        for sourcefile in $install_dir/commands/*
-        do
-                source $sourcefile
-                hint
-        done
+        hint_commands
    
         ## print formatted hint about man
         printf ${green}"%-40s"${NC} "  help" 
@@ -47,3 +43,4 @@ fi
 
 ## return to the directory we started from.
 cd $CWD >> /dev/null 2> /dev/null
+

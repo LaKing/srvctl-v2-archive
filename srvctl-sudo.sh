@@ -47,10 +47,8 @@ SC_USER=$SUDO_USER
 
 
 ## init libs
-for libfile in $install_dir/libs/*
-do
-        source $libfile
-done
+source $install_dir/libs/commonlib.sh
+load_libs
 
 ## disabled functions
 function hint {
@@ -66,10 +64,7 @@ function man {
 SUCC=" "
 
 ## execute the commands
-for sourcefile in $install_dir/commands/*
-do
-        source $sourcefile
-done
+load_commands
 
 
 ## return to the directory we started from.

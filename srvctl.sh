@@ -39,10 +39,8 @@ then
 fi
 
 ## init libs
-for libfile in $install_dir/libs/*
-do
-        source $libfile
-done
+source $install_dir/libs/commonlib.sh
+load_libs
  
 log "[$(whoami)@$(hostname) $(pwd)]# $0 $*"
 #msg "$(head $0 -n 3 | grep version)"
@@ -63,10 +61,7 @@ SUCC=" "
 C=$(hostname)
  
 #load the commands - and execute them 
-for sourcefile in $install_dir/commands/*
-do
-        source $sourcefile
-done
+load_commands
  
 source $install_dir/finish.sh
 
