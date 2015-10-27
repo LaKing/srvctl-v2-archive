@@ -48,6 +48,10 @@ function man {
      echo ''
      echo ''
 }
+
+function msg {
+     echo '' > /dev/null   
+}
    
 for sourcefile in $install_dir/commands/*
 do
@@ -58,4 +62,5 @@ echo "srvctl by Istvan Kiraly - LaKing@D250.hu - D250 Laboratories - 2015"
 
 
 exit
+
 

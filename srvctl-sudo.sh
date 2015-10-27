@@ -65,7 +65,7 @@ function man {
 
 SUCC=" "
 
-## execute the sudo command
+## execute the commands
 for sourcefile in $install_dir/commands/*
 do
         source $sourcefile
