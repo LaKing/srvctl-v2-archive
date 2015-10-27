@@ -8,7 +8,6 @@ function load_commands {
     
     if [ -d /root/srvctl-includes ]
     then
-        
         for sourcefile in /root/srvctl-includes/*
         do
             source $sourcefile
