@@ -435,7 +435,7 @@ tail /var/log/codepad/log
 chmod +x /bin/rc
 
 
-        msg "Codepad: https://dev.$C/admin admin:$adminpass"        
+        msg "Codepad: https://dev.$C admin:$adminpass"        
 
 ok
 fi ## codepad
