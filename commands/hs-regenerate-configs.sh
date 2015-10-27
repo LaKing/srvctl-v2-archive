@@ -16,20 +16,26 @@ then
         regenerate_counter
 
         regenerate_config_files
+        ## for each container generate_lxc_config
 
         regenerate_etc_hosts 
-
+        
         regenerate_known_hosts
+        ## for each container scan_host_key
 
         regenerate_pound_files
 
         regenerate_root_configs
+        ## ssh related
 
         regenerate_users 
+        ## add_user(s)
 
         regenerate_users_configs
-
+        ## for each user generate_user_configs
+    
         regenerate_users_structure
+        ## for each user generate_user_structure
 
         regenerate_dns
 
