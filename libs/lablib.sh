@@ -67,7 +67,7 @@ function add_conf {
     then
 
             if grep -q "$2" $1; then
-             echo ''
+             echo '' > /dev/null
              #echo $1" already has "$2
             else
              #echo "adding "$2
