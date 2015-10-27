@@ -8,13 +8,13 @@ hint "setup-logio" "Install log.io, a web-browser based realtime log monitoring 
 if [ "$CMD" == "setup-logio" ]
 then
                 ## install packages
-                pm install nodejs
-                pm install npm
+                pm nodejs
+                pm npm
 
                 cd /srv
 
-                npm install coffee-script
-                npm install log.io
+                npm coffee-script
+                npm log.io
 
                 mkdir -p /srv/.log.io
 

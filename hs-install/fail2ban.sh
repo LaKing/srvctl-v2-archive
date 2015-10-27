@@ -1,6 +1,6 @@
 if [ ! -d /etc/fail2ban ]
 then
-        pm install fail2ban
+        pm fail2ban
 
         cf=/etc/fail2ban/fail2ban.d/firewallcmd-ipset.conf
         wget -O $cf https://raw.githubusercontent.com/fail2ban/fail2ban/master/config/action.d/firewallcmd-ipset.conf

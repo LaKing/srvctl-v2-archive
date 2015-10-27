@@ -82,7 +82,7 @@ list of currently active commands:
 All bash scripts are for Fedora based systems.
 
 There is an option now to include commands in a plugin-like design. 
-Simply create a file in a /root/srvctl-includes directory, based on template.sh.
+Simply create a file in a ```/root/srvctl-includes``` directory, based on template.sh.
 
 As the software packages under it change, this script is always under construction.
 Recommended only for administrators / experts, who know what they do! Use it on your own risk!

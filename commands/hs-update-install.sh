@@ -181,15 +181,15 @@ source $install_dir/hs-install/usertools.sh
 
 
 ## public ftp server
-# pm install vsftpd
+# pm vsftpd
 # systemctl enable vsftpd.service
 # systemctl start vsftpd.service
 
 ## public torrent seed
-# pm install opentracker-ipv4 opentracker-ipv6
+# pm opentracker-ipv4 opentracker-ipv6
 # systemctl enable opentracker-ipv4.service
 # systemctl start opentracker-ipv4.service
-# pm install qbittorrent
+# pm qbittorrent
 
 ## TODO run clamscan ...
 

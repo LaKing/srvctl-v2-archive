@@ -3,7 +3,7 @@ then
 
         msg "Installing Pound"
         ## Pound is a reverse Proxy for http / https
-        pm install Pound
+        pm Pound
 
 set_file /etc/pound.cfg '## srvctl pound.cfg
 User "pound"
@@ -122,7 +122,7 @@ The service is not available. Please try again later.
 ## Pound logging. By default pound is logging to systemd-journald.
 ## To work with logs, use rsyslog to export to /var/log/pound
 
-        pm install rsyslog
+        pm rsyslog
 
         add_conf /etc/rsyslog.conf 'local0.*                         -/var/log/pound'
 

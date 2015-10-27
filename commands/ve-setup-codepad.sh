@@ -22,11 +22,11 @@ then
                 secure_mariadb
 
                 ## install packages
-                pm install nodejs
-                pm install npm
-                pm install gzip git-core curl python openssl-devel
-                pm install postgresql-devel
-                pm install wget                
+                pm nodejs
+                pm npm
+                pm gzip git-core curl python openssl-devel
+                pm postgresql-devel
+                pm wget                
 
                 npm -g install nodemon
                 
@@ -408,7 +408,7 @@ source $install_dir/ve-install/unitfiles.sh
         ## iptables to forward port 8000 to port 80
          #iptables -t nat -L
 
-        pm install iptables-services
+        pm iptables-services
 
         iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
         iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443

@@ -1,6 +1,6 @@
 ## configure openvpn
-pm install openvpn
-pm install easy-rsa
+pm openvpn
+pm easy-rsa
 
 #cp -ai /usr/share/easy-rsa/2.0 ~/srvctl-openvpn-rsa
 ## TODO continiue here

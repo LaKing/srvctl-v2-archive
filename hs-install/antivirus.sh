@@ -4,7 +4,7 @@ then
 
 msg "Installing antivirus software"
 
-pm install clamav clamav-update
+pm clamav clamav-update
 sed_file /etc/freshclam.conf "Example" "### Exampl."
 sed_file /etc/freshclam.conf "#DNSDatabaseInfo current.cvd.clamav.net" "DNSDatabaseInfo current.cvd.clamav.net"
 
@@ -13,8 +13,8 @@ freshclam
  
 ## http://www.server-world.info/en/note?os=Fedora_21&p=mail&f=6
 log "Install virus-scanners"
-pm install amavisd-new
-pm install clamav-server-systemd
+pm amavisd-new
+pm clamav-server-systemd
 
 systemctl start amavisd.service
 systemctl status amavisd.service

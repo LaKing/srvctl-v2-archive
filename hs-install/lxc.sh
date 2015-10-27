@@ -9,11 +9,11 @@ then
                 log "Install Development Tools"
                 pm groupinstall "Development Tools"
                 exif
-                pm install automake
+                pm automake
                 exif
-                pm install graphviz
+                pm graphviz
                 exif
-                pm install libcap-devel
+                pm libcap-devel
                 exif
 
 
@@ -109,13 +109,13 @@ then
                                 err 'LXC_VERSION not specified! CAN NOT use a release! exiting.'
                                 exit 10
                         fi
-                        pm install lxc-$LXC_VERSION
-                        pm install lxc-extra-$LXC_VERSION
-                        pm install lxc-templates-$LXC_VERSION
+                        pm lxc-$LXC_VERSION
+                        pm lxc-extra-$LXC_VERSION
+                        pm lxc-templates-$LXC_VERSION
                 else
-                        pm install lxc
-                        pm install lxc-extra
-                        pm install lxc-templates
+                        pm lxc
+                        pm lxc-extra
+                        pm lxc-templates
                 fi                 
         fi
         
@@ -136,7 +136,7 @@ then
 ## Networking with libvirt
         
         ## ipcalc is provided by initscripts.
-        pm install sipcalc
+        pm sipcalc
         
         ## network config validation
 
@@ -158,7 +158,7 @@ then
             exit
         fi
         
-        pm install libvirt-daemon-driver-network libvirt-daemon-config-network libvirt-daemon-config-nwfilter
+        pm libvirt-daemon-driver-network libvirt-daemon-config-network libvirt-daemon-config-nwfilter
 
         ## DHCP is only for manually created containers. srvctl containers should use static ip addresses.
         

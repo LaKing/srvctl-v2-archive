@@ -74,7 +74,7 @@ then
 
         log "Install perdition, with custom service files: imap4.service, imap4s.service, pop3s.service"
 
-        pm install perdition
+        pm perdition
         ##   + vanessa_logger vanessa_socket
 
         ## perdition is run as template.service by default.

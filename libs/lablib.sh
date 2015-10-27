@@ -141,12 +141,12 @@ function pm {
 
     if (( $FEDORA < 22 )) 
     then
-        echo yum -y $@
-        yum -y $@
+        echo yum -y install $@
+        yum -y install $@
         exif
     else
-        echo dnf -y $@
-        dnf -y $@
+        echo dnf -y install $@
+        dnf -y install $@
         exif
     fi   
 }

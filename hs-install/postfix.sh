@@ -11,7 +11,7 @@ then
             log "Installing the Postfix mail subsystem."
             bak $pc
 
-            pm install postfix
+            pm postfix
             sed_file $pc 'inet_interfaces = localhost' '#inet_interfaces # localhost'
 
                 ## append to the default conf

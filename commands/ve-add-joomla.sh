@@ -33,7 +33,7 @@ then ## no identation.
                 #### - download joomla!
                 ## from git
                 cd /root  
-                pm install git
+                pm git
                 git clone https://github.com/joomla/joomla-cms.git
                 rm -rf $wd/.git
                 cp -u -f -r $wd/* $dir
@@ -56,7 +56,7 @@ then ## no identation.
         
 
                 ## for dependencies.
-                pm install unzip php php-common php-gd php-mcrypt php-pear php-pecl-memcache php-mhash php-mysql php-xml php-mbstring
+                pm unzip php php-common php-gd php-mcrypt php-pear php-pecl-memcache php-mhash php-mysql php-xml php-mbstring
 
                 ## set php.ini, ...          
                 sed_file /etc/php.ini ";date.timezone =" "date.timezone = $php_timezone"

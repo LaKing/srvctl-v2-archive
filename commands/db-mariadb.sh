@@ -180,8 +180,8 @@ then
         if [ "$CMD" == "add-phpmyadmin" ] 
         then
 
-                pm install php
-                pm install phpmyadmin
+                pm php
+                pm phpmyadmin
 
 
                 ## grant access.

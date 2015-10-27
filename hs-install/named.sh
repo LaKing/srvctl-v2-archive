@@ -4,8 +4,8 @@ if [ ! -f /etc/named.conf ] || $all_arg_set
 then
         log "Installing BIND (named) DNS server."
 
-        pm install bind bind-utils
-        pm install ntp
+        pm bind bind-utils
+        pm ntp
         
         systemctl start ntpd.service
         systemctl enable ntpd.service

@@ -6,7 +6,7 @@ then
 hint "update-install-sec-dns" "Set up as a secondary DNS server"
 if [ "$CMD" == "update-install-sec-dns" ]
 then        
-        pm install bind
+        pm bind
 
         systemctl stop named.service
 
