@@ -412,7 +412,7 @@ function regenerate_dns {
         
         rm -rf /var/named/srvctl/*
         rm -rf $named_slave_path
-        mkdir -P $named_slave_path
+        mkdir -p $named_slave_path
         
         echo '## srvctl named.conf.local' > $named_conf_local
         echo '## srvctl named.slave.conf.global.'$(hostname) > $named_slave_conf
@@ -475,9 +475,9 @@ function regenerate_dns {
 
                 wget --no-check-certificate https://$host/dns.tar.gz -O /var/named/srvctl/$host.dns.tar.gz
                 
-                tar -xf /var/named/srvctl/$host.dns.tar.gz
+                #tar -xf /var/named/srvctl/$host.dns.tar.gz
                 
-                chown -R named:named /var/named/srvctl
+                #chown -R named:named /var/named/srvctl
             
                 systemctl restart named.service
                 test=$(systemctl is-active named.service)
@@ -486,16 +486,6 @@ function regenerate_dns {
                     err "Error loading DNS settings for $host"
                 fi
             done < /etc/srvctl/hosts  
-            
-            chown -R named:named /var/named/srvctl
-            
-
-            systemctl restart named.service
-            test=$(systemctl is-active named.service)
-            if ! [ "$test" == "active" ]
-            then
-                err
-            fi
 
         fi
 
