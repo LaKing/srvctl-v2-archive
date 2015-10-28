@@ -461,7 +461,28 @@ function regenerate_dns {
                 msg "Update remote DNS connection for $host"
                 wget https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
                 
+                tar -xf /var/srvctl-host/$host.dns.tar.gz
+                
+                chown -R named:named /var/named/srvctl
+            
+                systemctl restart named.service
+                test=$(systemctl is-active named.service)
+                if ! [ "$test" == "active" ]
+                then
+                    err "Error loading DNS settings for $host"
+                fi
             done < /etc/srvctl/hosts  
+            
+            chown -R named:named /var/named/srvctl
+            
+
+            systemctl restart named.service
+            test=$(systemctl is-active named.service)
+            if ! [ "$test" == "active" ]
+            then
+                err
+            fi
+
         fi
 
 }
