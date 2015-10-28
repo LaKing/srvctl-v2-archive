@@ -400,7 +400,7 @@ function regenerate_users_structure {
         
 function write_named_zone {
 ## TODO add IPv6 support
-dbg zone  $named_zone
+dbg @zone  $named_zone
 set_file $named_zone '$TTL 1D
 @        IN SOA        @ hostmaster.'$CDN'. (
                                         '$serial'        ; serial
@@ -456,7 +456,6 @@ function create_named_zone {
 
         #if [ ! -f $named_zone ]
         #then
-                dbg named zone $D
                 serial_file=$named_main_path/$D.serial
 
                 if [ ! -f $serial_file ]
