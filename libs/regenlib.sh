@@ -429,27 +429,28 @@ function create_named_zone {
             mail_server="$(cat $SRV/$C/settings/dns-mx-record | xargs)."            
         fi
 
-        if [ ! -f $named_conf ]
-        then
+        #if [ ! -f $named_conf ]
+        #then
                 echo '## srvctl named.conf '$D > $named_conf
                 echo 'zone "'$D'" {' >> $named_conf
                 echo '        type master;'  >> $named_conf
                 echo '        file "'$named_live_zone'";' >> $named_conf
                 echo '};' >> $named_conf
-        fi
+        #fi
 
-        if [ ! -f $named_slave ]
-        then
+        #if [ ! -f $named_slave ]
+        #then
                 echo '## srvctl named slave conf '$D > $named_slave
                 echo 'zone "'$D'" {' >> $named_slave
                 echo '        type slave;'  >> $named_slave
                 echo '        masters {'$HOSTIPv4';};'  >> $named_slave
                 echo '        file "'$named_slave_zone'";' >> $named_slave
                 echo '};' >> $named_slave
-        fi
+        #fi
 
-        if [ ! -f $named_zone ]
-        then
+        #if [ ! -f $named_zone ]
+        #then
+                dbg named zone $D
                 serial_file=$named_main_path/$D.serial
 
                 if [ ! -f $serial_file ]
@@ -473,7 +474,7 @@ function create_named_zone {
                         write_named_zone  
                     fi
                 fi
-        fi
+        #fi
 }
 
 function regenerate_dns {
