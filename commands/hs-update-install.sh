@@ -9,7 +9,7 @@ hint "update-install [all]" "This will update the current OS to be a srvctl-conf
 if [ "$CMD" == "update-install" ]
 then
 
-        pm update 
+        pm_update 
 
         if [ "$2" == "all" ]
         then

@@ -65,18 +65,11 @@ function add_conf {
     ## filename=$1 content=$2
     if [ -f "$1" ]
     then
-
-            if ! grep -q "$2" $1; then
-             #echo '' > /dev/null
-             #echo $1" already has "$2
-             #else
-             #echo "adding "$2
-              if [ -f $1 ];
-               then bak $1
-              fi
-             echo "$2" >> $1
-            fi
-        
+        if ! grep -q "$2" $1
+        then
+            bak $1
+            echo "$2" >> $1
+        fi
     else 
         echo "File not found! $1"
     fi
@@ -151,6 +144,19 @@ function pm {
     fi   
 }
 
+function pm_update {
+
+    if (( $FEDORA < 22 )) 
+    then
+        echo yum -y update
+        yum -y update
+        exif
+    else
+        echo dnf -y update
+        dnf -y update
+        exif
+    fi   
+}
 
 
 
