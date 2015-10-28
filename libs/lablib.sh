@@ -96,8 +96,8 @@ function dbg {
     ## debug message
         if $debug
         then
-            echo -e ${yellow}'#'$BASH_LINENO' '${FUNCNAME[1]}': '$1${NC}
-            echo $NOW': '$1 >> $LOG
+            echo -e ${yellow}'#'$BASH_LINENO' '${FUNCNAME[1]}': '$@${NC}
+            echo $NOW': '$@ >> $LOG
         fi
 }
 
