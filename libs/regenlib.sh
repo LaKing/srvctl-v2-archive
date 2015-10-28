@@ -446,7 +446,7 @@ function regenerate_dns {
                 mkdir -p /var/named/srvctl
                 
                 ## create tarball
-                tar -czPf $dns_share -C /var/named/srvctl
+                tar -czPf $dns_share -C /var/named/srvctl .
 
         else
                 err "DNS Error."
