@@ -400,8 +400,8 @@ function regenerate_dns {
 
         rm -rf /var/named/srvctl/*
 
-        named_conf_local=/var/srvctl-host/named.conf.local
-        named_slave_conf_global=/var/srvctl-host/named.slave.conf.global.$(hostname)
+        named_conf_local=/var/named/srvctl/named.conf.local
+        named_slave_conf_global=/var/named/srvctl/named.conf.$(hostname)
 
         echo '## srvctl named.conf.local' > $named_conf_local
         echo '## srvctl named.slave.conf.global.'$(hostname) > $named_slave_conf_global
