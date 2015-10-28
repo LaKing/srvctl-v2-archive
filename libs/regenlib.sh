@@ -419,6 +419,7 @@ function create_named_zone {
         named_conf=$named_main_path/$D.conf
         named_slave=$named_slave_path/$D.slave.conf
         named_zone=$named_main_path/$D.zone
+        named_live_zone=$named_live_path/$D.zone
         
         mail_server="mail"
 
@@ -432,7 +433,7 @@ function create_named_zone {
                 echo '## srvctl named.conf '$D > $named_conf
                 echo 'zone "'$D'" {' >> $named_conf
                 echo '        type master;'  >> $named_conf
-                echo '        file "'$named_zone'";' >> $named_conf
+                echo '        file "'$named_live_zone'";' >> $named_conf
                 echo '};' >> $named_conf
         fi
 
@@ -442,7 +443,7 @@ function create_named_zone {
                 echo 'zone "'$D'" {' >> $named_slave
                 echo '        type slave;'  >> $named_slave
                 echo '        masters {'$HOSTIPv4';};'  >> $named_slave
-                echo '        file "'$named_zone'";' >> $named_slave
+                echo '        file "'$named_live_zone'";' >> $named_slave
                 echo '};' >> $named_slave
         fi
 
@@ -580,6 +581,7 @@ function regenerate_dns {
         if ! [ "$test" == "active" ]
         then
             err "Error loading DNS settings."
+            systemctl status named.service
             exit
         fi
         
