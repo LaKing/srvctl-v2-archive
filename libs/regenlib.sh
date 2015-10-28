@@ -393,13 +393,28 @@ function regenerate_users_structure {
 
 }
 
+function write_named_zone {
+## TODO add IPv6 support
+set_file $named_zone '$TTL 1D
+@        IN SOA        @ hostmaster.'$CDN'. (
+                                        '$serial'        ; serial
+                                        1D        ; refresh
+                                        1H        ; retry
+                                        1W        ; expire
+                                        3H )        ; minimum
+        IN         NS        ns1.'$CDN'.
+        IN         NS        ns2.'$CDN'.
+*        IN         A        '$HOSTIPv4'
+@        IN         A        '$HOSTIPv4'
+@        IN        MX        10        '${mail_server,,}'
+        AAAA        ::1'
+
+}
+
 function create_named_zone {
 
         ## argument domain ($C or alias)
         D=$1
-
-        mkdir -p /var/named/srvctl
-
 
         named_conf=$named_main_path/$D.conf
         named_slave=$named_slave_path/$D.slave.conf
@@ -433,57 +448,40 @@ function create_named_zone {
 
         if [ ! -f $named_zone ]
         then
-                serial_file=/var/named/serial-counter.txt
+                serial_file=$named_main_path/$D.serial
 
                 if [ ! -f $serial_file ]
                 then
                   serial='1'        
                   echo $serial > $serial_file
                 else        
-                  serial=$(($(cat $serial_file)+1))
-                  echo $serial >  $serial_file
+                  serial=$(cat $serial_file)
                 fi
 
-                set_file $named_zone '$TTL 1D
-@        IN SOA        @ hostmaster.'$CDN'. (
-                                        '$serial'        ; serial
-                                        1D        ; refresh
-                                        1H        ; retry
-                                        1W        ; expire
-                                        3H )        ; minimum
-        IN         NS        ns1.'$CDN'.
-        IN         NS        ns2.'$CDN'.
-*        IN         A        '$HOSTIPv4'
-@        IN         A        '$HOSTIPv4'
-@        IN        MX        10        '${mail_server,,}'
-        AAAA        ::1'
-
-## TODO add IPv6 support
-
+                if [ -f $named_zone ]
+                then
+                    cat $named_zone > $named_zone.set
+                    write_named_zone
+                    
+                    if ! cmp $named_zone $named_zone.set
+                    then
+                        # constructed content changed
+                        serial=$(($(cat $serial_file)+1)) 
+                        echo $serial >  $serial_file
+                        write_named_zone  
+                    fi
+                fi
         fi
-
-        #chown named:named $named_conf
-        #chown named:named $named_slave_conf
-        #chown named:named $named_zone
-
-        ## TODO create a nice file structure and re-enable this.
-        #if [ ! -L $SRV/$C/$D.named.conf ]
-        #then
-        #   ln -s $named_conf $SRV/$C/$D.named.conf
-        #fi
-
-        #if [ ! -L $SRV/$C/$D.named.zone ]
-        #then
-        #   ln -s $named_zone $SRV/$C/$D.named.zone
-        #fi
 }
 
 function regenerate_dns {
         
         msg "Regenerate DNS - named/bind configs"
         
-        named_main_path=/var/named/srvctl
-        named_slave_path=/var/srvctl-host/named
+        named_includes=/var/named/srvctl-includes.conf
+        named_live_path=/var/named/srvctl
+        named_main_path=/var/srvctl-host/named-local
+        named_slave_path=/var/srvctl-host/named-slave
         
         ## dir might not exist
         mkdir -p $named_main_path
@@ -499,9 +497,9 @@ function regenerate_dns {
         ## the secondary file
         named_slave_conf=$named_slave_path/named.conf.$(hostname)
         
-        
-        echo '## srvctl named.conf.local' > $named_conf_local
-        echo '## srvctl named.slave.conf.global.'$(hostname) > $named_slave_conf
+        echo '## srvctl named includes' > $named_includes
+        echo '## srvctl named primary' > $named_conf_local
+        echo '## srvctl named slaves'$(hostname) > $named_slave_conf
 
         for C in $(lxc-ls)
         do
@@ -527,30 +525,35 @@ function regenerate_dns {
                 fi
         done
         
-        chown -R named:named $named_main_path
         
-        systemctl restart named.service
+        
+        #chown -R named:named $named_live_path
+        
+        #systemctl restart named.service
 
 
-        test=$(systemctl is-active named.service)
+        #test=$(systemctl is-active named.service)
 
-        if [ "$test" == "active" ]
-        then
+        #if [ "$test" == "active" ]
+        #then
                 msg "Creating DNS share."
-
-                ## to make sure everything is correct we regenerate the dns share too
                 ## delete first
                 rm -rf $dns_share
-                
-
                 
                 ## create tarball
                 tar -czPf $dns_share -C $named_slave_path .
 
-        else
-                err "DNS Error."
-                systemctl status named.service
-        fi
+        #else
+        #        err "DNS Error."
+        #        systemctl status named.service
+        #        exit
+        #fi
+
+
+        echo 'include "/var/named/srvctl/named.conf.local";' >> $named_includes
+
+        cp $named_main_path/* $named_live_path
+        cp $named_slave_path/* $named_live_path
 
         if [ -f /etc/srvctl/hosts ]
         then
@@ -558,22 +561,29 @@ function regenerate_dns {
             while read host
             do
                 msg "Update remote DNS connection for $host"
+                
+                wget --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
+                tar -xf /var/srvctl-host/$host.dns.tar.gz -C $named_live_path
+                
+                echo 'include "/var/named/srvctl/named.conf.'$host'";' >> $named_includes
 
-                wget --no-check-certificate https://$host/dns.tar.gz -O /var/named/srvctl/$host.dns.tar.gz
-                
-                #tar -xf /var/named/srvctl/$host.dns.tar.gz
-                
-                #chown -R named:named /var/named/srvctl
-            
-                systemctl restart named.service
-                test=$(systemctl is-active named.service)
-                if ! [ "$test" == "active" ]
-                then
-                    err "Error loading DNS settings for $host"
-                fi
             done < /etc/srvctl/hosts  
 
         fi
+        
+        chown named:named $named_includes
+        chown -R named:named $named_live_path
+        
+        ## all preparations done, activate!
+        systemctl restart named.service
+        test=$(systemctl is-active named.service)
+        if ! [ "$test" == "active" ]
+        then
+            err "Error loading DNS settings."
+            exit
+        fi
+        
+        
 
 }
 
