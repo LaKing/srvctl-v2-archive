@@ -66,10 +66,10 @@ function add_conf {
     if [ -f "$1" ]
     then
 
-            if grep -q "$2" $1; then
-             echo '' > /dev/null
+            if ! grep -q "$2" $1; then
+             #echo '' > /dev/null
              #echo $1" already has "$2
-            else
+             #else
              #echo "adding "$2
               if [ -f $1 ];
                then bak $1

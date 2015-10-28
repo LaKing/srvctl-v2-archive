@@ -91,19 +91,19 @@ source $install_dir/hs-install/lxc.sh
         ## srvctl
 
         ## TODO change counter location to /var/srvctl/counter
-        if [ -f /etc/srvctl/counter ]
+        if [ -f /var/srvctl-host/counter ]
         then
-         msg "Counter exists, counting at "$(cat /etc/srvctl/counter)
+         msg "Counter exists, counting at "$(cat /var/srvctl-host/counter)
         else
          log "Counter does not exist. Creating."
-         echo '0' > /etc/srvctl/counter
+         echo '0' > /var/srvctl-host/counter
         fi
 
         ## make sure srvctl enviroment directories exists
         mkdir -p $SRV
         mkdir -p $TMP
-        #mkdir -p /var/srvctl/share
-        ## TODO FIX HERE
+        
+        mkdir -p /var/srvctl-host
         mkdir -p /var/srvctl
         mkdir -p /etc/srvctl
 
@@ -273,6 +273,8 @@ man '
     Custom files for pound will reside in /var/www/html, and they might be customized.      
 '
 fi ## onHS
+
+
 
 
 

@@ -53,10 +53,10 @@ zone "." IN {
 include "/etc/named.rfc1912.zones";
 include "/etc/named.root.key";
 
-include "/etc/srvctl/named.conf.local";
+include "/var/srvctl-host/named.conf.local";
 '
 
-set_file /etc/srvctl/named.conf.local '## srvctl generated 
+set_file /var/srvctl-host/named.conf.local '## srvctl generated 
 '
 
         rsync -a /usr/share/doc/bind/sample/etc/named.rfc1912.zones /etc
@@ -67,4 +67,6 @@ set_file /etc/srvctl/named.conf.local '## srvctl generated
 else
     msg "Bind - DNS server already configured."
 fi ## install named
+
+
 

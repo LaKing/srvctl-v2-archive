@@ -35,8 +35,8 @@ function regenerate_config_files {
             if [ ! -f $SRV/$_C/config.counter ]
             then
                 ## increase the counter
-                counter=$(($(cat /etc/srvctl/counter)+1))
-                echo $counter >  /etc/srvctl/counter
+                counter=$(($(cat /var/srvctl-host/counter)+1))
+                echo $counter >  /var/srvctl-host/counter
                 echo $counter > $SRV/$_C/config.counter
             fi
             
@@ -400,8 +400,8 @@ function regenerate_dns {
 
         rm -rf /var/named/srvctl/*
 
-        named_conf_local=$TMP/named.conf.local
-         named_slave_conf_global=$TMP/named.slave.conf.global.$(hostname)
+        named_conf_local=/var/srvctl-host/named.conf.local
+        named_slave_conf_global=/var/srvctl-host/named.slave.conf.global.$(hostname)
 
         echo '## srvctl named.conf.local' > $named_conf_local
         echo '## srvctl named.slave.conf.global.'$(hostname) > $named_slave_conf_global
@@ -420,20 +420,9 @@ function regenerate_dns {
                                 create_named_zone $A
                                 echo 'include "/var/named/srvctl/'$A'.conf";' >> $named_conf_local
                                 echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf_global
-                        
                         done
                 fi
-
         done
-
-        bak /etc/srvctl/named.conf.local
-        bak /etc/srvctl/named.slave.conf.global.$(hostname)
-
-        rsync -a $named_conf_local /etc/srvctl
-        rsync -a $named_slave_conf_global /etc/srvctl
-
-        ## update this variable as it was synced to its real location
-        named_slave_conf_global=/etc/srvctl/named.slave.conf.global.$(hostname)
 
         systemctl restart named.service
 
@@ -457,6 +446,17 @@ function regenerate_dns {
         else
                 err "DNS Error."
                 systemctl status named.service
+        fi
+
+        if [ -f /etc/srvctl/hosts ]
+        then
+            
+            while read host
+            do
+                msg "Update remote DNS connection for $host"
+                wget https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
+                
+            done < /etc/srvctl/hosts  
         fi
 
 }
@@ -499,7 +499,7 @@ __c=0
                 fi
         done
         
-        counter=$(cat /etc/srvctl/counter)
+        counter=$(cat /var/srvctl-host/counter)
         if ! [ "$counter" -eq "$__c" ]
         then
                 msg "Counter: $counter vs $__c"
@@ -756,6 +756,8 @@ function wait_for_ve_connection {
 
 
 fi ## if onHS
+
+
 
 
 

@@ -49,8 +49,8 @@ then
         sudomize
 
         ## increase the counter
-        counter=$(($(cat /etc/srvctl/counter)+1))
-        echo $counter >  /etc/srvctl/counter
+        counter=$(($(cat /var/srvctl-host/counter)+1))
+        echo $counter >  /var/srvctl-host/counter
 
         log "Create container $C #$counter"
         ## templates are usually in /usr/local/share/lxc/templates, lxc-fedora-srv has to be installed!
@@ -234,10 +234,10 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 
 ## DNS
 
-        named_slave_conf_global=/etc/srvctl/named.slave.conf.global.$(hostname)
+        named_slave_conf_global=/var/srvctl-host/named.slave.conf.global.$(hostname)
 
         create_named_zone $C
-        echo 'include "/var/named/srvctl/'$C'.conf";' >> /etc/srvctl/named.conf.local
+        echo 'include "/var/named/srvctl/'$C'.conf";' >> /var/srvctl-host/named.conf.local
         echo 'include "/var/named/srvctl/'$C'.slave.conf";' >> $named_slave_conf_global
 
         rm $dns_share
@@ -353,6 +353,9 @@ man '
     Containers will be configured as web and mail servers. The srvctl command will be available on every VE, and can be used to configure further.
     
 '
+
+
+
 
 
 
