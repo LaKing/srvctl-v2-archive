@@ -393,32 +393,119 @@ function regenerate_users_structure {
 
 }
 
+function create_named_zone {
+
+        ## argument domain ($C or alias)
+        D=$1
+
+        mkdir -p /var/named/srvctl
+
+
+        named_conf=$named_main_path/$D.conf
+        named_slave=$named_slave_path/$D.slave.conf
+        named_zone=$named_main_path/$D.zone
+        
+        mail_server="mail"
+
+        if [ -f "$SRV/$C/settings/dns-mx-record" ] && [ ! -z "$(cat $SRV/$C/settings/dns-mx-record)" ]
+        then
+            mail_server="$(cat $SRV/$C/settings/dns-mx-record | xargs)."            
+        fi
+
+        if [ ! -f $named_conf ]
+        then
+                echo '## srvctl named.conf '$D > $named_conf
+                echo 'zone "'$D'" {' >> $named_conf
+                echo '        type master;'  >> $named_conf
+                echo '        file "'$named_zone'";' >> $named_conf
+                echo '};' >> $named_conf
+        fi
+
+        if [ ! -f $named_slave ]
+        then
+                echo '## srvctl named.slave.conf '$D > $named_slave
+                echo 'zone "'$D'" {' >> $named_slave
+                echo '        type slave;'  >> $named_slave
+                echo '        masters {'$HOSTIPv4';};'  >> $named_slave
+                echo '        file "'$named_zone'";' >> $named_slave
+                echo '};' >> $named_slave
+        fi
+
+        if [ ! -f $named_zone ]
+        then
+                serial_file=/var/named/serial-counter.txt
+
+                if [ ! -f $serial_file ]
+                then
+                  serial='1'        
+                  echo $serial > $serial_file
+                else        
+                  serial=$(($(cat $serial_file)+1))
+                  echo $serial >  $serial_file
+                fi
+
+                set_file $named_zone '$TTL 1D
+@        IN SOA        @ hostmaster.'$CDN'. (
+                                        '$serial'        ; serial
+                                        1D        ; refresh
+                                        1H        ; retry
+                                        1W        ; expire
+                                        3H )        ; minimum
+        IN         NS        ns1.'$CDN'.
+        IN         NS        ns2.'$CDN'.
+*        IN         A        '$HOSTIPv4'
+@        IN         A        '$HOSTIPv4'
+@        IN        MX        10        '${mail_server,,}'
+        AAAA        ::1'
+
+## TODO add IPv6 support
+
+        fi
+
+        #chown named:named $named_conf
+        #chown named:named $named_slave_conf
+        #chown named:named $named_zone
+
+        ## TODO create a nice file structure and re-enable this.
+        #if [ ! -L $SRV/$C/$D.named.conf ]
+        #then
+        #   ln -s $named_conf $SRV/$C/$D.named.conf
+        #fi
+
+        #if [ ! -L $SRV/$C/$D.named.zone ]
+        #then
+        #   ln -s $named_zone $SRV/$C/$D.named.zone
+        #fi
+}
 
 function regenerate_dns {
         
         msg "Regenerate DNS - named/bind configs"
         
-        ## dir might not exist
-        mkdir -p /var/named/srvctl
-        
-        ## has to be empty        
-        rm -rf /var/named/srvctl/*
-        rm -rf /var/srvctl-host/named
-
-        named_conf_local=/var/named/srvctl/named.conf.local
-        
+        named_main_path=/var/named/srvctl
         named_slave_path=/var/srvctl-host/named
+        
+        ## dir might not exist
+        mkdir -p $named_main_path
+        mkdir -p $named_slave_path
+                
+        ## has to be empty for regeneration      
+        rm -rf $named_main_path/*
+        rm -rf $named_slave_path/*
+        
+        ## the main include file
+        named_conf_local=$named_main_path/named.conf.local
+        
+        ## the secondary file
         named_slave_conf=$named_slave_path/named.conf.$(hostname)
         
-        rm -rf /var/named/srvctl/*
-        rm -rf $named_slave_path
-        mkdir -p $named_slave_path
         
         echo '## srvctl named.conf.local' > $named_conf_local
         echo '## srvctl named.slave.conf.global.'$(hostname) > $named_slave_conf
 
         for C in $(lxc-ls)
         do
+                ## skip local domains
                 if [ "${C: -6}" == ".local" ]
                 then
                     continue
@@ -439,10 +526,9 @@ function regenerate_dns {
                         done
                 fi
         done
-
-        cp -a /var/named/srvctl/. $named_slave_path
-        rm -rf $named_slave_path/named.conf.local
-
+        
+        chown -R named:named $named_main_path
+        
         systemctl restart named.service
 
 
@@ -459,7 +545,7 @@ function regenerate_dns {
 
                 
                 ## create tarball
-                tar -czPf $dns_share -C /var/named/srvctl .
+                tar -czPf $dns_share -C $named_slave_path .
 
         else
                 err "DNS Error."
@@ -639,94 +725,7 @@ function set_file_limits {
     sysctl fs.inotify.max_user_instances=1024 >> /dev/null
 }
 
-function create_named_zone {
 
-        ## argument domain ($C or alias)
-        D=$1
-
-        mkdir -p /var/named/srvctl
-        chown -R named:named /var/named/srvctl
-
-        named_conf=/var/named/srvctl/$D.conf
-        named_slave_conf=/var/named/srvctl/$D.slave.conf
-        named_zone=/var/named/srvctl/$D.zone
-        
-        mail_server="mail"
-
-        if [ -f "$SRV/$C/settings/dns-mx-record" ] && [ ! -z "$(cat $SRV/$C/settings/dns-mx-record)" ]
-        then
-            ## TODO validate entry.
-            mail_server="$(cat $SRV/$C/settings/dns-mx-record | xargs)."            
-        fi
-
-        if [ ! -f $named_conf ]
-        then
-## TODO convert to single string and command, this is ugly.
-                echo '## srvctl named.conf '$D > $named_conf
-                echo 'zone "'$D'" {' >> $named_conf
-                echo '        type master;'  >> $named_conf
-                echo '        file "'$named_zone'";' >> $named_conf
-                echo '};' >> $named_conf
-        fi
-
-        if [ ! -f $named_slave_conf ]
-        then
-                echo '## srvctl named.slave.conf '$D > $named_slave_conf
-                echo 'zone "'$D'" {' >> $named_slave_conf
-                echo '        type slave;'  >> $named_slave_conf
-                echo '        masters {'$HOSTIPv4';};'  >> $named_slave_conf
-                echo '        file "'$named_zone'";' >> $named_slave_conf
-                echo '};' >> $named_slave_conf
-        fi
-
-        if [ ! -f $named_zone ]
-        then
-                
-
-                serial_file=/var/named/serial-counter.txt
-
-                if [ ! -f $serial_file ]
-                then
-                  serial='1'        
-                  echo $serial > $serial_file
-                else        
-                  serial=$(($(cat $serial_file)+1))
-                  echo $serial >  $serial_file
-                fi
-
-                set_file $named_zone '$TTL 1D
-@        IN SOA        @ hostmaster.'$CDN'. (
-                                        '$serial'        ; serial
-                                        1D        ; refresh
-                                        1H        ; retry
-                                        1W        ; expire
-                                        3H )        ; minimum
-        IN         NS        ns1.'$CDN'.
-        IN         NS        ns2.'$CDN'.
-*        IN         A        '$HOSTIPv4'
-@        IN         A        '$HOSTIPv4'
-@        IN        MX        10        '${mail_server,,}'
-        AAAA        ::1'
-
-## TODO add IPv6 support
-
-        fi
-
-        chown named:named $named_conf
-        chown named:named $named_slave_conf
-        chown named:named $named_zone
-
-        ## TODO create a nice file structure and re-enable this.
-        #if [ ! -L $SRV/$C/$D.named.conf ]
-        #then
-        #   ln -s $named_conf $SRV/$C/$D.named.conf
-        #fi
-
-        #if [ ! -L $SRV/$C/$D.named.zone ]
-        #then
-        #   ln -s $named_zone $SRV/$C/$D.named.zone
-        #fi
-}
 
 function wait_for_ve_online {
 
