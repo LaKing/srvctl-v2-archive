@@ -77,19 +77,19 @@ function add_conf {
 
 function msg {
     ## message for the user
-    echo -e ${green}$1${NC}
+    echo -e ${green}$@${NC}
 }
 
 function ntc {
     ## notice for the user
-    echo -e ${yellow}$1${NC}
+    echo -e ${yellow}$@${NC}
 }
 
 
 function log {
     ## create a log entry
     echo -e ${yellow}$1${NC}
-    echo $NOW': '$1 >> $LOG
+    echo $NOW': '$@ >> $LOG
 }
 
 function dbg {
@@ -103,9 +103,9 @@ function dbg {
 
 function err {
     ## error message
-    echo -e ${red}$1${NC}
-    echo $NOW': '$1 >> $LOG
-    SUCC=$SUCC" "$1
+    echo -e ${red}$@${NC}
+    echo $NOW': '$@ >> $LOG
+    SUCC=$SUCC" "$@
 }
 
 function is_fqdn() {

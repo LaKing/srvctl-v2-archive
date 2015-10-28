@@ -392,9 +392,15 @@ function regenerate_users_structure {
         #systemctl restart firewalld.service
 
 }
-
+        ## constants
+        named_includes=/var/named/srvctl-includes.conf
+        named_live_path=/var/named/srvctl
+        named_main_path=/var/srvctl-host/named-local
+        named_slave_path=/var/srvctl-host/named-slave
+        
 function write_named_zone {
 ## TODO add IPv6 support
+dbg zone  $named_zone
 set_file $named_zone '$TTL 1D
 @        IN SOA        @ hostmaster.'$CDN'. (
                                         '$serial'        ; serial
@@ -474,17 +480,13 @@ function create_named_zone {
                         write_named_zone  
                     fi
                 fi
-        #fi
+        #sc!fi
 }
 
 function regenerate_dns {
         
         msg "Regenerate DNS - named/bind configs"
-        
-        named_includes=/var/named/srvctl-includes.conf
-        named_live_path=/var/named/srvctl
-        named_main_path=/var/srvctl-host/named-local
-        named_slave_path=/var/srvctl-host/named-slave
+    
         
         ## dir might not exist
         mkdir -p $named_main_path
