@@ -446,7 +446,8 @@ function regenerate_dns {
                 mkdir -p /var/named/srvctl
                 
                 ## create zip
-                tar -czPf $dns_share /var/named/srvctl
+                #tar -czPf $dns_share /var/named/srvctl
+                find /var/named/srvctl -maxdepth 1 -type f -exec tar Avf $dns_share {} +
 
         else
                 err "DNS Error."
