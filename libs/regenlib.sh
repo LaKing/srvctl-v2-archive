@@ -397,14 +397,25 @@ function regenerate_users_structure {
 function regenerate_dns {
         
         msg "Regenerate DNS - named/bind configs"
-
+        
+        ## dir might not exist
+        mkdir -p /var/named/srvctl
+        
+        ## has to be empty        
         rm -rf /var/named/srvctl/*
+        rm -rf /var/srvctl-host/named
 
         named_conf_local=/var/named/srvctl/named.conf.local
-        named_slave_conf_global=/var/named/srvctl/named.conf.$(hostname)
-
+        
+        named_slave_path=/var/srvctl-host/named
+        named_slave_conf=$named_slave_path/named.conf.$(hostname)
+        
+        rm -rf /var/named/srvctl/*
+        rm -rf $named_slave_path
+        mkdir -P $named_slave_path
+        
         echo '## srvctl named.conf.local' > $named_conf_local
-        echo '## srvctl named.slave.conf.global.'$(hostname) > $named_slave_conf_global
+        echo '## srvctl named.slave.conf.global.'$(hostname) > $named_slave_conf
 
         for C in $(lxc-ls)
         do
@@ -415,7 +426,7 @@ function regenerate_dns {
                 
                 create_named_zone $C
                 echo 'include "/var/named/srvctl/'$C'.conf";' >> $named_conf_local
-                echo 'include "/var/named/srvctl/'$C'.slave.conf";' >> $named_slave_conf_global
+                echo 'include "/var/named/srvctl/'$C'.slave.conf";' >> $named_slave_conf
 
                 if [ -f /$SRV/$C/settings/aliases ]
                 then
@@ -424,10 +435,13 @@ function regenerate_dns {
                                 #msg "$A is an alias of $C"
                                 create_named_zone $A
                                 echo 'include "/var/named/srvctl/'$A'.conf";' >> $named_conf_local
-                                echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf_global
+                                echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf
                         done
                 fi
         done
+
+        cp -a /var/named/srvctl/. $named_slave_path
+        rm -rf $named_slave_path/named.conf.local
 
         systemctl restart named.service
 
@@ -442,8 +456,7 @@ function regenerate_dns {
                 ## delete first
                 rm -rf $dns_share
                 
-                ## dir might not exist
-                mkdir -p /var/named/srvctl
+
                 
                 ## create tarball
                 tar -czPf $dns_share -C /var/named/srvctl .
