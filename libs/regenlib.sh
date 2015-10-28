@@ -217,7 +217,7 @@ function regenerate_root_configs {
 
 function regenerate_users {
         ## First of all, make sure all users we have defined for sites, are all present.
-        msg "vierifying user-list on $(hostname)"
+        msg "processing user-list"
         for _C in $(lxc-ls)
         do
                 touch $SRV/$_C/settings/users
@@ -446,7 +446,7 @@ function regenerate_dns {
                 mkdir -p /var/named/srvctl
                 
                 ## create tarball
-                tar -czPf $dns_share /var/named/srvctl
+                tar -czPf $dns_share -C /var/named/srvctl
 
         else
                 err "DNS Error."
@@ -459,7 +459,7 @@ function regenerate_dns {
             while read host
             do
                 msg "Update remote DNS connection for $host"
-                wget --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
+                wget --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz > /dev/null
                 
                 tar -xf /var/srvctl-host/$host.dns.tar.gz
                 
