@@ -408,6 +408,11 @@ function regenerate_dns {
 
         for C in $(lxc-ls)
         do
+                if [ "${C: -6}" == ".local" ]
+                then
+                    continue
+                fi
+                
                 create_named_zone $C
                 echo 'include "/var/named/srvctl/'$C'.conf";' >> $named_conf_local
                 echo 'include "/var/named/srvctl/'$C'.slave.conf";' >> $named_slave_conf_global
