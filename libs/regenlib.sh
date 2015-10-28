@@ -459,7 +459,7 @@ function regenerate_dns {
             while read host
             do
                 msg "Update remote DNS connection for $host"
-                wget https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
+                wget --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
                 
                 tar -xf /var/srvctl-host/$host.dns.tar.gz
                 
