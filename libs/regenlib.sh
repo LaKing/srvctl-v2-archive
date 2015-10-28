@@ -420,7 +420,8 @@ function create_named_zone {
         named_slave=$named_slave_path/$D.slave.conf
         named_zone=$named_main_path/$D.zone
         named_live_zone=$named_live_path/$D.zone
-        
+        named_slave_zone=$named_live_path/$D.slave.zone
+                
         mail_server="mail"
 
         if [ -f "$SRV/$C/settings/dns-mx-record" ] && [ ! -z "$(cat $SRV/$C/settings/dns-mx-record)" ]
@@ -439,11 +440,11 @@ function create_named_zone {
 
         if [ ! -f $named_slave ]
         then
-                echo '## srvctl named.slave.conf '$D > $named_slave
+                echo '## srvctl named slave conf '$D > $named_slave
                 echo 'zone "'$D'" {' >> $named_slave
                 echo '        type slave;'  >> $named_slave
                 echo '        masters {'$HOSTIPv4';};'  >> $named_slave
-                echo '        file "'$named_live_zone'";' >> $named_slave
+                echo '        file "'$named_slave_zone'";' >> $named_slave
                 echo '};' >> $named_slave
         fi
 
