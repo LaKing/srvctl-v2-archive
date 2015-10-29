@@ -398,24 +398,6 @@ function regenerate_users_structure {
         named_main_path=/var/srvctl-host/named-local
         named_slave_path=/var/srvctl-host/named-slave
         
-function write_named_zone {
-## TODO add IPv6 support
-dbg @zone  $named_zone
-set_file $named_zone '$TTL 1D
-@        IN SOA        @ hostmaster.'$CDN'. (
-                                        '$serial'        ; serial
-                                        1D        ; refresh
-                                        1H        ; retry
-                                        1W        ; expire
-                                        3H )        ; minimum
-        IN         NS        ns1.'$CDN'.
-        IN         NS        ns2.'$CDN'.
-*        IN         A        '$HOSTIPv4'
-@        IN         A        '$HOSTIPv4'
-@        IN        MX        10        '${mail_server,,}'
-        AAAA        ::1'
-
-}
 
 function create_named_zone {
 
@@ -423,8 +405,9 @@ function create_named_zone {
         D=$1
 
         named_conf=$named_main_path/$D.conf
-        named_slave=$named_slave_path/$D.slave.conf
         named_zone=$named_main_path/$D.zone
+        named_slave=$named_slave_path/$D.slave
+        
         named_live_zone=$named_live_path/$D.zone
         named_slave_zone=$named_live_path/$D.slave.zone
                 
@@ -437,7 +420,7 @@ function create_named_zone {
 
         #if [ ! -f $named_conf ]
         #then
-                echo '## srvctl named.conf '$D > $named_conf
+                echo '## srvctl named main conf '$D > $named_conf
                 echo 'zone "'$D'" {' >> $named_conf
                 echo '        type master;'  >> $named_conf
                 echo '        file "'$named_live_zone'";' >> $named_conf
@@ -456,30 +439,36 @@ function create_named_zone {
 
         #if [ ! -f $named_zone ]
         #then
-                serial_file=$named_main_path/$D.serial
-
+                today=$(date +%y%m%d)
+                serial_file=/var/srvctl-host/named-$today
+                serial=0
+                
                 if [ ! -f $serial_file ]
-                then
-                  serial='1'        
+                then      
+                  serial=$today'0000'
                   echo $serial > $serial_file
                 else        
-                  serial=$(cat $serial_file)
+                  serial=$(($(cat $serial_file)+1))
+                  echo $serial > $serial_file
                 fi
 
-                if [ -f $named_zone ]
-                then
-                    cat $named_zone > $named_zone.set
-                    write_named_zone
-                    
-                    if ! cmp $named_zone $named_zone.set
-                    then
-                        # constructed content changed
-                        serial=$(($(cat $serial_file)+1)) 
-                        echo $serial >  $serial_file
-                        write_named_zone  
-                    fi
-                fi
-        #sc!fi
+                ## TODO add IPv6 support
+
+set_file $named_zone '$TTL 1D
+@        IN SOA        @ hostmaster.'$CDN'. (
+                                        '$serial'        ; serial
+                                        1D        ; refresh
+                                        1H        ; retry
+                                        1W        ; expire
+                                        3H )        ; minimum
+        IN         NS        ns1.'$CDN'.
+        IN         NS        ns2.'$CDN'.
+*        IN         A        '$HOSTIPv4'
+@        IN         A        '$HOSTIPv4'
+@        IN        MX        10        '${mail_server,,}'
+        AAAA        ::1'
+
+## named zone written.                    
 }
 
 function regenerate_dns {
@@ -488,22 +477,26 @@ function regenerate_dns {
     
         
         ## dir might not exist
+        mkdir -p $named_live_path
         mkdir -p $named_main_path
         mkdir -p $named_slave_path
                 
-        ## has to be empty for regeneration      
+        ## has to be empty for regeneration
+        rm -rf $named_live_path/* 
         rm -rf $named_main_path/*
         rm -rf $named_slave_path/*
         
         ## the main include file
-        named_conf_local=$named_main_path/named.conf.local
+        named_local=/var/named/srvctl-local.conf
+        
         
         ## the secondary file
-        named_slave_conf=$named_slave_path/named.conf.$(hostname)
+        #named_slave_conf=$named_slave_path/srvctl-$(hostname).conf
         
         echo '## srvctl named includes' > $named_includes
-        echo '## srvctl named primary' > $named_conf_local
-        echo '## srvctl named slaves'$(hostname) > $named_slave_conf
+        echo '## srvctl named primary local' > $named_local
+        
+        #echo '## srvctl named slaves'$(hostname) > $named_slave_conf
 
         for C in $(lxc-ls)
         do
@@ -514,8 +507,8 @@ function regenerate_dns {
                 fi
                 
                 create_named_zone $C
-                echo 'include "/var/named/srvctl/'$C'.conf";' >> $named_conf_local
-                echo 'include "/var/named/srvctl/'$C'.slave.conf";' >> $named_slave_conf
+                echo 'include "/var/named/srvctl/'$C'.conf";' >> $named_local
+                #echo 'include "/var/named/srvctl/'$C'.slave.conf";' >> $named_slave_conf
 
                 if [ -f /$SRV/$C/settings/aliases ]
                 then
@@ -523,8 +516,8 @@ function regenerate_dns {
                         do
                                 #msg "$A is an alias of $C"
                                 create_named_zone $A
-                                echo 'include "/var/named/srvctl/'$A'.conf";' >> $named_conf_local
-                                echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf
+                                echo 'include "/var/named/srvctl/'$A'.conf";' >> $named_local
+                                #echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf
                         done
                 fi
         done
@@ -554,10 +547,14 @@ function regenerate_dns {
         #fi
 
 
-        echo 'include "/var/named/srvctl/named.conf.local";' >> $named_includes
+        echo 'include "'$named_local'";' >> $named_includes
 
-        cp $named_main_path/* $named_live_path
-        cp $named_slave_path/* $named_live_path
+        cp $named_main_path/*.zone $named_live_path
+        cp $named_main_path/*.conf $named_live_path
+        #cp $named_slave_path/*.zone $named_live_path
+        #cp $named_slave_path/*.conf $named_live_path
+
+
 
         if [ -f /etc/srvctl/hosts ]
         then
@@ -566,17 +563,38 @@ function regenerate_dns {
             do
                 msg "Update remote DNS connection for $host"
                 
-                wget --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
-                tar -xf /var/srvctl-host/$host.dns.tar.gz -C $named_live_path
+                named_expath=/var/srvctl-host/named-$host
                 
-                echo 'include "/var/named/srvctl/named.conf.'$host'";' >> $named_includes
+                rm -rf $named_expath/*
+                mkdir -p $named_expath
+                
+                wget -q --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
+                tar -xf /var/srvctl-host/$host.dns.tar.gz -C $named_expath
+                
+                ## expath alapján include file éas azt beincludolni
+                named_exconf=/var/named/srvctl-$host.conf
+                echo 'include "'$named_exconf'";' >> $named_includes
+                echo '## srvctl named external slave conf includes' > $named_exconf 
+                
+                for ex in $(ls $named_expath)
+                do
+                    echo 'include "/var/named/srvctl/'$ex'";' >> $named_exconf
+                done
+                
+                chown root:named $named_exconf
+                chmod 640 $named_exconf
+                
+                cp $named_expath/*.slave $named_live_path
 
             done < /etc/srvctl/hosts  
 
         fi
         
-        chown named:named $named_includes
-        chown -R named:named $named_live_path
+        chown root:named $named_includes
+        chmod 640 $named_includes
+        
+        chown -R root:named $named_live_path
+        chmod -R 650 $named_live_path
         
         ## all preparations done, activate!
         systemctl restart named.service

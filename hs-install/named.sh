@@ -53,7 +53,7 @@ zone "." IN {
 include "/etc/named.rfc1912.zones";
 include "/etc/named.root.key";
 
-include "/var/srvctl-host/named.conf.local";
+include "/var/named/srvctl-includes.conf";
 '
 
 set_file /var/srvctl-host/named.conf.local '## srvctl generated 

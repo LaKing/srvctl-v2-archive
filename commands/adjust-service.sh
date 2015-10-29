@@ -1,7 +1,9 @@
 #!/bin/bash
 
-if $isROOT
-then 
+dbg $isROOT
+
+#if $isROOT
+#then 
 ## no identation
 
 ## start or restart service
@@ -18,6 +20,8 @@ then
     OP=$1
     SERVICE=$2
 fi
+
+dbg $OP $SERVICE
 
 if [ ! -z "$SERVICE" ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/$SERVICE.service" ] 
 then
@@ -69,4 +73,5 @@ man '
         
 '
 
-fi ## isROOT
+#fi ## isROOT
+
