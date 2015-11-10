@@ -16,7 +16,9 @@ function regenerate_sudo_configs {
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh stop *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh stop-all" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh disable *" >> $sudoconf
-      
+    
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh list" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh ls" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh status" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh status-all" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh usage" >> $sudoconf
@@ -31,5 +33,7 @@ function regenerate_sudo_configs {
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh clamscan" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh backup *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh restore *" >> $sudoconf
+    
+    
 }
 

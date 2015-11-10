@@ -1,27 +1,19 @@
 #!/bin/bash
 
-dbg $isROOT
-
-#if $isROOT
-#then 
-## no identation
-
 ## start or restart service
 hint "SERVICE OP | OP SERVICE" "start|stop|restart|status a service via systemctl.  +|-|!|?"
 
-if [ "$2" == "start" ] || [ "$2" == "+" ] || [ "$2" == "restart" ] || [ "$2" == "!" ] || [ "$2" == "stop" ]  || [ "$2" == "-" ] || [ "$2" == "status" ]  || [ "$2" == "?" ]
+if [ "$ARG" == "start" ] || [ "$ARG" == "+" ] || [ "$ARG" == "restart" ] || [ "$ARG" == "!" ] || [ "$ARG" == "stop" ]  || [ "$ARG" == "-" ] || [ "$ARG" == "status" ]  || [ "$ARG" == "?" ]
 then
-    OP=$2
-    SERVICE=$1
+    OP=$ARG
+    SERVICE=$CMD
 fi 
 
-if [ "$1" == "start" ] || [ "$1" == "+" ] || [ "$1" == "restart" ] || [ "$1" == "!" ] || [ "$1" == "stop" ]  || [ "$1" == "-" ] || [ "$1" == "status" ]  || [ "$1" == "?" ]
+if [ "$CMD" == "start" ] || [ "$CMD" == "+" ] || [ "$CMD" == "restart" ] || [ "$CMD" == "!" ] || [ "$CMD" == "stop" ]  || [ "$CMD" == "-" ] || [ "$CMD" == "status" ]  || [ "$CMD" == "?" ]
 then
-    OP=$1
-    SERVICE=$2
+    OP=$CMD
+    SERVICE=$ARG
 fi
-
-dbg $OP $SERVICE
 
 if [ ! -z "$SERVICE" ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/$SERVICE.service" ] 
 then
@@ -72,6 +64,4 @@ man '
     to stop and disable a service the operator is "-" or "stop"
         
 '
-
-#fi ## isROOT
 

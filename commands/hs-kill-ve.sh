@@ -18,7 +18,7 @@ then
         then
                 say_info "KILLING"
                 get_info
-                nfs_unmount
+                nfs_unmount $C
                 lxc-stop -k -n $C    
         else
                 get_state
@@ -47,7 +47,7 @@ then
                 then
                         say_info "KILLING"
                         get_info
-                        nfs_unmount
+                        nfs_unmount $C
                         lxc-stop -k -n $C                      
                 else
                         get_state
@@ -65,3 +65,4 @@ man '
 '
 
 fi
+

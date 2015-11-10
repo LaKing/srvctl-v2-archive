@@ -1,5 +1,3 @@
-#!/bin/bash
-
 if $onHS && $isROOT
 then ## no identation.
 

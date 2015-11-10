@@ -66,13 +66,14 @@ then
                 then
                         create_certificate /root
                 fi
+                        #ca_bundle=/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
 
                         cert_status=$(openssl verify -CAfile /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt /root/crt.pem | tail -n 1 | tail -c 3)
 
                         if [ ! "$cert_status" == "OK" ]
                         then
                                 err "Requirement-check, error: certificate check for /root/crt.pem - Exiting"
-                                exit
+                                #exit
 
                         fi
 
@@ -232,32 +233,7 @@ ln -s /usr/share/srvctl/srvctl.sh /bin/sc 2> /dev/null
 msg ".. update-install process complete."
 
 
-## regenerate all configs
-all_arg_set=true
-
-        regenerate_counter
-
-        regenerate_config_files
-
-        regenerate_etc_hosts 
-
-        regenerate_known_hosts
-
-        regenerate_pound_files
-
-        regenerate_root_configs
-
-        regenerate_users 
-
-        regenerate_users_configs
-
-        regenerate_users_structure
-
-        regenerate_dns
-
-        regenerate_logfiles
-        
-        regenerate_sudo_configs
+msg "update-install done. You may regenerate configs now."
 
 ok
 fi ## update-install

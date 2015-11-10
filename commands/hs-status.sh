@@ -179,6 +179,8 @@ man '
 hint "list" "List containers and their internal IP information."
 if [ "$CMD" == "list" ] 
 then
+        sudomize
+        
         for C in $(lxc_ls)
         do 
             get_info
@@ -189,9 +191,23 @@ echo ''
 ok        
 fi
 man '
-    A Quick list of all containers.
+    A Quick list of accessible containers.
 '
 
+hint "list" "List containers in ls format"
+if [ "$CMD" == "ls" ] 
+then
+        sudomize 
+        
+        for C in $(lxc_ls)
+        do 
+            echo $C
+        done
+ok        
+fi
+man '
+    A Quick list of acessible container names to be processed further in other scripts..
+'
 fi ## of onHS
 
 

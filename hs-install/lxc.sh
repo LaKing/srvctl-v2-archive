@@ -7,7 +7,7 @@ then
         then
                 ## packages needed for compilation and for running
                 log "Install Development Tools"
-                pm groupinstall "Development Tools"
+                pm_groupinstall "Development Tools"
                 exif
                 pm automake
                 exif
@@ -216,4 +216,5 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
 else
     msg "LXC is OK! "$(lxc-info --version)
 fi ## Install LXC
+
 

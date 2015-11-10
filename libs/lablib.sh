@@ -92,6 +92,12 @@ function log {
     echo $NOW': '$@ >> $LOG
 }
 
+## silent log
+function logs {
+    ## create a log entry
+    echo $NOW': '$@ >> $LOG
+}
+
 function dbg {
     ## debug message
         if $debug
@@ -131,31 +137,21 @@ function exif {
 
 ## choose a package manager based on relese
 function pm {
-
-    if (( $FEDORA < 22 )) 
-    then
-        echo yum -y install $@
-        yum -y install $@
-        exif
-    else
         echo dnf -y install $@
         dnf -y install $@
         exif
-    fi   
 }
 
 function pm_update {
-
-    if (( $FEDORA < 22 )) 
-    then
-        echo yum -y update
-        yum -y update
-        exif
-    else
         echo dnf -y update
         dnf -y update
         exif
-    fi   
+}
+
+function pm_groupinstall {
+        echo dnf -y groupinstall $@
+        dnf -y groupinstall $@
+        exif
 }
 
 

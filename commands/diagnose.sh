@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if $onHS
+if $isROOT
 then
 
 hint "scan" "Run scan or phpscan and clamscan to diagnose infections even while the container is offline."
@@ -53,6 +53,11 @@ then
         #echo "Dovecot: "$(systemctl is-active dovecot.service)
 
         msg "srvctl variables and settings."
+        echo "FEDORA: $FEDORA"
+        echo "FEDORA_RELEASE: $FEDORA_RELEASE"
+        echo "install_bin: $install_bin"
+        echo "install_dir: $install_dir"
+        echo "C: $C"
         echo "onVE: $onVE"
         echo "onHS: $onHS"
         echo "USER: $USER / $(whoami)"
@@ -85,22 +90,27 @@ then
         #echo ": $"
         echo ""
 
-        msg "FULL STATUS MESSAGES"
-        systemctl status pop3s.service
-        systemctl status imap4s.service
-        systemctl status imap4.service
-        systemctl status saslauthd.service
-        systemctl status postfix.service
-        systemctl status pound.service
-        systemctl status fail2ban.service
-        systemctl status clamd.amavisd.service
-        fail2ban-client status
 
-        msg "NETWORK PORTS and PROTOCOLLS"
-        netstat -tulpn
+        msg "Checking for services"
         
-        if $isROOT
+        for service in $(ls /etc/systemd/system/basic.target.wants) $(ls /etc/systemd/system/multi-user.target.wants) $(ls /etc/systemd/system/multi-user.target.wants | grep '.service')
+        do
+            if [ $(systemctl is-active $service) == "active" ]
+            then
+                msg $service $(systemctl is-active $service) $(systemctl is-enabled $service)
+            else
+                err $service $(systemctl is-active $service) $(systemctl is-enabled $service)
+                systemctl status $service
+            fi
+        done
+
+
+        
+        if $isROOT && [ "$(type -a netstat)" == "netstat is /usr/bin/netstat" ]
         then
+            msg "NETWORK PORTS and PROTOCOLLS"
+            netstat -tulpn
+        
             msg "POP3"
             netstat -np | grep ":995"
             msg "IMAP4S"
@@ -119,7 +129,27 @@ then
             netstat -np | grep ":80"
             netstat -np | grep ":443"
         fi
+        echo ''
         
+
+    if $onHS
+    then    
+        zone=$(firewall-cmd --get-default-zone)
+        services=" $(firewall-cmd --zone=$zone --list-services) "
+
+        msg "Firewall $(firewall-cmd --state) - default zone: $zone"
+        echo $services
+        echo ''
+
+        echo Interfaces:
+        interfaces=$(firewall-cmd --list-interfaces)
+        for i in $interfaces
+        do
+            echo $i - $(firewall-cmd --get-zone-of-interface=$i)
+            echo ''
+        done
+    fi
+    
         msg "CONNECTED SHELL USERS"
         w
         
@@ -134,5 +164,5 @@ man '
     Display status messages of services, and list important network port statuses.
 '
 
-fi ## onHS
+fi ## isROOT
 

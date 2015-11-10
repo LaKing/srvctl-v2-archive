@@ -1,73 +1,3 @@
-## To create proper SMTPD Auth proxy method http://www.postfix.org/SASL_README.html
-## saslauthd can verify the SMTP client credentials by using them to log into an IMAP server. 
-## If the login succeeds, SASL authentication also succeeds. saslauthd contacts an IMAP server when started like this: saslauthd -d -a rimap -O test.d250.hu
-## the remote server - in the container - needs to have dovecot (or an IMAP server) with users to authenticate.
-
-## saslauthd and perdition - incompability problem as of 2014.06.25 
-## 
-## saslauthd with rimap to perdition ...
-## The response after LOGIN is not being processed correctly.
-## Perdition sends the CAPABILITY before the OK, thus saslauthd returns 
-## [reason=[ALERT] Unexpected response from remote authentication server] 
-## .. and fails to authenticate.
-##
-## A workaround is to patch saslauthd.
-## We can consider CAPABILITY equal to OK [CAPABILITY ...], as in case of bad password / bad username / bad host, the remote server rejects the credentials.
-## That means, if the response is not a NO, and there is a response, we can assume its an OK.
-##
-## cyrus-sasl-2.1.26/saslauthd/auth_rimap.c last lines:
-## replace: return strdup(RESP_UNEXPECTED);
-## with: return strdup("OK remote authentication successful"); 
-## .. compile, install.
-##
-## Some more dev-hints.
-##
-## The LOGIN command is supported on both, saslauthd and perdition, plaintext only on saslauthd.
-## Here is a note how to enable plaintext in dovecot:
-## disable_plaintext_auth = no  >>> /etc/dovecot 10-auth.conf 
-## ssl = no >>> 10-ssl.conf 
-## testing the running saslauthd: testsaslauthd -u tx -p xxxxxx
-##
-## Get base64 encoded login code for user x pass xxxxxx
-## echo -en "\0x\0xxxxxx" | base64
-## AHgAeHh4eHh4
-##
-##
-## Send e-mail
-## echo "this is the body" | mail -s "this is the subject" "to@address"
-##
-## Other test commands:
-##
-#### plaintext IMAP connaction test
-## telnet test.d250.hu 143
-## a AUTHENTICATE PLAIN
-## + base64_code
-##
-#### IMAP4S connection test
-## openssl s_client -crlf -connect test.d250.hu:993
-## a LOGIN user passwd
-##
-#### SASL commands
-## saslauthd -a rimap -O localhost
-## saslauthd -d -a rimap -O localhost
-## testsaslauthd -u username -p password
-## testsaslauthd -u x -p xxxxxx
-## testsaslauthd -u x@test.d250.hu -p xxxxxx
-##
-#### SMTPS connection test 
-## openssl s_client -connect test.d250.hu:465
-## EHLO d250.hu
-## AUTH PLAIN
-## base64_code
-##
-## exit from telnet Ctrl-AltGr-G quit
-##
-## TODO: this information is submitted to the cyrus sasl devel mailing list. keep an eye on it.
-## for now we will aply a customization in the next step.
-
-## to verify openssl SNI use the following command:
-## openssl s_client -servername container.ve -connect localhost:443
-
 ## IMAP4S proxy
 if [ ! -f /etc/perdition/perdition.conf ] || $all_arg_set
 then
@@ -238,4 +168,5 @@ FLAGS="-O localhost -r"'
 else
     msg "Perdition is already installed."
 fi ## install perdition
+
 

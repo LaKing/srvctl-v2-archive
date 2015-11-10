@@ -11,6 +11,7 @@ then
 
         argument C 
         isDEV=false
+        isMX=false
 
         ## TODO verify if a domain alias already exists
 
@@ -18,7 +19,15 @@ then
         if [ ${C:0:4} == "dev." ]
         then
                 C=${C:4}
-                isDEV=true      
+                isDEV=true
+                msg "$C will be a dev site."      
+        fi
+
+        ## if this is a mail server, its something special
+        if [ ${C:0:5} == "mail." ]
+        then
+                isMX=true
+                msg ""
         fi
 
         ## check for human mistake
@@ -93,8 +102,6 @@ then
         ## disable password authentication on ssh
         sed_file $rootfs/etc/ssh/sshd_config "PasswordAuthentication yes" "PasswordAuthentication no"
         
-
-
         ## Add IP to hosts file
         regenerate_etc_hosts
 
@@ -125,17 +132,17 @@ HOSTIPv4="'$HOSTIPv4'"
 
         ln -s /var/srvctl/locale-archive $rootfs/usr/lib/locale/locale-archive 
         
-        rm -rf $rootfs/var/cache/yum/*
+        rm -rf $rootfs/var/cache/dnf/*
 
         ## add symlink to the srvctl application.
-        ## outdated with 2.x, this was it for 1.x ln -s /var/srvctl/srvctl $rootfs/bin/srvctl
         ln -sf $install_dir/srvctl.sh $rootfs//bin/srvctl
         ln -sf $install_dir/srvctl.sh $rootfs//bin/sc
 
         ## As of June 2014, systemd-journald is running amok in the containers. To prevent 100% CPU usage, it has to be disabled.
         ## To undo, you may run: rm $rootfs/etc/systemd/system/systemd-journald.service
         ## Or, in the containers mask / unmask journald.service - reboot container to apply.
-        ln -s '/dev/null' "$rootfs/etc/systemd/system/systemd-journald.service"
+        # ln -s '/dev/null' "$rootfs/etc/systemd/system/systemd-journald.service"
+        ## as of November 2015, with Fedora 23 - experimantally unlocked.
 
 ## Sendmail
 
@@ -164,11 +171,29 @@ home_mailbox = Maildir/
 ## Max 25MB mail size
 message_size_limit=26214400
 
+        ' >> $rootfs/etc/postfix/main.cf
+        
+if $isMX
+then
+
+        echo '
+## we need to change myhostname
+myorigin = '${C:5}'
+        
+## set localhost.localdomain in mydestination to enable local mail delivery
+mydestination = $myhostname, '${C:5}', localhost, localhost.localdomain
+        ' >> $rootfs/etc/postfix/main.cf
+
+else
+
+echo '
 ## set localhost.localdomain in mydestination to enable local mail delivery
 mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
-
-## also, add aliases there
         ' >> $rootfs/etc/postfix/main.cf
+        
+fi
+
+
 
         echo "@$C root" > $rootfs/etc/postfix/catchall
         postmap $rootfs/etc/postfix/catchall
@@ -207,9 +232,16 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
         echo '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;">
         <img src="logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div>
         <p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">' > $index
-        echo '<b>'$C'</b> @ '$(hostname) >> $index
+        
+        if [ "$C" == "default-host.local" ]
+        then            
+            echo '<b>'$HOSTIPv4'</b> - '$(hostname) >> $index       
+        else        
+            echo '<b>'$C'</b> @ '$(hostname) >> $index
+        fi 
+        
         echo '</font><p></body>' >> $index
-
+        
         cp /var/www/html/logo.png $rootfs/var/www/html
         cp /var/www/html/favicon.ico $rootfs/var/www/html
 
@@ -229,21 +261,15 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
         cat $ssl_key > $rootfs/etc/pki/tls/private/localhost.key
         cat $ssl_crt > $rootfs/etc/pki/tls/certs/localhost.crt
 
+        if [ "$C" == "default-host.local" ]
+        then
+            echo $(hostname) > $SRV/$C/settings/pound-host        
+        fi 
+
         regenerate_pound_files
-        
 
 ## DNS
-
-        named_slave_conf_global=/var/srvctl-host/named.slave.conf.global.$(hostname)
-
-        create_named_zone $C
-        echo 'include "/var/named/srvctl/'$C'.conf";' >> /var/srvctl-host/named.conf.local
-        echo 'include "/var/named/srvctl/'$C'.slave.conf";' >> $named_slave_conf_global
-
-        rm $dns_share
-        tar -czPf $dns_share $named_slave_conf_global /var/named/srvctl
-
-        systemctl restart named.service
+        regenerate_dns
 
 ## Node / npm
         ## npm root -g => /usr/lib/node_modules
@@ -257,8 +283,8 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
             echo "$SC_USER" >> $SRV/$C/settings/users
             U=$SC_USER
             add_user $U
-            generate_user_configs
-            generate_user_structure
+            generate_user_configs $U
+            generate_user_structure $U $C
         fi
 
         ## add users from argument
@@ -267,8 +293,8 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
             msg "Add user $U"                
             echo "$U" >> $SRV/$C/settings/users
             add_user $U
-            generate_user_configs
-            generate_user_structure
+            generate_user_configs $U
+            generate_user_structure $U $C
         done        
         
         mkdir -p $backup_path/$C
@@ -316,12 +342,12 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
         ssh $C "groupadd -r -g 104 codepad"
         ssh $C "useradd -r -u 104 -g 104 -s /sbin/nologin -d /srv/etherpad-lite codepad"
 
-## Dovecot - due to an error in yum, it has to be installed in the container after it has started.
+## Dovecot - due to an error in dnf, it has to be installed in the container after it has started.
 ## Fedora 20 and fedora 21 as well.
 ## TODO bugcheck - does dovecot hang on postinit script?
  
         ssh $C "newaliases"
-        ssh $C "yum -y install dovecot"
+        ssh $C "dnf -y install dovecot"
         ssh $C "systemctl enable dovecot.service"
         ssh $C "systemctl start dovecot.service"
 
@@ -351,6 +377,7 @@ man '
     Logged in users can access files of the containers with ssh - usually in a two step hop, or directly with NFS folders mounted to their home/VE directories.
     The srvctl-client script can be used to sync, backup, upload files. Proper SSH port forwarding allows SFTP access directly from remote user computers.
     Containers will be configured as web and mail servers. The srvctl command will be available on every VE, and can be used to configure further.
+    Prefixes make sense, mail. or dev. will create MX or development servers.
     
 '
 

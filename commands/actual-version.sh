@@ -6,7 +6,7 @@ if [ "$CMD" == "version" ]
 then
   msg "Kernel: "$(uname -r)
   ver=$(head $0 | grep "# version ")
-  msg 'srvctl: '${ver:10}
+  msg "srvctl: $(cat $install_dir/version)"
 
   if $onHS
   then 
@@ -17,13 +17,13 @@ then
     else
         msg 'LXC: '$(lxc-info --version)' installed'
     fi
-    msg_yum_version_installed Pound
+    msg_dnf_version_installed Pound
     pound -V 2> /dev/null | grep Version
-    msg_yum_version_installed postfix
-    msg_yum_version_installed perdition
-    msg_yum_version_installed fail2ban
-    msg_yum_version_installed bind
-    msg_yum_version_installed clamav
+    msg_dnf_version_installed postfix
+    msg_dnf_version_installed perdition
+    msg_dnf_version_installed fail2ban
+    msg_dnf_version_installed bind
+    msg_dnf_version_installed clamav
   fi
 
 ok
@@ -33,4 +33,5 @@ man '
     Display kernel version, srvctl version
     Pound, postfix, perdition, fail2ban, bind, clamav versions
 '
+
 

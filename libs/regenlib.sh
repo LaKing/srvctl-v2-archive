@@ -71,10 +71,10 @@ function regenerate_config_files {
             ## Enforce disabled password authentication?
             if [ ! -z $(cat $SRV/$_C/rootfs/etc/ssh/sshd_config | grep "PasswordAuthentication yes") ]
             then
-                 ntc "Password authentication is enabled on $C"
+                 ntc "Password authentication is enabled on $_C"
                         ## make sure password authentication is disabled
-                        #sed_file $SRV/$C/rootfs/etc/ssh/sshd_config "PasswordAuthentication yes" "PasswordAuthentication no"
-                        #ssh $C "systemctl restart sshd.service"
+                        #sed_file $SRV/$_C/rootfs/etc/ssh/sshd_config "PasswordAuthentication yes" "PasswordAuthentication no"
+                        #ssh $_C "systemctl restart sshd.service"
 
             fi
 
@@ -104,6 +104,7 @@ function regenerate_etc_hosts {
                         if [ -z $counter ] 
                         then        
                                 err "No counter, no IPv4 for "$_C
+                                exit
                         else
                                 ip="10.10."$(to_ip $counter)
                         fi        
@@ -113,7 +114,10 @@ function regenerate_etc_hosts {
                 then
  
                         echo $ip'                '$_C >>  $TMP/hosts
+                        if [ ! -d $SRV/mail.$_C ] && [ "${_C:0:5}" != "mail." ]
+                        then
                         echo $ip'                mail.'$_C >>  $TMP/hosts
+                        fi
                         echo $_C' #' >>  $TMP/relaydomains
 
                                 if [ -f /$SRV/$_C/settings/aliases ]
@@ -126,7 +130,11 @@ function regenerate_etc_hosts {
                                                 else
                                                         # ntc "$A is an alias of $_C"
                                                         echo $ip'                '$A >>  $TMP/hosts
+                                                        
+                                                        if [ ! -d $SRV/mail.$A ] && [ ! -d $SRV/mail.$_C ] && [ "${A:0:5}" != "mail." ] && [ "${_C:0:5}" != "mail." ]
+                                                        then
                                                         echo $ip'                mail.'$A >>  $TMP/hosts
+                                                        fi
                                                         echo $A' #' >>  $TMP/relaydomains
                                                 fi
                                         done
@@ -235,30 +243,31 @@ function regenerate_users {
 }
 
 function generate_user_configs {
-        
-        # echo "Generating user configs for $U"
+
+        _u=$1        
+        # msg "Generating user configs for $_u"        
 
         ## create keypair
-        if [ ! -f /home/$U/.ssh/id_rsa.pub ]
+        if [ ! -f /home/$_u/.ssh/id_rsa.pub ]
         then
-          msg "Creating keypair for user "$U
-          create_keypair $U
+          msg "Creating keypair for user "$_u
+          create_keypair $_u
         fi
 
         mkdir -p /root/srvctl-users/authorized_keys
         ## create user submitted authorised_keys
-        if [ ! -f /home/$U/.ssh/authorized_keys ] || $all_arg_set
+        if [ ! -f /home/$_u/.ssh/authorized_keys ] || $all_arg_set
         then
-                ntc "Creating authorized_keys for $U"  
-                cat /root/.ssh/authorized_keys > /home/$U/.ssh/authorized_keys
-                echo '' >> /home/$U/.ssh/authorized_keys
-                if [ -f  /root/srvctl-users/authorized_keys/$U ]
+                ntc "Creating authorized_keys for $_u"  
+                cat /root/.ssh/authorized_keys > /home/$_u/.ssh/authorized_keys
+                echo '' >> /home/$_u/.ssh/authorized_keys
+                if [ -f  /root/srvctl-users/authorized_keys/$_u ]
                 then
-                        cat /root/srvctl-users/authorized_keys/$U >> /home/$U/.ssh/authorized_keys
+                        cat /root/srvctl-users/authorized_keys/$_u >> /home/$_u/.ssh/authorized_keys
                 else
-                        ntc "No authorized ssh-rsa key in /root/srvctl-users/authorized_keys/$U"
+                        ntc "No authorized ssh-rsa key in /root/srvctl-users/authorized_keys/$_u"
                 fi                
-                chown $U:$U /home/$U/.ssh/authorized_keys
+                chown $_u:$_u /home/$_u/.ssh/authorized_keys
         fi
 }
 
@@ -267,124 +276,110 @@ function regenerate_users_configs {
 
         msg "regenrateing user configs"
 
-        for U in $(ls /home)
+        for _U in $(ls /home)
         do
-                generate_user_configs
+                generate_user_configs $_U
         done 
 }
 
-function generate_user_structure ## for user $U, Container $C
+function generate_user_structure ## for user, container
 {
-     #dbg  "Generating user structure for $U in $C"
+    _u=$1
+    _c=$2
+
+     #dbg  "Generating user structure for $_u in $C"
 
                 ## add users host public key to container root user - for ssh access.
-                if [ -f /home/$U/.ssh/id_rsa.pub ]
+                if [ -f /home/$_u/.ssh/id_rsa.pub ]
                 then
-                        cat /home/$U/.ssh/id_rsa.pub >> $SRV/$C/rootfs/root/.ssh/authorized_keys
+                        cat /home/$_u/.ssh/id_rsa.pub >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
                 else
-                        err "No id_rsa.pub for user "$U
+                        err "No id_rsa.pub for user "$_u
                 fi
 
                 ## add users submitted public key to container root user - for ssh access.
-                if [ -f /root/srvctl-users/authorized_keys/$U ]
+                if [ -f /root/srvctl-users/authorized_keys/$_u ]
                 then
-                        cat /root/srvctl-users/authorized_keys/$U >> $SRV/$C/rootfs/root/.ssh/authorized_keys
-     #dbg  "Add key for $U in $C"
+                        cat /root/srvctl-users/authorized_keys/$_u >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
+     #dbg  "Add key for $_u in $_c"
                         ## else
-                        ## ntc "No public key for user "$U
+                        ## ntc "No public key for user "$_u
                 fi
 
                 ## Share via mount
                 ## Second, create common share
-                mkdir -p /home/$U/$C/mnt
-                chown $U:$U /home/$U/$C
-                chown $U:$U /home/$U/$C/mnt
+                mkdir -p /home/$_u/$_c/mnt
+                chown $_u:$_u /home/$_u/$_c
+                chown $_u:$_u /home/$_u/$_c/mnt
 
                 ## make sure all the hashes are up to date
-                # update_password $U
+                # update_password $_u
 
                 ## take care of password hashes
-                if ! [ -f "/home/$U/$C/.password.sha512" ]
+                if ! [ -f "/home/$_u/$_c/.password.sha512" ]
                 then
-                        update_password_hash $U
+                        update_password_hash $_u
 
-                        if [ ! -f /home/$U/$C/mnt/.password.sha512 ] && [ -f /home/$U/.password ]
+                        if [ ! -f /home/$_u/$_c/mnt/.password.sha512 ] && [ -f /home/$_u/.password ]
                         then
-                                ln /home/$U/.password.sha512 /home/$U/$C/mnt/.password.sha512
+                                ln /home/$_u/.password.sha512 /home/$_u/$_c/mnt/.password.sha512
                         fi
                 fi
 
                 ## create directory we will bind to
-                mkdir -p $SRV/$C/rootfs/mnt/$U
+                mkdir -p $SRV/$_c/rootfs/mnt/$_u
 
                 ## everything prepared, this is for container mount point.
-                add_conf $SRV/$C/fstab "/home/$U/$C/mnt $SRV/$C/rootfs/mnt/$U none rw,bind 0 0"
+                add_conf $SRV/$_c/fstab "/home/$_u/$_c/mnt $SRV/$_c/rootfs/mnt/$_u none rw,bind 0 0"
 
-                
+
 }
-
-                ## NOTE on port forwarding and ssh usage. This will allow direct ssh on a custom local port! 
-                ## Create the tunnel
-                ## ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -L 2222:nameof.container.ve:22 -N -f user@host
-                ## ssh -L 2222:nameof.container.ve:22 -N -f user@host
-                ## connect to the tunnel
-                ## ssh -p 2222 user@localhost
-
-                ## List Open tunnels
-                ##  ps ax | grep "ssh " | grep " -L "
-
-                ## ssh with compresion
-                ## ssh -C -c blowfish
-
-                ## kill all L tunnels
-                ## kill $(ps ax | grep "ssh " | grep " -L " | cut -f 1 -d " ")
-
-                ## another method for rsync-ing container data
-                ## rsync -avz -e "ssh -A user@host ssh" root@container.ve:/srv/node-project /srv
 
 
 function regenerate_users_structure {
 
         msg "Updateing user-structure."
         
-        for C in $(lxc-ls)
+        for _C in $(lxc-ls)
         do
+
                 
-                cat /root/.ssh/id_rsa.pub > $SRV/$C/rootfs/root/.ssh/authorized_keys
-                #echo '' >> $SRV/$C/rootfs/root/.ssh/authorized_keys
-                cat /root/.ssh/authorized_keys >> $SRV/$C/rootfs/root/.ssh/authorized_keys 2> /dev/null
-                chmod 600 $SRV/$C/rootfs/root/.ssh/authorized_keys
+                cat /root/.ssh/id_rsa.pub > $SRV/$_C/rootfs/root/.ssh/authorized_keys
+                #echo '' >> $SRV/$_C/rootfs/root/.ssh/authorized_keys
+                cat /root/.ssh/authorized_keys >> $SRV/$_C/rootfs/root/.ssh/authorized_keys 2> /dev/null
+                chmod 600 $SRV/$_C/rootfs/root/.ssh/authorized_keys
          
-                for U in $(cat $SRV/$C/settings/users)
-                do
-                        generate_user_structure
+                for _U in $(cat $SRV/$_C/settings/users)
+                do        
+                        generate_user_structure $_U $_C
                 done
 
                 if $all_arg_set
                 then
 
-                        nfs_unmount
-
-                        generate_exports $C
+                        nfs_unmount $_C
+                        generate_exports $_C
                 fi                
 
-                for U in $(cat $SRV/$C/settings/users)
+                for _U in $(cat $SRV/$_C/settings/users)
                 do
-                        nfs_mount
-                        backup_mount
+
+                        nfs_mount $_U $_C
+                        backup_mount $_U $_C
+
                 done
          done
 
-        ## generate host's-user's access keysets. 
+        msg "generate access keysets." 
         for U in $(ls /home)
         do
                 ## users should be accessible by root with ssh
-                cat /root/.ssh/authorized_keys > /home/$U/.ssh/authorized_keys 2> /dev/null
+                cat /root/.ssh/authorized_keys > /home/$_U/.ssh/authorized_keys 2> /dev/null
 
                 ## if the user submitted a public key, add it as well.
-                if [ -f /root/srvctl-users/authorized_keys/$U ]
+                if [ -f /root/srvctl-users/authorized_keys/$_U ]
                 then
-                        cat /root/srvctl-users/authorized_keys/$U >> /home/$U/.ssh/authorized_keys
+                        cat /root/srvctl-users/authorized_keys/$_U >> /home/$_U/.ssh/authorized_keys
                 fi
         done
 
@@ -401,7 +396,7 @@ function regenerate_users_structure {
 
 function create_named_zone {
 
-        ## argument domain ($C or alias)
+        ## argument domain ($_C or alias)
         D=$1
 
         named_conf=$named_main_path/$D.conf
@@ -413,9 +408,9 @@ function create_named_zone {
                 
         mail_server="mail"
 
-        if [ -f "$SRV/$C/settings/dns-mx-record" ] && [ ! -z "$(cat $SRV/$C/settings/dns-mx-record)" ]
+        if [ -f "$SRV/$D/settings/dns-mx-record" ] && [ ! -z "$(cat $SRV/$D/settings/dns-mx-record)" ]
         then
-            mail_server="$(cat $SRV/$C/settings/dns-mx-record | xargs)."            
+            mail_server="$(cat $SRV/$D/settings/dns-mx-record | xargs)."            
         fi
 
         #if [ ! -f $named_conf ]
@@ -463,6 +458,7 @@ set_file $named_zone '$TTL 1D
                                         3H )        ; minimum
         IN         NS        ns1.'$CDN'.
         IN         NS        ns2.'$CDN'.
+        IN         NS        ns3.'$CDN'.
 *        IN         A        '$HOSTIPv4'
 @        IN         A        '$HOSTIPv4'
 @        IN        MX        10        '${mail_server,,}'
@@ -498,23 +494,36 @@ function regenerate_dns {
         
         #echo '## srvctl named slaves'$(hostname) > $named_slave_conf
 
-        for C in $(lxc-ls)
+        for _C in $(lxc-ls)
         do
                 ## skip local domains
-                if [ "${C: -6}" == ".local" ]
+                if [ "${_C: -6}" == ".local" ]
                 then
                     continue
                 fi
                 
-                create_named_zone $C
-                echo 'include "/var/named/srvctl/'$C'.conf";' >> $named_local
-                #echo 'include "/var/named/srvctl/'$C'.slave.conf";' >> $named_slave_conf
-
-                if [ -f /$SRV/$C/settings/aliases ]
+                ## skip mail-only servers
+                if [ "${_C:0:5}" == "mail." ]
                 then
-                        for A in $(cat /$SRV/$C/settings/aliases)
+                    continue
+                fi
+                
+                
+                ## option to skip servers
+                if [ -f $SRV/$_C/settings/no-dns ]
+                then
+                    continue
+                fi
+                
+                create_named_zone $_C
+                echo 'include "/var/named/srvctl/'$_C'.conf";' >> $named_local
+                #echo 'include "/var/named/srvctl/'$_C'.slave.conf";' >> $named_slave_conf
+
+                if [ -f /$SRV/$_C/settings/aliases ]
+                then
+                        for A in $(cat /$SRV/$_C/settings/aliases)
                         do
-                                #msg "$A is an alias of $C"
+                                #msg "$A is an alias of $_C"
                                 create_named_zone $A
                                 echo 'include "/var/named/srvctl/'$A'.conf";' >> $named_local
                                 #echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf
@@ -604,6 +613,8 @@ function regenerate_dns {
             err "Error loading DNS settings."
             systemctl status named.service
             exit
+        else
+            msg "DNS server OK"
         fi
         
         
@@ -735,6 +746,12 @@ lxc.network.ipv4.gateway = auto
     echo "/var/srvctl $SRV/$_c/rootfs/var/srvctl none ro,bind 0 0" > $SRV/$_c/fstab
     ## in srvctl 2.x we add the folowwing
     echo "$install_dir $SRV/$_c/rootfs/$install_dir none ro,bind 0 0" >> $SRV/$_c/fstab
+    
+    
+    if [ -f $SRV/$_c/fstab.local ]
+    then
+        cat $SRV/$_c/fstab.local >> $SRV/$_c/fstab
+    fi
 
 
 set_file $SRV/$_c/rootfs/etc/resolv.conf "# Generated by srvctl
@@ -742,7 +759,7 @@ search local
 nameserver 10.10.0.1
 "
 
-    ## err $C? .. $_c !
+    ## err $_C? .. $_c !
     echo "10.10."$_ip4 > $SRV/$_c/config.ipv4
 
 }

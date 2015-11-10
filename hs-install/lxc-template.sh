@@ -1,9 +1,19 @@
         ## We do some customisations in our template
-        ## template path is different depending on installation, yum or some src
-
+        ## template path is different depending on installation, dnf or some src
+        
+        
+        
+        ## TODO this is redundant. missing on first update-install only.
+        lxc_usr_path="/usr"
+        lxc_bin_path="/usr/bin"
+        if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "tar" ]
+        then
+                lxc_usr_path="/usr/local"
+                lxc_bin_path="/usr/local/bin"
+        fi        
         
 
-        ## ndf / yum-based install
+        ## ndf / dnf-based install
         fedora_template="$lxc_usr_path/share/lxc/templates/lxc-fedora"
         srvctl_template="$lxc_usr_path/share/lxc/templates/lxc-fedora-srv"
 
@@ -51,7 +61,7 @@ then
         sed_file $srvctl_template 'Edit the config file to check/enable networking setup.' 'exit 0'
 
         ## Add additional default packages 
-        sed_file $srvctl_template '    PKG_LIST="yum initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release"' '    PKG_LIST="yum initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release fedora-repos mc httpd mod_ssl openssl postfix mailx sendmail unzip clucene-core make  rsync nfs-utils"'
+        sed_file $srvctl_template '    PKG_LIST="dnf initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release"' '    PKG_LIST="dnf initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release fedora-repos mc httpd mod_ssl openssl postfix mailx sendmail unzip clucene-core make  rsync nfs-utils"'
 
         ## fedora-repos added for fixing: https://bugzilla.redhat.com/show_bug.cgi?id=1176634
 
@@ -65,9 +75,9 @@ then
         ## httpd needs to be installed here, other wise it failes with cpio set_file_cap error.
 
         ## After modifocation of the last line, in a live filesystem, /usr/local/var/cache/lxc/fedora needs to be purged.
-        log "Clearing yum cache for container creation."
+        log "Clearing dnf cache for container creation."
 
-        ## paths are different for src or yum install
+        ## paths are different for src or dnf install
         rm -rf /usr/local/var/cache/lxc/fedora
         rm -rf /var/cache/lxc/fedora
 else

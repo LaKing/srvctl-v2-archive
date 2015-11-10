@@ -290,9 +290,9 @@ function  get_randomstr {
     randomstr=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 }
 
-function msg_yum_version_installed {
-    v=$(yum info $1 2> /dev/null | grep -m1 Version)
-    i=$(yum info $1 2> /dev/null | grep -m1 installed)    
+function msg_dnf_version_installed {
+    v=$(dnf info $1 2> /dev/null | grep -m1 Version)
+    i=$(dnf info $1 2> /dev/null | grep -m1 installed)    
     msg "$1 ${v:13:8} ${i:13}"
 
 }
@@ -473,7 +473,7 @@ fi ## set aliases
 
 if $onHS
 then
-        ## yum and source builds work with different directories.
+        ## dnf and source builds work with different directories.
         lxc_usr_path="/usr"
         lxc_bin_path="/usr/bin"
         if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "tar" ]

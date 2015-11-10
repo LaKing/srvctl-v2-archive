@@ -3,8 +3,8 @@
 
 ## use the latst version, options are 'latest-package' 'package' 'git' 'tar' 'src' 
 LXC_INSTALL='latest-package'
-## eventually specify the version - mandatory for tar, optional for yum
-LXC_VERSION='1.1.2'
+## eventually specify the version - mandatory for tar, optional for dnf
+LXC_VERSION='1.1.5'
 
 ## logfile
 LOG=/var/log/srvctl.log
@@ -52,4 +52,5 @@ php_timezone=Europe/Budapest
 
 ## turn off debug messages
 debug=false
+
 

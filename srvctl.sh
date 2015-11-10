@@ -1,6 +1,6 @@
 #!/bin/bash
-# Last update:2015.10.29-01:21:44
-# version 2.2.4
+# Last update:2015.04.21-18:44:04
+# version 2.2.3
 #
 # Server Controll script for Fedora with LXC containers
 #
@@ -11,7 +11,7 @@
 ## Source URL
 #URL="https://raw.githubusercontent.com/LaKing/Fedora-scripts/master/srvctl"
 
-echo -e "\e[2m$(head $0 -n 3 | grep version)"
+#echo -e "\e[2m$(head $0 -n 3 | grep version)"
 
 install_bin=$(realpath "$BASH_SOURCE")
 install_dir=${install_bin:0:-10}
@@ -42,7 +42,7 @@ fi
 source $install_dir/libs/commonlib.sh
 load_libs
  
-log "[$(whoami)@$(hostname) $(pwd)]# $0 $*"
+logs "[$(whoami)@$(hostname) $(pwd)]# $0 $*"
 #msg "$(head $0 -n 3 | grep version)"
 SUCC=""
  

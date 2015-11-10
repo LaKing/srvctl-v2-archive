@@ -20,13 +20,13 @@ then
         if [ ! -z "$ARG" ]
         then
             argument C
-            run_backup
+            run_backup $C
             msg "$C - backup complete."
         else
             for C in $(lxc_ls)
             do
                 msg $C
-                run_backup
+                run_backup $C
                 msg "$C - backup complete."
             done
         fi
@@ -49,7 +49,7 @@ then
         sudomize
         authorize
 
-        nfs_unmount
+        nfs_unmount $C
         
         if [ -z "$backup_path" ]
         then
@@ -99,9 +99,9 @@ then
                 fr=$from/packagelist
                 lp=$TMP/$C-packagelist
                 ## create local pacgakelist
-                if [ -f $SRV/$C/rootfs/var/log/yum.log ]
+                if [ -f $SRV/$C/rootfs/var/log/dnf.log ]
                 then
-                    ssh $C "yum list installed" > $lp
+                    ssh $C "dnf list installed" > $lp
                 fi
                 if [ -f $SRV/$C/rootfs/var/log/dnf.log ]
                 then

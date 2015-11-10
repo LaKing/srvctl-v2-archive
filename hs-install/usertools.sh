@@ -10,13 +10,14 @@
             pm mercurial
         fi
         
-        if [ -z "$(type -a git | grep 'git is ')" ]
-        then
-            pm git
-        fi
-        
         if [ -z "$(type -a fdupes | grep 'fdupes is ')" ]
         then
             pm fdupes
         fi
+        
+        if [ -z "$(type -a mail | grep 'mail is ')" ]
+        then
+            pm mailx
+        fi
+
 

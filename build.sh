@@ -22,8 +22,8 @@ then
         if [ -z "$(rpmbuild --version 2> /dev/null | grep version)" ]
         then
             ## install the fedora packager
-            yum -y install rpmdevtools
-            yum -y install rpm-build
+            dnf -y install rpmdevtools
+            dnf -y install rpm-build
         fi
         echo "WARNING started as root - will use user/folder srv for packaging"
         is_root=true
@@ -34,16 +34,16 @@ else
         then
             echo "WARNING - rpmbuild not found, attemt to install it with sudo"
             ## install the fedora packager
-            sudo yum -y install @development-tools
-            sudo yum -y install fedora-packager
+            sudo dnf -y install @development-tools
+            sudo dnf -y install fedora-packager
             user=$(whoami)
             sudo usermod -a -G mock $user
         fi
         if [ -z "$(rpmbuild --version 2> /dev/null | grep version)" ]
         then
             echo "ERROR - rpmbuild installation failed. Login as root and run:"
-            echo "yum -y install @development-tools"
-            echo "yum -y install fedora-packager"
+            echo "dnf -y install @development-tools"
+            echo "dnf -y install fedora-packager"
             echo "Exiting for now."
             exit
         fi

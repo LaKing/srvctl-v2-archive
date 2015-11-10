@@ -13,8 +13,9 @@ then
         sudomize
         authorize
 
-        nfs_unmount
-        backup_unmount
+        nfs_unmount $C
+        
+        backup_unmount $C
 
         lxc-stop -k -n $ARG
 

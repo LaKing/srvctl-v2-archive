@@ -24,7 +24,7 @@ then
         sudomize
         authorize
 
-        nfs_unmount
+        nfs_unmount $C
 
         set_is_running
 
@@ -32,7 +32,7 @@ then
         then
                 printf ${yellow}"%-10s"${NC} "SHUTDOWN"
                 get_info
-                nfs_unmount
+                nfs_unmount $C
                 ssh $C shutdown -P now
         else 
                 get_state
@@ -57,21 +57,17 @@ then
     sudomize
         for C in $(lxc_ls)
         do
-            nfs_unmount
+            nfs_unmount $C
         done 
         
         for C in $(lxc_ls)
         do
-
-                #nfs_unmount
-
                 set_is_running
 
                 if $is_running
                 then
                         printf ${yellow}"%-10s"${NC} "SHUTDOWN"
                         get_info
-                        #nfs_unmount
                         ssh $C shutdown -P now &
                 else 
                         get_state
