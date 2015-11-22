@@ -26,7 +26,7 @@ then
                 if $onVE
                 then 
                         ## TODO check this
-                        echo "This is the mailing system at "$(hostname)", your password has been updated." | mail -s "Notice" $U
+                        echo "This is the mailing system at "$HOSTNAME", your password has been updated." | mail -s "Notice" $U
                 fi
         fi
 ok

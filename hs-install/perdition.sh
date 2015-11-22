@@ -61,7 +61,7 @@ ssl_key_file /etc/perdition/key.pem
 
         set_file /etc/perdition/popmap.re '#### srvctl tuned popmap.re
 
-# (.*)@'$(hostname)': localhost
+# (.*)@'$HOSTNAME': localhost
 
 ## you may add email domains here that should be located at localhost.
 

@@ -15,7 +15,7 @@ function load_commands {
         source $sourcefile
     done
     
-    if [ -d /root/srvctl-includes ]
+    if [ -d /root/srvctl-includes ] && [ ! -z "$(ls /root/srvctl-includes)" ]
     then
         for sourcefile in /root/srvctl-includes/*
         do

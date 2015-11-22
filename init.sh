@@ -22,8 +22,11 @@ source $install_dir/hs-install/config
 if [ -f "/etc/srvctl/config" ]
 then
     source /etc/srvctl/config 
-    #2> /dev/null
+else
+    err "No counfig file found."
 fi
+
+mkdir -p $LOG
 
 ## variable detection
 
@@ -56,18 +59,23 @@ then
 fi
 
 ## we use the format srvctl or sc command argument [plus-argument]
-## command
+## command, lowercase
 CMD=$1
+CMD=${CMD,,}
 ## argument
 ARG=$2
 ## optional single argument
 OPA=$3
+## all optional arguments
+OPAS="${@:2}"
 ## all arguments, including command and argument
 ARGS="$*"
 ## Current start directory
 CWD=$(pwd)
 
 cd ~
+
+
 
 
 

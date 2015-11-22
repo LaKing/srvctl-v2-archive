@@ -32,7 +32,7 @@ systemctl start clamd@amavisd
 systemctl enable clamd@amavisd 
 
 sed_file /etc/amavisd/amavisd.conf "mydomain = 'example.com';   " "mydomain = '$CDN';   "
-sed_file /etc/amavisd/amavisd.conf "myhostname = 'host.example.com';  " "myhostname = '$(hostname)';  "
+sed_file /etc/amavisd/amavisd.conf "myhostname = 'host.example.com';  " "myhostname = '$HOSTNAME';  "
 
 # $notify_method  = 'smtp:[127.0.0.1]:10025';
 # $forward_method = 'smtp:[127.0.0.1]:10025';  # set to undef with milter!

@@ -18,7 +18,7 @@ then
         ## we only run the client script. 
         if (( "$UID" < 1000 ))
         then
-            echo "Permission denied for system user: $(whoami)"
+            echo "Permission denied for system user: $USER"
         else
             echo "Running the srvctl-client now!"
             source $install_dir/srvctl-client.sh $1

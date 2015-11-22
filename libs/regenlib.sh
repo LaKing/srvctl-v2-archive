@@ -570,14 +570,25 @@ function regenerate_dns {
             
             while read host
             do
+            
+              if [ "$(ssh -n -o ConnectTimeout=1 $host hostname 2> /dev/null)" == "$host" ]
+              then
                 msg "Update remote DNS connection for $host"
+                
+                rm -rf /var/srvctl-host/$host.dns.tar.gz
+                
+                wget -q --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
+                if [ "$?" != "0" ]
+                then
+                    err "Failed to fetch DNS update information from https://$host/dns.tar.gz"
+                    continue
+                fi
                 
                 named_expath=/var/srvctl-host/named-$host
                 
                 rm -rf $named_expath/*
                 mkdir -p $named_expath
-                
-                wget -q --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
+
                 tar -xf /var/srvctl-host/$host.dns.tar.gz -C $named_expath
                 
                 ## expath alapján include file éas azt beincludolni
@@ -594,6 +605,9 @@ function regenerate_dns {
                 chmod 640 $named_exconf
                 
                 cp $named_expath/*.slave $named_live_path
+              else
+                err "Could not connect to $host"
+              fi
 
             done < /etc/srvctl/hosts  
 
@@ -835,6 +849,7 @@ function wait_for_ve_connection {
 
 
 fi ## if onHS
+
 
 
 

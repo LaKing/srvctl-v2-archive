@@ -120,7 +120,7 @@ cat $conf > /root/.log.io/log_server.conf
                 rm -rf  /var/log/logio/*
 
 set_file /srv/logio.sh '#!/bin/bash
-echo $(whoami)" starting "$0 
+echo $USER" starting "$0 
 
 mkdir -p /var/log/logio
 chown -R root:srv /var/log/logio

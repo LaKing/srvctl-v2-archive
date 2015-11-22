@@ -40,7 +40,7 @@ then
 
         sudomize
 
-        echo "Hostname: "$(hostname)
+        echo "Hostname: "$HOSTNAME
         echo "Uptime:   "$(uptime)
         free -h | head -n 2
 

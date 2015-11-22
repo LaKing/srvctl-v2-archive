@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if $onVE
+if $onVE && $isROOT
 then ## no identation.
 
 ## To delete all backups older then 10 days 
@@ -24,11 +24,11 @@ then
         then
                 check_mariadb_connection
                 
-                if [ -z "$2" ]
+                if [ -z "$ARG" ]
                 then
                         mysql $MDA
                 else
-                        mysql $MDA -e "$2" 
+                        mysql $MDA -e "$ARG" 
                 fi 
         ok
         fi
@@ -168,7 +168,7 @@ then
                 then
                     msg 'All databases have a backup in '$BACKUP_POINT
 
-                    if [ "$2" == "clean" ]
+                    if [ "$ARG" == "clean" ]
                     then
                      rm -fr $old_backup
                     fi
@@ -256,5 +256,6 @@ man '
     Import or create databases, backup databases, and reset passwords. The mysql root password is stored locally, for all operations.
     PhpMyAdmin can be installed for graphical administration. 
 '
+
 
 

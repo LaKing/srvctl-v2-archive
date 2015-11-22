@@ -112,3 +112,19 @@ networking-scripts
 ## echo BODY | mail -s SUBJECT user@host
 ##
 
+################ Using vncserver ################xx
+User needs a ~/.vnc/xstartup
+
+#!/bin/sh
+
+xrdb $HOME/.Xresources
+xsetroot -solid grey
+
+export XKL_XMODMAP_DISABLE=1
+
+ratpoison &
+
+.. and then an application here.
+
+#########################################x
+

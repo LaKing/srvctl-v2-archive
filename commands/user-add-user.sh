@@ -1,4 +1,7 @@
-#!/bin/bash
+if $isROOT
+then
+
+
 if $onHS
 then
     hint "add-user USERNAME [VE]" "Add a new user to the system. Optionally, grant the user access to VE."
@@ -58,10 +61,13 @@ then
 ok
 fi ## adduser
 
+fi ## isROOT
+
 man '
     This command will set up a new user account. It will generate a password, and password hashes for VE applications.
     A single user may have access to all containers and their CMSs, with the same password. The generated password is stored in plaintext.
 '
+
 
 
 

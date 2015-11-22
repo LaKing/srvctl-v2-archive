@@ -98,7 +98,7 @@ function create_certificate { ## for container $C
             if [ -d "$1" ]
             then
                 ## argument is a directory, eg. /root
-                Cname=$(hostname)
+                Cname=$HOSTNAME
                 cert_path=$1
             else 
                 ## argument must be a VE
@@ -196,7 +196,7 @@ function create_keypair { ## for user $U
 
         ## create ssh keypair
         if [ ! -f /home/$U/.ssh/id_rsa.pub ]; then
-           ssh-keygen -t rsa -b 4096 -f /home/$U/.ssh/id_rsa -N '' -C $U@@$(hostname)
+           ssh-keygen -t rsa -b 4096 -f /home/$U/.ssh/id_rsa -N '' -C $U@@$HOSTNAME
         fi
 
         chown -R $U:$U /home/$U/.ssh
@@ -259,7 +259,7 @@ function update_password {
                 ## generate new password
                 get_password
                 echo $password > /home/$_u/.password
-                log "Password is $password for $_u@"$(hostname)
+                log "Password is $password for $_u@"$HOSTNAME
         else
                 ## use existing password
                 password=$(cat /home/$_u/.password)
@@ -496,47 +496,37 @@ then
     if [ ! -d "$lxc_usr_path/share/lxc" ]
     then
         err "Configuration error. Directory not found: $lxc_usr_path/share/lxc"
-        exit
     fi    
     
     if [ ! -d "$lxc_usr_path/share/lxc/templates" ]
     then
         err "Configuration error. Directory not found: $lxc_usr_path/share/lxc/templates"
-        exit
     fi
         
     if [ ! -d "$lxc_usr_path/share/lxc/config" ]
     then
         err "Configuration error. Directory not found: $lxc_usr_path/share/lxc/config"
-        exit
     fi
     
     if [ ! -f "$lxc_bin_path/lxc-ls" ]
     then
         err "Configuration error. binary not found: $lxc_bin_path/lxc-ls (part of lxc-extra)"
-        locate lxc-ls
-        exit
     fi
     
     if [ ! -f "$lxc_bin_path/lxc-start" ]
     then
         err "Configuration error. binary not found: $lxc_bin_path/lxc-start"
-        locate lxc-start
-        exit
     fi
     
     if [ ! -f "$lxc_bin_path/lxc-stop" ]
     then
         err "Configuration error. binary not found: $lxc_bin_path/lxc-start"
-        locate lxc-start
-        exit
     fi
     
     if [ ! -f "$lxc_bin_path/lxc-info" ]
     then
         err "Configuration error. binary not found: $lxc_bin_path/lxc-start"
-        locate lxc-start
-        exit
     fi
 fi
+
 

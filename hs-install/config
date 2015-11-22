@@ -1,13 +1,13 @@
 ## srvctl config 
-## Use with "" if value contains spaces.
+## Use as string with "" if value contains spaces.
 
 ## use the latst version, options are 'latest-package' 'package' 'git' 'tar' 'src' 
 LXC_INSTALL='latest-package'
 ## eventually specify the version - mandatory for tar, optional for dnf
 LXC_VERSION='1.1.5'
 
-## logfile
-LOG=/var/log/srvctl.log
+## logpath
+LOG=/var/log/srvctl
 
 ## temporal backup and work directory
 TMP=/temp
@@ -43,7 +43,7 @@ PREFIXv6=64
 dns_share=/root/dns.tar.gz
 
 ## path to store compressed data archives
-backup_path=/temp
+BACKUP_PATH=/temp
 
 #### the following options are exported to containers, when they get created..
 
@@ -52,5 +52,6 @@ php_timezone=Europe/Budapest
 
 ## turn off debug messages
 debug=false
+
 
 

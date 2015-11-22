@@ -1,6 +1,4 @@
 #!/bin/bash
-# Last update:2015.04.21-18:44:04
-# version 2.2.3
 #
 # Server Controll script for Fedora with LXC containers
 #
@@ -9,9 +7,7 @@
 # LaKing@D250.hu
 # 
 ## Source URL
-#URL="https://raw.githubusercontent.com/LaKing/Fedora-scripts/master/srvctl"
-
-#echo -e "\e[2m$(head $0 -n 3 | grep version)"
+## URL="https://raw.githubusercontent.com/LaKing/Fedora-scripts/master/srvctl"
 
 install_bin=$(realpath "$BASH_SOURCE")
 install_dir=${install_bin:0:-10}
@@ -42,7 +38,7 @@ fi
 source $install_dir/libs/commonlib.sh
 load_libs
  
-logs "[$(whoami)@$(hostname) $(pwd)]# $0 $*"
+logs "[$USER@$HOSTNAME $(pwd)]# $0 $*"
 #msg "$(head $0 -n 3 | grep version)"
 SUCC=""
  
@@ -58,7 +54,7 @@ SUCC=" "
  
  
 ## if onVE C - the container name - should be the hostname
-C=$(hostname)
+C=$HOSTNAME
  
 #load the commands - and execute them 
 load_commands

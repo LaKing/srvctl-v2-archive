@@ -10,7 +10,7 @@ then ## no identation.
 
                 secure_mariadb
 
-                URI=$2
+                URI=$ARG
 
 
 
@@ -114,7 +114,7 @@ then ## no identation.
                 f=$dir/wp-install.php
                 echo "<?php" > $f
                 echo "// srvctl wordpress wp-install" >> $f
-                echo "define('WP_SITEURL', 'http://"$(hostname)"/"$URI"');" >> $f
+                echo "define('WP_SITEURL', 'http://"$HOSTNAME"/"$URI"');" >> $f
                 echo "define('WP_INSTALLING',true);" >> $f
                 #echo "define('ABSPATH','/var/www/html/"$URI"/');" >> $f
                 echo "require_once('$dir/wp-config.php');" >> $f
@@ -122,7 +122,7 @@ then ## no identation.
                 echo "require_once('$dir/wp-admin/includes/upgrade.php');" >> $f
                 echo "require_once('$dir/wp-includes/wp-db.php');" >> $f
                 get_password
-                echo "wp_install('"$(hostname)"','admin','root@localhost',1,'','"$password"');" >> $f                
+                echo "wp_install('"$HOSTNAME"','admin','root@localhost',1,'','"$password"');" >> $f                
                 
                 php -f $f
 
@@ -145,7 +145,7 @@ then ## no identation.
                 echo $password > $dir/.admin
                 chmod 000 $dir/.admin
 
-                log "Wordpress instance installed. https://"$(hostname)"/$URI/wp-admin admin:$password"
+                log "Wordpress instance installed. https://"$HOSTNAME"/$URI/wp-admin admin:$password"
                 
                 ## URGENT TODO: fix https for wordpress behind pound
                 ## TODO, reset password: UPDATE users SET user_pass = MD5('"(new-password)"') WHERE ID = 1;
@@ -158,5 +158,6 @@ man '
     Install the latest wordpress from wordpress.org, and create configuration files.
     Homepage: https://wordpress.org/
 '
+
 
 

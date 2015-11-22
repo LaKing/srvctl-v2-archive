@@ -13,9 +13,9 @@ then
     if [ "$UID" -ne "0" ]
     then
         ## I assume that if you run this as a system user, the its srv
-        if [ "$(whoami)" -ne "srv" ]
+        if [ "$USER" -ne "srv" ]
         then
-            echo "ERROR - system user $(whoami) is unknown. Use a normal user."
+            echo "ERROR - system user $USER is unknown. Use a normal user."
             exit 1
         fi
     else
@@ -29,14 +29,14 @@ then
         is_root=true
     fi
 else
-        echo "OK user $(whoami)"
+        echo "OK user $USER"
         if [ -z "$(rpmbuild --version 2> /dev/null | grep version)" ]
         then
             echo "WARNING - rpmbuild not found, attemt to install it with sudo"
             ## install the fedora packager
             sudo dnf -y install @development-tools
             sudo dnf -y install fedora-packager
-            user=$(whoami)
+            user=$USER
             sudo usermod -a -G mock $user
         fi
         if [ -z "$(rpmbuild --version 2> /dev/null | grep version)" ]

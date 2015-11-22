@@ -97,7 +97,7 @@ then
             done
         
         done        
-
+    msg "... done"
 ok
 fi ## stop-all
 

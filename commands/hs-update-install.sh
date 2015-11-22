@@ -11,7 +11,7 @@ then
 
         pm_update 
 
-        if [ "$2" == "all" ]
+        if [ "$ARG" == "all" ]
         then
            all_arg_set=true
         fi
@@ -22,7 +22,8 @@ then
             ok
             exit
         fi
-
+    
+    source $install_dir/hs-install/lxc.sh
 
         ## TODO make sure networking is set and okay.
         # /etc/sysconfig/network-scripts/ifcfg-em1
@@ -176,9 +177,8 @@ useradd -r -u 104 -g 104 -s /sbin/nologin -d /tmp codepad 2> /dev/null
 ## User tools
 source $install_dir/hs-install/usertools.sh
 
-
-
-
+## maintenance system tools
+dnf -y install dnf-plugin-system-upgrade
 
 
 ## public ftp server
@@ -219,16 +219,14 @@ if [ -s /root/.ssh/authorized_keys  ]
 then
   sed_file /etc/ssh/sshd_config "PasswordAuthentication yes" "PasswordAuthentication no"
 else
-  msg "Password based ssh login couldnt be disabled, no authorized keys."
+  msg "Password based ssh login couldn't be disabled, as root has no authorized keys."
 fi
 
 source $install_dir/hs-install/antivirus.sh
 #source $install_dir/hs-install/openvpn.sh
 source $install_dir/hs-install/firewall.sh
 
-## make sure symlink exist
-ln -s /usr/share/srvctl/srvctl.sh /bin/srvctl 2> /dev/null
-ln -s /usr/share/srvctl/srvctl.sh /bin/sc 2> /dev/null
+
 
 msg ".. update-install process complete."
 

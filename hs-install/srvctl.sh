@@ -13,13 +13,42 @@ then
     dnf -y install git
 fi
 
-if [ -z "$$install_dir" ]
+if [ -z "$install_dir" ]
+then
+    install_dir=/usr/share/srvctl
+fi
+
+if [ ! -d "$install_dir" ]
 then
     ## srvctl is not installed, or thes function was called outside of srvctl
-
+    echo "Installing to /usr/share/srvctl"
+    mkdir -p /usr/share
+    git clone git clone https://github.com/LaKing/srvctl.git
+    
 else
     ## we are called from srvctl
     cv="$(cat $install_dir/version)"
-    gv=""
+    gv="$(curl https://raw.githubusercontent.com/LaKing/srvctl/master/version | xargs)"
+    
+    if [ "$gv" != "$cv" ] 
+    then
+        echo "WARNING on srvctl version"
+        echo "Current version is $cv"
+        echo "git version is: $gv"
+    fi
+      
+    if [ -d "$install_dir/.git" ]
+    then  
+        echo "Update over git"
+        cd $install_dir
+        git pull
+    else
+        echo "Can not update over git. Update must be performed manually." 
+    fi
+    
 fi
+
+## make sure symlink exist
+ln -s $install_dir/srvctl.sh /bin/srvctl 2> /dev/null
+ln -s $install_dir/srvctl.sh /bin/sc 2> /dev/null
 

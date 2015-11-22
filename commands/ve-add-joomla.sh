@@ -74,7 +74,7 @@ then ## no identation.
                 echo "        public \$offline_message = 'This site is down for maintenance.<br /> Please check back again soon.';" >> $f
                 echo "        public \$display_offline_message = '1';" >> $f
                 echo "        public \$offline_image = '';" >> $f
-                echo "        public \$sitename = '"$(hostname)"';" >> $f
+                echo "        public \$sitename = '"$HOSTNAME"';" >> $f
                 echo "        public \$editor = 'tinymce';" >> $f
                 echo "        public \$captcha = '0';" >> $f
                 echo "        public \$list_limit = '20';" >> $f
@@ -102,8 +102,8 @@ then ## no identation.
                 echo "        public \$offset = 'UTC';" >> $f
                 echo "        public \$mailonline = '1';" >> $f
                 echo "        public \$mailer = 'mail';" >> $f
-                echo "        public \$mailfrom = 'joomla@"$(hostname)"';" >> $f
-                echo "        public \$fromname = '"$(hostname)"';" >> $f
+                echo "        public \$mailfrom = 'joomla@"$HOSTNAME"';" >> $f
+                echo "        public \$fromname = '"$HOSTNAME"';" >> $f
                 echo "        public \$sendmail = '/usr/sbin/sendmail';" >> $f
                 echo "        public \$smtpauth = '0';" >> $f
                 echo "        public \$smtpuser = '';" >> $f
@@ -153,7 +153,7 @@ then ## no identation.
 
                 systemctl restart httpd.service
                 
-                log "Joomla! installed. https://"$(hostname)"/$URI/administrator admin:$password"
+                log "Joomla! installed. https://"$HOSTNAME"/$URI/administrator admin:$password"
 
         ok
         fi ## install-joomla

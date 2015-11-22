@@ -3,7 +3,7 @@
 if $onHS
 then ## no identation.
 
-hint "backup [VE]" "Backup VE data"
+hint "backup [VE]" "Backup VE data, or all containers."
 if [ "$CMD" == "backup" ]
 then
 
@@ -11,10 +11,10 @@ then
         sudomize
         authorize
         
-        if [ -z "$backup_path" ]
+        if [ -z "$BACKUP_PATH" ]
         then
             err "Backup path not set in configs. Using $TMP for now."
-            backup_path=$TMP
+            BACKUP_PATH=$TMP
         fi
         
         if [ ! -z "$ARG" ]
@@ -51,13 +51,13 @@ then
 
         nfs_unmount $C
         
-        if [ -z "$backup_path" ]
+        if [ -z "$BACKUP_PATH" ]
         then
             err "Backup path not set in configs. Using $TMP for now."
-            backup_path=$TMP
+            BACKUP_PATH=$TMP
         fi
 
-        from=$backup_path/$C
+        from=$BACKUP_PATH/$C
         
         if [ ! -d $from ]
         then
@@ -228,6 +228,12 @@ then
             msg "/log to /root/log"
             7z x -o/$SRV/$C/rootfs/root $from/log.7z -aoa 
         fi
+        
+        if [ -f $from/cron.7z ]
+        then
+            msg "/cron to /var/spool/cron"
+            7z x -o/$SRV/$C/rootfs/root $from/log.7z -aoa 
+        fi
        
         creation_date="$(cat $from/creation-date)"
         if [ ! -z "$creation_date" ]
@@ -255,4 +261,6 @@ man '
 '
 
 fi
+
+
 

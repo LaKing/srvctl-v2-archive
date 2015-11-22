@@ -175,7 +175,7 @@ then
                 chmod 750 /var/log/codepad
 
                 set_file /srv/codepad.sh '#!/bin/bash
-echo $(whoami)" starting "$0 
+echo $USER" starting "$0 
 
 mkdir -p /var/log/codepad
 chown codepad:srv /var/log/codepad
@@ -323,7 +323,7 @@ done
                         chmod 750 /var/log/node-project
 
                         set_file /srv/node-project/run.sh '#!/bin/bash
-echo $(whoami)" starting "$0 
+echo $USER" starting "$0 
 
 mkdir -p /var/log/node-project
 chown node:srv /var/log/node-project
@@ -367,11 +367,11 @@ source $install_dir/ve-install/unitfiles.sh
         cd /var/git
 
         git config --global user.name 'codepad'
-        git config --global user.email codepad@$(hostname)
+        git config --global user.email codepad@$HOSTNAME
         git config --global push.default simple
 
         su codepad -s /bin/bash -c "git config --global user.name 'codepad'"
-        su codepad -s /bin/bash -c "git config --global user.email codepad@$(hostname)"
+        su codepad -s /bin/bash -c "git config --global user.email codepad@$HOSTNAME"
         su codepad -s /bin/bash -c "git config --global push.default simple"
 
         ## init bare git repository

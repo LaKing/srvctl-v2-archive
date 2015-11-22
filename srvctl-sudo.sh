@@ -16,7 +16,7 @@ isROOT=true
 isSUDO=true
 
 ## silent log entry
-echo "$NOW : [$SUDO_USER@$(hostname) $(pwd)]# $0 $@" >> $LOG
+echo "$NOW : [$SUDO_USER@$HOSTNAME $(pwd)]# $0 $@" >> $LOG/sudo.log
 
 ## some extra checks
 if ! $LXC_SERVER

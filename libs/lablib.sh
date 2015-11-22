@@ -89,13 +89,13 @@ function ntc {
 function log {
     ## create a log entry
     echo -e ${yellow}$1${NC}
-    echo $NOW': '$@ >> $LOG
+    echo $NOW': '$@ >> $LOG/srvctl.log
 }
 
 ## silent log
 function logs {
     ## create a log entry
-    echo $NOW': '$@ >> $LOG
+    echo $NOW': '$@ >> $LOG/srvctl.log
 }
 
 function dbg {
@@ -103,14 +103,14 @@ function dbg {
         if $debug
         then
             echo -e ${yellow}'#'$BASH_LINENO' '${FUNCNAME[1]}': '$@${NC}
-            echo $NOW': '$@ >> $LOG
+            echo $NOW': '$@ >> $LOG/debug.log
         fi
 }
 
 function err {
     ## error message
     echo -e ${red}$@${NC}
-    echo $NOW': '$@ >> $LOG
+    echo $NOW': '$@ >> $LOG/error.log
     SUCC=$SUCC" "$@
 }
 
@@ -135,7 +135,7 @@ function exif {
     fi
 }
 
-## choose a package manager based on relese
+## package manager based install
 function pm {
         echo dnf -y install $@
         dnf -y install $@

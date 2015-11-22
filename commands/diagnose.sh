@@ -8,12 +8,12 @@ if [ "$CMD" == "scan" ] || [ "$CMD" == "phpscan" ]
 then
         sudomize
         source $install_dir/libs/phpscan.sh
-        mkdir -p /var/log/phpscan
+        mkdir -p $LOG/phpscan
         
         for C in $(lxc_ls)
         do
-            msg "PHPSCAN $C"
-            phpscan $SRV/$C/rootfs/var/www/html /var/log/phpscan/$C.log
+            msg "phpscan $C"
+            phpscan $SRV/$C/rootfs/var/www/html $LOG/phpscan/$C.log
         done
 ok
 fi
@@ -84,7 +84,7 @@ then
         echo "RANGEv6: $RANGEv6"
         echo "PREFIXv6: $PREFIXv6"
         echo "dns_share: $dns_share"
-        echo "backup_path: $backup_path"
+        echo "BACKUP_PATH: $BACKUP_PATH"
         echo "php_timezone: $php_timezone"
         echo "debug: $debug"
         #echo ": $"
@@ -165,4 +165,7 @@ man '
 '
 
 fi ## isROOT
+
+
+
 

@@ -39,7 +39,7 @@ then
         
         if ! $(is_fqdn $C)
         then
-            C="$C.$(hostname)"
+            C="$C.$HOSTNAME"
         fi
         
         if ! $(is_fqdn $C)
@@ -126,7 +126,7 @@ MDF="'$MDF'"
 ## for php.ini in containers
 php_timezone="'$php_timezone'"
 
-## IPv4 Address ## TODO: dig command not available on a minimal-container, get it with: $(dig +time=1 +short $(hostname))
+## IPv4 Address ## TODO: dig command not available on a minimal-container, get it with: $(dig +time=1 +short $HOSTNAME)
 HOSTIPv4="'$HOSTIPv4'"
 '
 
@@ -235,9 +235,9 @@ fi
         
         if [ "$C" == "default-host.local" ]
         then            
-            echo '<b>'$HOSTIPv4'</b> - '$(hostname) >> $index       
+            echo '<b>'$HOSTIPv4'</b> - '$HOSTNAME >> $index       
         else        
-            echo '<b>'$C'</b> @ '$(hostname) >> $index
+            echo '<b>'$C'</b> @ '$HOSTNAME >> $index
         fi 
         
         echo '</font><p></body>' >> $index
@@ -263,7 +263,7 @@ fi
 
         if [ "$C" == "default-host.local" ]
         then
-            echo $(hostname) > $SRV/$C/settings/pound-host        
+            echo $HOSTNAME > $SRV/$C/settings/pound-host        
         fi 
 
         regenerate_pound_files
@@ -297,7 +297,7 @@ fi
             generate_user_structure $U $C
         done        
         
-        mkdir -p $backup_path/$C
+        mkdir -p $BACKUP_PATH/$C
 
 
 ## NFS

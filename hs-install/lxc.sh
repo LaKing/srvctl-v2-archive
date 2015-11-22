@@ -7,7 +7,7 @@ then
         then
                 ## packages needed for compilation and for running
                 log "Install Development Tools"
-                pm_groupinstall "Development Tools"
+                dnf -y groupinstall "Development-Tools"
                 exif
                 pm automake
                 exif

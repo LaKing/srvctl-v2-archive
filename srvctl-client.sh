@@ -33,7 +33,7 @@ cd ~
 CWF="srvctl-client"
 
 ## source or set here as default
-U=$(whoami)
+U=$USER
 H="localhost"
 A=true
 I=true
@@ -62,7 +62,7 @@ else
 
     if [ -z "$U" ]
     then
-        U=$(whoami)
+        U=$USER
     fi
     echo "Using $U@$H"
 
