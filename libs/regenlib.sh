@@ -531,38 +531,18 @@ function regenerate_dns {
                 fi
         done
         
-        
-        
-        #chown -R named:named $named_live_path
-        
-        #systemctl restart named.service
-
-
-        #test=$(systemctl is-active named.service)
-
-        #if [ "$test" == "active" ]
-        #then
-                msg "Creating DNS share."
-                ## delete first
-                rm -rf $dns_share
+        msg "Creating DNS share."
+        ## delete first
+        rm -rf $dns_share
                 
-                ## create tarball
-                tar -czPf $dns_share -C $named_slave_path .
-
-        #else
-        #        err "DNS Error."
-        #        systemctl status named.service
-        #        exit
-        #fi
+        ## create tarball
+        tar -czPf $dns_share -C $named_slave_path .
 
 
         echo 'include "'$named_local'";' >> $named_includes
 
         cp $named_main_path/*.zone $named_live_path
         cp $named_main_path/*.conf $named_live_path
-        #cp $named_slave_path/*.zone $named_live_path
-        #cp $named_slave_path/*.conf $named_live_path
-
 
 
         if [ -f /etc/srvctl/hosts ]
@@ -607,6 +587,7 @@ function regenerate_dns {
                 cp $named_expath/*.slave $named_live_path
               else
                 err "Could not connect to $host"
+                ssh -n -o ConnectTimeout=1 $host hostname
               fi
 
             done < /etc/srvctl/hosts  

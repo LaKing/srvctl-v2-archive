@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if $isROOT
-then
+#if $isROOT
+#then
 
 hint "scan" "Run scan or phpscan and clamscan to diagnose infections even while the container is offline."
 if [ "$CMD" == "scan" ] || [ "$CMD" == "phpscan" ]
@@ -52,6 +52,7 @@ then
         #echo "Postfix: "$(systemctl is-active postfix.service)        
         #echo "Dovecot: "$(systemctl is-active dovecot.service)
 
+        ## maintain these list of variables for debugging!
         msg "srvctl variables and settings."
         echo "FEDORA: $FEDORA"
         echo "FEDORA_RELEASE: $FEDORA_RELEASE"
@@ -72,6 +73,7 @@ then
         echo "ARG: $ARG"
         echo "OPA: $OPA"
         echo "ARGS: $ARGS"
+        echo "OPAS: $OPAS"
         echo "LXC_INSTALL: $LXC_INSTALL"
         echo "LXC_VERSION: $LXC_VERSION"
         echo "LOG: $LOG"
@@ -132,7 +134,7 @@ then
         echo ''
         
 
-    if $onHS
+    if $onHS && $isROOT
     then    
         zone=$(firewall-cmd --get-default-zone)
         services=" $(firewall-cmd --zone=$zone --list-services) "
@@ -150,6 +152,7 @@ then
         done
     fi
     
+        msg "Uptime: $(uptime)"
         msg "CONNECTED SHELL USERS"
         w
         
@@ -164,7 +167,7 @@ man '
     Display status messages of services, and list important network port statuses.
 '
 
-fi ## isROOT
+#fi ## isROOT
 
 
 

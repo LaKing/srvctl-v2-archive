@@ -11,14 +11,15 @@ then
     if $LXC_SERVER
     then
         ## Authorize this user!
-        LOG="$(realpath ~)/.srvctl.log"
+        LOG="$(realpath ~)/.srvctl"
+        mkdir -p $LOG
         isUSER=true
         #exit
     else    
         ## we only run the client script. 
         if (( "$UID" < 1000 ))
         then
-            echo "Permission denied for system user: $USER"
+            echo "Permission denied for system user: $(whoami)"
         else
             echo "Running the srvctl-client now!"
             source $install_dir/srvctl-client.sh $1
@@ -31,3 +32,5 @@ fi
 
 
 ## other wise, root can continiue.
+
+

@@ -40,7 +40,7 @@ then
 
         sudomize
 
-        echo "Hostname: "$HOSTNAME
+        echo "Hostname: "$(hostname)
         echo "Uptime:   "$(uptime)
         free -h | head -n 2
 
@@ -59,7 +59,8 @@ then
     
     for C in $(lxc_ls)
     do
-
+        get_dns_servers
+        
         get_state
         get_info
         get_ip
@@ -69,7 +70,15 @@ then
         get_dig_MX
         get_disk_usage
         get_users
-
+        
+        if [ -f $SRV/$C/err.log ]
+        then
+            echo ''
+            while read line
+            do
+                err "$line"
+            done < $SRV/$C/err.log
+        fi
         echo ''
     done
 
@@ -194,7 +203,7 @@ man '
     A Quick list of accessible containers.
 '
 
-hint "list" "List containers in ls format"
+hint "ls" "List containers in ls format"
 if [ "$CMD" == "ls" ] 
 then
         sudomize 
@@ -209,6 +218,7 @@ man '
     A Quick list of acessible container names to be processed further in other scripts..
 '
 fi ## of onHS
+
 
 
 

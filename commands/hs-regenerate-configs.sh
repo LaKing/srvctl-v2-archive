@@ -3,10 +3,10 @@ then ## no identation.
 
 ## regenerate configs 
 hint "regenerate [all]" "Regenerate configuration files, and restart affected services. (!)"
-if [ "$CMD" == "regenerate" ] || [ "$CMD" == "!" ]
+if [ "$CMD" == "regenerate" ] || [ "$CMD" == "regenerate-all" ] || [ "$CMD" == "!" ]
 then
 
-        if [ "$ARG" == "all" ]
+        if [ "$CMD" == "regenerate-all" ] || [ "$ARG" == "all" ]
         then
            all_arg_set=true
         fi

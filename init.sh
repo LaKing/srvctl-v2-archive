@@ -11,6 +11,15 @@ DDN=$(dnsdomainname)
 ## if enabled, containers should be accessible on container.yourdomain.net
 ENABLE_CDDN=true
 
+
+## MYSQL / MARIADB conf file that stores the mysql root password - in containers
+MDF=/etc/mysqldump.conf
+
+## global variables with default values
+all_arg_set=false
+
+
+
 ####################################################
 
 ## These where the variables to be custimized - used in update-install too!
@@ -70,9 +79,10 @@ OPA=$3
 OPAS="${@:2}"
 ## all arguments, including command and argument
 ARGS="$*"
+
+
 ## Current start directory
 CWD=$(pwd)
-
 cd ~
 
 

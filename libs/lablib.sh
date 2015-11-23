@@ -4,13 +4,6 @@
 
 ## constants
 
-## MYSQL / MARIADB conf file that stores the mysql root password - in containers
-MDF=/etc/mysqldump.conf
-
-## global variables with default values
-all_arg_set=false
-
-
 green='\e[32m'
 red='\e[31m'
 blue='\e[34m'

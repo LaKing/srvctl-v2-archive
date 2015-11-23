@@ -79,10 +79,10 @@ list of currently active commands:
 
 ```
 
-All bash scripts are for Fedora based systems.
+All bash scripts are made for, and tested on Fedora based systems. Some scripts might eventually work on other distros, with slight modifications, however there are a lot of fodora-specific workarounds and bugfixes in these scripts.
 
 There is an option now to include commands in a plugin-like design. 
-Simply create a file in a ```/root/srvctl-includes``` directory, based on template.sh.
+Simply create a shell script based on the template.sh and place in the ```/root/srvctl-includes``` directory.
 
 As the software packages under it change, this script is always under construction.
 Recommended only for administrators / experts, who know what they do! Use it on your own risk!
@@ -90,8 +90,7 @@ If you use or plan to use this script you should contact me for support.
 
 [current srvctl documentation](http://srvctl.d250.hu/)
 
-[rpm files](ftp://d250.hu/fedora-release/)
-However, currently, updating rpm's does not work. :(
+Made on codepad. Made in hungary.
     
 
 
