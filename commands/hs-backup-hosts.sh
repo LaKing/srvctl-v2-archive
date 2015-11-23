@@ -20,6 +20,11 @@ then
             msg "Using $BACKUP_PATH"
         fi
         
+        if [ -f /etc/srvctl/backup-hosts-include ]
+        then
+            msg processing backup-hosts-include
+            source /etc/srvctl/backup-hosts-include
+        fi
         
         local_backup /etc
         local_backup /root
@@ -48,6 +53,10 @@ fi ## backup
 man '
     Attempt to backup all container-data, but not the container operating system.
     This will create a folder - path specified in config - and rsync files and folders.
+    Optional directives may be specified in /etc/srvctl/backup-hosts-include
+    - local_backup DIRs
+    - server_backup HOST DIRs
+    - remote_baclup PROXY HOST DIRs
 '
 fi
 

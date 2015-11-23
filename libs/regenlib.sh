@@ -469,8 +469,14 @@ set_file $named_zone '$TTL 1D
 
 function regenerate_dns {
         
+        
+        for C in $(lxc-ls)
+        do
+            rm -rf $SRV/$C/dns-*
+            get_dns_servers
+        done
+        
         msg "Regenerate DNS - named/bind configs"
-    
         
         ## dir might not exist
         mkdir -p $named_live_path
@@ -611,7 +617,6 @@ function regenerate_dns {
         else
             msg "DNS server OK"
         fi
-        
         
 
 }
@@ -830,6 +835,7 @@ function wait_for_ve_connection {
 
 
 fi ## if onHS
+
 
 
 

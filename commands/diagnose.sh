@@ -79,6 +79,8 @@ then
         echo "LOG: $LOG"
         echo "TMP: $TMP"
         echo "SRV: $SRV"
+        echo "MDA: $MDA"
+        echo "MDF: $MDF"
         echo "CMP: $CMP"
         echo "CDN: $CDN"
         echo "HOSTIPv4: $HOSTIPv4"

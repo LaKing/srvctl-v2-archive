@@ -212,7 +212,7 @@ function remote_backup {
 
     for i in $backup_dirs
     do
-        mkdir -p $LOG/backup/$backup_hostname/
+        mkdir -p $LOG/backup/$backup_hostname/$i
         backup_log=$LOG/backup/$backup_hostname/$i/log
         
         echo $backup_hostname:$i 
@@ -255,7 +255,7 @@ function srvctl_backup {
         msg $c
         if $BACKUP
         then
-            ssh $srvctl_host "ssh -n $c 'sc backup-db'"
+            ssh -n $srvctl_host "ssh -n $c 'sc backup-db'"
         fi
         server_backup $srvctl_host $SRV/$c/cert
         server_backup $srvctl_host $SRV/$c/settings

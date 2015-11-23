@@ -23,7 +23,7 @@ then
         if  [ "$CMD" == "mysql" ]
         then
                 check_mariadb_connection
-                
+                echo MDA: $MDA
                 if [ -z "$ARG" ]
                 then
                         mysql $MDA

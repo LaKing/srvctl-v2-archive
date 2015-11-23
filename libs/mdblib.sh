@@ -13,6 +13,7 @@ function check_mariadb_connection {
             MDA="--defaults-file=$MDF -u root"
         else
             MDA="-u root"
+
         fi
         
         mysql $MDA -e exit 2> /dev/null
@@ -156,6 +157,7 @@ function add_mariadb_db {
         
         msg "Added MariaDB database $db_name  $db_usr:$db_pwd"
 }
+
 
 
 

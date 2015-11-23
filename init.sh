@@ -31,8 +31,6 @@ source $install_dir/hs-install/config
 if [ -f "/etc/srvctl/config" ]
 then
     source /etc/srvctl/config 
-else
-    err "No counfig file found."
 fi
 
 mkdir -p $LOG
