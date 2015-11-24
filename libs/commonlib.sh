@@ -41,3 +41,18 @@ function hint_commands {
     fi
 }
 
+function load_cms {
+    for sourcefile in $install_dir/ve-cms/*
+    do
+        source $sourcefile
+    done
+}
+
+function hint_cms {
+    for sourcefile in $install_dir/ve-cms/*
+    do
+        source $sourcefile
+        hint
+    done
+}
+

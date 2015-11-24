@@ -30,12 +30,19 @@ then
 
 
         hint_commands
-   
         ## print formatted hint about man
         printf ${green}"%-40s"${NC} "  help" 
         printf ${yellow}"%-48s"${NC} "see more detailed descriptions about commands."
         ## newline
         echo ''
+        echo ''
+        
+        if $isROOT && $onVE
+        then
+            msg "CMS list:"         
+            hint_cms
+            echo ''
+        fi
         
 else
  echo -e "$SUCC"

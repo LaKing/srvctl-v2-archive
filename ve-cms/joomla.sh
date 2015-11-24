@@ -3,8 +3,8 @@
 if $onVE && $isROOT
 then ## no identation.
 
-        hint "add-joomla [path]" "Install the latest Joomla! "
-        if [ "$CMD" == "add-joomla" ]
+        hint "joomla [path]" "Install the latest Joomla! Optionally to a folder (URI)."
+        if [ "$CMD" == "add-cms" ] && [ "$OPA" == "joomla" ]
         then        
 
                 secure_mariadb
@@ -165,5 +165,6 @@ man '
     Use the github release of Joomla! Create configuration files.
     http://www.joomla.org/
 '
+
 
 

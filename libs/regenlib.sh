@@ -469,11 +469,11 @@ set_file $named_zone '$TTL 1D
 
 function regenerate_dns {
         
-        
-        for C in $(lxc-ls)
+        msg "Regenerate DNS - query public information."
+        for _C in $(lxc-ls)
         do
-            rm -rf $SRV/$C/dns-*
-            get_dns_servers
+            rm -rf $SRV/$_C/dns-*
+            get_dns_servers $_C
         done
         
         msg "Regenerate DNS - named/bind configs"

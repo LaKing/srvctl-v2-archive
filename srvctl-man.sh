@@ -32,6 +32,16 @@ xxxx='\e[33m'
 
 NC='\e[0m' # No Color
 
+function title {
+ if [ ! -z "$1" ]
+  then
+        echo ''
+        printf ${green}"%-40s"${NC} "$1" 
+        echo ''
+        echo ''
+ fi
+} 
+
 function hint {
  if [ ! -z "$1" ]
   then
@@ -40,6 +50,7 @@ function hint {
         printf ${yellow}"%-48s"${NC} "$2"
         ## newline
         echo ''
+
  fi
 } 
 
@@ -54,9 +65,13 @@ function msg {
 }
    
 source $install_dir/libs/commonlib.sh
+title "srvctl COMMAND [arguments]"
+title "COMMAND"
 load_commands
+title "CMS"
+load_cms
 
-echo "srvctl by Istvan Kiraly - LaKing@D250.hu - D250 Laboratories - 2015"
+title "Fedora srvctl by Istvan Kiraly - LaKing@D250.hu - D250 Laboratories - 2015"
 
 
 exit

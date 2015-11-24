@@ -59,7 +59,7 @@ then
     
     for C in $(lxc_ls)
     do
-        get_dns_servers
+        get_dns_servers $C
         
         get_state
         get_info

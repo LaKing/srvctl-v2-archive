@@ -3,8 +3,8 @@
 if $onVE  && $isROOT
 then ## no identation.
 
-        hint "add-wordpress [path]" "Install Wordpress. Optionally to a folder (URI)."
-        if [ "$CMD" == "add-wordpress" ]
+        hint "wordpress [path]" "Install Wordpress. Optionally to a folder (URI)."
+        if [ "$CMD" == "add-cms" ] && [ "$OPA" == "wordpress" ]
         then
                 pm wordpress
 
@@ -158,6 +158,7 @@ man '
     Install the latest wordpress from wordpress.org, and create configuration files.
     Homepage: https://wordpress.org/
 '
+
 
 
 

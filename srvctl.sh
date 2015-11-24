@@ -38,13 +38,13 @@ fi
 source $install_dir/libs/commonlib.sh
 load_libs
  
-logs "[$USER@$HOSTNAME $(pwd)]# $0 $*"
+logs "[$(whoami)@$(hostname) $(pwd)]# $0 $*"
 #msg "$(head $0 -n 3 | grep version)"
 SUCC=""
  
 ## hint provides a sort of help functionality - initialize empty
 function hint {
-        echo "-" >> /dev/null
+        echo 0 >> /dev/null
 } 
  
 ## this is used at the end of command-blocks, to confirm command success or failure.
@@ -54,10 +54,12 @@ SUCC=" "
  
  
 ## if onVE C - the container name - should be the hostname
-C=$HOSTNAME
+C=$(hostname)
  
 #load the commands - and execute them 
 load_commands
  
 source $install_dir/finish.sh
+
+
 
