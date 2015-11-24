@@ -226,7 +226,7 @@ function remote_backup {
 
             if $BACKUP
             then
-                if rsync --delete -avz -e "ssh -n -A $backup_proxy ssh -n" $backup_host:/$i $backup_target/$(dirname $i) >> $backup_log
+                if rsync --delete -avz -e "ssh -A $backup_proxy ssh" $backup_host:/$i $backup_target/$(dirname $i) >> $backup_log
                 then
                     log "done  $backup_host @ $i"
                 else
