@@ -345,6 +345,35 @@ function regenerate_pound_files {
                                 echo 'Include "'$cfg_dir/https-service'"' >> /var/pound/https-domains.cfg
 
                         fi
+
+                        ## pound aliases redirect other domains here
+                        if [ -f $SRV/$_C/settings/pound-aliases ]
+                        then
+                            for A in $(cat $SRV/$_C/settings/pound-aliases 2> /dev/null)
+                            do
+                                if [ -d $SRV/$A ]
+                                then
+                                    err "Pound configuration error in $SRV/$_C/settings/pound-aliases: $A exists as a container."
+                                    continue
+                                fi
+                        
+                                set_file $cfg_dir/$A-http-alias-service '## srvctl redirect-service '$_C' '$_ip'
+                                Service
+                                          HeadRequire "Host: '$A'"
+                                          Redirect "http://'$_C'"
+                                End'
+                                
+                                set_file $cfg_dir/$A-https-alias-service '## srvctl redirect-service '$_C' '$_ip'
+                                Service
+                                          HeadRequire "Host: '$A'"
+                                          Redirect "https://'$_C'"
+                                End'
+
+                                echo 'Include "'$cfg_dir/$A-http-alias-service'"' >> /var/pound/http-domains.cfg
+                                echo 'Include "'$cfg_dir/$A-https-alias-service'"' >> /var/pound/https-domains.cfg
+    
+                            done
+                        fi
                         
                         ## aliased, or match based domains - redirect only
 

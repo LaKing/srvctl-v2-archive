@@ -462,12 +462,20 @@ set_file $named_zone '$TTL 1D
 *        IN         A        '$HOSTIPv4'
 @        IN         A        '$HOSTIPv4'
 @        IN        MX        10        '${mail_server,,}'
-        AAAA        ::1'
+'
+
+    if [ -f $SRV/$D/opendkim/default.txt ]
+    then
+         cat $SRV/$D/opendkim/default.txt >> $named_zone
+    fi
+    
+## TODO IPv6
+#'        AAAA        ::1'
 
 ## named zone written.                    
 }
 
-function regenerate_dns {
+function regenerate_dns_publicinfo {
         
         msg "Regenerate DNS - query public information."
         for _C in $(lxc-ls)
@@ -475,7 +483,10 @@ function regenerate_dns {
             rm -rf $SRV/$_C/dns-*
             get_dns_servers $_C
         done
-        
+}
+
+function regenerate_dns {
+    
         msg "Regenerate DNS - named/bind configs"
         
         ## dir might not exist
@@ -604,7 +615,8 @@ function regenerate_dns {
         chmod 640 $named_includes
         
         chown -R root:named $named_live_path
-        chmod -R 650 $named_live_path
+        chmod -R 640 $named_live_path
+        chmod 650 $named_live_path
         
         ## all preparations done, activate!
         systemctl restart named.service
@@ -621,22 +633,20 @@ function regenerate_dns {
 
 }
 
-function regenerate_logfiles {
+function regenerate_logfiles {    
 
-        msg "Linking log files for fail2ban."        
-
-        rm -rf /var/log/httpd
-        mkdir -p /var/log/httpd
+        rm -rf /var/log/srvctl/httpd
+        mkdir -p /var/log/srvctl/httpd
 
         for _C in $(lxc-ls)
         do
                 if [ -f $SRV/$_C/rootfs/var/log/httpd/access_log ]
                 then
-                        ln -s $SRV/$_C/rootfs/var/log/httpd/access_log /var/log/httpd/$_C-access_log
+                        ln -s $SRV/$_C/rootfs/var/log/httpd/access_log /var/log/srvctl/httpd/$_C-access_log
                 fi
                 if [ -f $SRV/$_C/rootfs/var/log/httpd/error_log ]
                 then
-                        ln -s $SRV/$_C/rootfs/var/log/httpd/error_log /var/log/httpd/$_C-error_log
+                        ln -s $SRV/$_C/rootfs/var/log/httpd/error_log /var/log/srvctl/httpd/$_C-error_log
                 fi
         done
 

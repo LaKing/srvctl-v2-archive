@@ -10,36 +10,47 @@ then
         then
            all_arg_set=true
         fi
+            ## counter linearly assigns a unique number to containers.
+            regenerate_counter
 
-        regenerate_counter
-
-        regenerate_config_files
-        ## for each container generate_lxc_config
-
-        regenerate_etc_hosts 
+            ## for each container generate_lxc_config
+            regenerate_config_files
         
-        regenerate_known_hosts
-        ## for each container scan_host_key
-
-        regenerate_pound_files
-
-        regenerate_root_configs
-        ## ssh related
-
-        regenerate_users 
-        ## add_user(s)
-
-        regenerate_users_configs
-        ## for each user generate_user_configs
-    
-        regenerate_users_structure
-        ## for each user generate_user_structure
-
-        regenerate_dns
-
-        regenerate_logfiles
+            ## /etc/hosts for trusted localhosts
+            regenerate_etc_hosts 
         
-        regenerate_sudo_configs
+            ## for each container scan_host_key
+            regenerate_known_hosts
+        
+            ## create pound configuration files
+            regenerate_pound_files
+
+            ## ssh related
+            regenerate_root_configs
+        
+            ## add_user(s)
+            regenerate_users 
+        
+            ## for each user generate_user_configs
+            regenerate_users_configs
+        
+            ## for each user generate_user_structure
+            regenerate_users_structure
+            
+            ## query 8.8.8.8 for dns information
+            regenerate_dns_publicinfo
+            
+            ## opendkim for email signing
+            regenerate_opendkim
+            
+            ## bind / named configs
+            regenerate_dns
+            
+            ## make logfiles for apache log - kind of cosmetic action
+            regenerate_logfiles
+            
+            ## doesent really change much  - TODO, place it to update-install?
+            regenerate_sudo_configs
          
 ok
 fi ## regenerate

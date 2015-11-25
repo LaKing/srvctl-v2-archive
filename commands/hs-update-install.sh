@@ -138,10 +138,11 @@ source $install_dir/hs-install/pound.sh
 set_file_limits
 
 ### E-mail
+source $install_dir/hs-install/opendkim.sh
 source $install_dir/hs-install/saslauthd.sh
 source $install_dir/hs-install/postfix.sh
 source $install_dir/hs-install/perdition.sh
-source $install_dir/hs-install/opendkim.sh
+
 
 ## DNS
 source $install_dir/hs-install/named.sh

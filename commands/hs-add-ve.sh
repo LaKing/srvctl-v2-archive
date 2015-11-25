@@ -39,7 +39,7 @@ then
         
         if ! $(is_fqdn $C)
         then
-            C="$C.$HOSTNAME"
+            C="$C.$(hostname)"
         fi
         
         if ! $(is_fqdn $C)
@@ -126,7 +126,7 @@ MDF="'$MDF'"
 ## for php.ini in containers
 php_timezone="'$php_timezone'"
 
-## IPv4 Address ## TODO: dig command not available on a minimal-container, get it with: $(dig +time=1 +short $HOSTNAME)
+## IPv4 Address ## TODO: dig command not available on a minimal-container, get it with: $(dig +time=1 +short $(hostname))
 HOSTIPv4="'$HOSTIPv4'"
 '
 
@@ -235,9 +235,9 @@ fi
         
         if [ "$C" == "default-host.local" ]
         then            
-            echo '<b>'$HOSTIPv4'</b> - '$HOSTNAME >> $index       
+            echo '<b>'$HOSTIPv4'</b> - '$(hostname) >> $index       
         else        
-            echo '<b>'$C'</b> @ '$HOSTNAME >> $index
+            echo '<b>'$C'</b> @ '$(hostname) >> $index
         fi 
         
         echo '</font><p></body>' >> $index
@@ -263,12 +263,13 @@ fi
 
         if [ "$C" == "default-host.local" ]
         then
-            echo $HOSTNAME > $SRV/$C/settings/pound-host        
+            echo $(hostname) > $SRV/$C/settings/pound-host        
         fi 
 
         regenerate_pound_files
 
 ## DNS
+        get_dns_servers $C
         regenerate_dns
 
 ## Node / npm
@@ -380,6 +381,9 @@ man '
     Prefixes make sense, mail. or dev. will create MX or development servers.
     
 '
+
+
+
 
 
 

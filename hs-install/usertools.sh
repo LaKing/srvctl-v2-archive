@@ -2,20 +2,21 @@
 msg "User tools"
 
 ## vncserver
-pm tigervnc-server
+pmc tigervnc-server vncserver
 
 ## hg
-pm mercurial
+pmc mercurial hg
 
 ## fdupes   
-pm fdupes
+pmc fdupes
         
 ## mail
-pm mailx
+pmc mailx mail
 
 ## ratposion
-pm ratpoison
+pmc ratpoison
 
 ## firefox
-pm firefox
+pmc firefox
+
 

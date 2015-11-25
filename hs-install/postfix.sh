@@ -3,24 +3,62 @@
 
 if [ ! -f /etc/postfix/main.cf ] || $all_arg_set
 then
-        pc=/etc/postfix/main.cf
 
-        if grep -q  '## srvctl postfix configuration directives' $pc; then
+        if grep -q  '## srvctl postfix configuration file' /etc/postfix/main.cf; then
          msg "Skipping Postfix configuration, as it seems to be configured."
         else
             log "Installing the Postfix mail subsystem."
-            bak $pc
+            bak /etc/postfix/main.cf
 
             pm postfix
-            sed_file $pc 'inet_interfaces = localhost' '#inet_interfaces # localhost'
 
-                ## append to the default conf
-                echo '
-## srvctl postfix configuration directives
-## RECIEVING
+            set_file /etc/postfix/main.cf '
+## srvctl postfix configuration file
+# Global Postfix configuration file. 
 
-## Listen on ..
+# COMPATIBILITY
+compatibility_level = 2
+
+# LOCAL PATHNAME INFORMATION
+queue_directory = /var/spool/postfix
+
+
+command_directory = /usr/sbin
+daemon_directory = /usr/libexec/postfix
+data_directory = /var/lib/postfix
+
+# QUEUE AND PROCESS OWNERSHIP
+mail_owner = postfix
+
+# RECEIVING MAIL
 inet_interfaces = all
+
+# Enable IPv4, and IPv6 if supported
+inet_protocols = all
+
+mydestination = $myhostname, localhost.$mydomain, localhost
+unknown_local_recipient_reject_code = 550
+
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+
+# DEBUGGING CONTROL
+debug_peer_level = 2
+
+debugger_command = PATH=/bin:/usr/bin:/usr/local/bin; export PATH; (echo cont;echo where) | gdb $daemon_directory/$process_name $process_id 2>&1 > $config_directory/$process_name.$process_id.log & sleep 5
+
+# INSTALL-TIME CONFIGURATION INFORMATION
+sendmail_path = /usr/sbin/sendmail.postfix
+newaliases_path = /usr/bin/newaliases.postfix
+mailq_path = /usr/bin/mailq.postfix
+setgid_group = postdrop
+html_directory = no
+manpage_directory = /usr/share/man
+readme_directory = /usr/share/doc/postfix/README_FILES
+meta_directory = /etc/postfix
+shlib_directory = no
+          
+## CUSTOM Directives
 
 ## use /etc/hosts instead of dns-query
 lmtp_host_lookup = native
@@ -28,7 +66,7 @@ smtp_host_lookup = native
 ## in addition, this might be enabled too.
 # smtp_dns_support_level = disabled
 
-## dont forget to postmap /etc/postfix/relaydomains
+# TRUST AND RELAY CONTROL
 relay_domains = $mydomain, hash:/etc/postfix/relaydomains
 
 ## SENDING
@@ -42,10 +80,6 @@ smtpd_use_tls = yes
 ## We use cyrus for PAM authentication of local users
 smtpd_sasl_type = cyrus
 
-## We could use dovecot too.
-#smtpd_sasl_type = dovecot
-#smtpd_sasl_path = private/auth
-
 smtpd_sasl_auth_enable = yes
 smtpd_sasl_authenticated_header = yes
 smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated
@@ -58,7 +92,14 @@ message_size_limit=26214400
 ## virus scanner
 content_filter=smtp-amavis:[127.0.0.1]:10024
 
-' >> $pc
+## opendkim
+smtpd_milters           = inet:127.0.0.1:8891
+non_smtpd_milters       = $smtpd_milters
+milter_default_action   = accept
+
+## dont forget to postmap /etc/postfix/relaydomains
+'
+
         fi ## add postfix directives
 
         echo '# srvctl postfix relaydomains' >> /etc/postfix/relaydomains
@@ -131,18 +172,13 @@ smtp-amavis unix -    -    n    -    2 smtp
         systemctl enable postfix.service
         systemctl start postfix.service
 
-make_aliases_db ''
-## this is outdated for fedora 21 and up, ...
-
-if (( $FEDORA < 21 ))
-then
-    newaliases 
-fi
+        make_aliases_db ''
 
 else
     msg "Postfix already installed."
 fi ## postfix
 ## @update-install
+
 
 
 

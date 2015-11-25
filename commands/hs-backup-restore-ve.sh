@@ -3,7 +3,7 @@
 if $onHS
 then ## no identation.
 
-hint "backup [VE]" "Backup VE data, or all containers."
+hint "backup [VE]" "Backup VE data, or all containers locally."
 if [ "$CMD" == "backup" ]
 then
 
@@ -15,6 +15,8 @@ then
         then
             err "Backup path not set in configs. Using $TMP for now."
             BACKUP_PATH=$TMP
+        else
+            msg "Backup to $BACKUP_PATH"
         fi
         
         if [ ! -z "$ARG" ]

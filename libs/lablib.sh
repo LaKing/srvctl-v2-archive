@@ -135,6 +135,22 @@ function pm {
         exif
 }
 
+function pmc {
+        p=$1
+        b=$1
+        if [ ! -z "$2" ]
+        then
+            b=$2
+        fi
+        
+        if [ ! -f /usr/bin/$b ]
+        then  
+            echo @@ dnf -y install $@
+            dnf -y install $@
+            exif
+        fi    
+}
+
 function pm_update {
         echo dnf -y update
         dnf -y update
