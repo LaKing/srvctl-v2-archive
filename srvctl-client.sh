@@ -33,7 +33,7 @@ cd ~
 CWF="srvctl-client"
 
 ## source or set here as default
-U=$USER
+U=$(whoami)
 H="localhost"
 A=true
 I=true
@@ -62,7 +62,7 @@ else
 
     if [ -z "$U" ]
     then
-        U=$USER
+        U=$(whoami)
     fi
     echo "Using $U@$H"
 
@@ -496,7 +496,7 @@ do
         fi
 
         echo "SSH - $D = localhost:$sshlocalport"
-        ssh -C -c blowfish -L $sshlocalport:$D:22 -N -f $U@$H
+        ssh -C -L $sshlocalport:$D:22 -N -f $U@$H
     fi
     
     if [ "$(ssh -p $sshlocalport root@localhost hostname)" == "$D" ]
@@ -570,3 +570,5 @@ echo ""
 cd $CWD
 echo "OK - Done."
 exit
+
+

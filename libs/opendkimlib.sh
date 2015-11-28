@@ -12,22 +12,29 @@ function regenerate_opendkim {
      do
          if [ ! -d $SRV/$_c/opendkim ]
          then
+             dkim_selector="default"
+             if [ ${_c:0:5} == "mail." ]
+             then
+                 dkim_selector="mail"
+             fi
              mkdir -p $SRV/$_c/opendkim
-             opendkim-genkey -D $SRV/$_c/opendkim -d $_c -s default
+             opendkim-genkey -D $SRV/$_c/opendkim -d $_c -s $dkim_selector
              chown -R root:opendkim $SRV/$_c/opendkim
              chmod 640 $SRV/$_c/opendkim/default.private
              chmod 644 $SRV/$_c/opendkim/default.txt
          fi
          
-         get_dns_servers $_c       
-         if [ "$dns_provider" == $CDN ]
+         if [[ $_c != *.local ]] && [ -d $SRV/$_c/opendkim ]
          then 
-             msg "OpenDKIM is signing mail for $_c"
              echo $_c >> /var/srvctl-host/opendkim/TrustedHosts
-             echo "default._domainkey.$_c $_c:default:$SRV/$_c/opendkim/default.private" >> /var/srvctl-host/opendkim/KeyTable
-             echo "*@$_c default._domainkey.$_c" >> /var/srvctl-host/opendkim/SigningTable
-         #else
-         #    msg "DNS provider for $_c is $dns_provider"
+             
+             for i in $SRV/$_c/opendkim/*.private
+             do
+                 selector="$(basename $i)"
+                 selector="${selector:0:-8}"
+                 echo "$selector._domainkey.$_c $_c:$selector:$SRV/$_c/opendkim/$selector.private" >> /var/srvctl-host/opendkim/KeyTable
+                 echo "*@$_c $selector._domainkey.$_c" >> /var/srvctl-host/opendkim/SigningTable
+             done
          fi
     done
     
