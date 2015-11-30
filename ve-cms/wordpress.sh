@@ -130,7 +130,7 @@ then ## no identation.
                 echo '</Directory>' >> $cf
                 echo '' >> $cf
 
-                systemctl restart httpd.service
+                add_service httpd
 
                 echo $password > $dir/.admin
                 chmod 000 $dir/.admin

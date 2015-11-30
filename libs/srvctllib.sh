@@ -98,7 +98,7 @@ function create_certificate { ## for container $C
             if [ -d "$1" ]
             then
                 ## argument is a directory, eg. /root
-                Cname=$HOSTNAME
+                Cname=$(hostname)
                 cert_path=$1
             else 
                 ## argument must be a VE
@@ -123,6 +123,7 @@ function create_certificate { ## for container $C
         mkdir -p $cert_path
 
         ## TODO generate a self signed wildcard certificate!
+        
 
         set_file $ssl_config "       RANDFILE               = $ssl_random
 
@@ -196,7 +197,7 @@ function create_keypair { ## for user $U
 
         ## create ssh keypair
         if [ ! -f /home/$U/.ssh/id_rsa.pub ]; then
-           ssh-keygen -t rsa -b 4096 -f /home/$U/.ssh/id_rsa -N '' -C $U@@$HOSTNAME
+           ssh-keygen -t rsa -b 4096 -f /home/$U/.ssh/id_rsa -N '' -C $U@@$(hostname)
         fi
 
         chown -R $U:$U /home/$U/.ssh
@@ -259,7 +260,7 @@ function update_password {
                 ## generate new password
                 get_password
                 echo $password > /home/$_u/.password
-                log "Password is $password for $_u@"$HOSTNAME
+                log "Password is $password for $_u@"$(hostname)
         else
                 ## use existing password
                 password=$(cat /home/$_u/.password)
@@ -467,6 +468,41 @@ decode:                root
 fi ## set aliases
 }
 
+
+function add_service {
+    
+    if [ -f /usr/lib/systemd/system/$1.service ]
+    then
+        mkdir -p /etc/srvctl/system
+        ln -s /usr/lib/systemd/system/$1.service /etc/srvctl/system/$1.service 2> /dev/null
+
+        systemctl enable $1.service
+        systemctl restart $1.service
+        systemctl status $1.service 
+    else
+        err "No such service - $1"
+    fi
+    
+   
+}
+
+function rm_service {
+    
+    if [ -f /usr/lib/systemd/system/$1.service ]
+    then
+    
+        rm -rf /etc/srvctl/system/$1.service 2> /dev/null
+    
+        systemctl disable $1.service
+        systemctl stop $1.service
+    
+    else
+        err "No such service - $1"
+    fi
+}
+
+
+
 ## srvctl functions end here.
 ## additional configuration checks.
 ### TODO 2.x check if this is needed. propably only on source install
@@ -528,5 +564,6 @@ then
         err "Configuration error. binary not found: $lxc_bin_path/lxc-start"
     fi
 fi
+
 
 

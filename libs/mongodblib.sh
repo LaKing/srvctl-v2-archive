@@ -10,12 +10,7 @@ function install_mongodb {
 
     msg "MongoDB - setup system services!"
 
-    #Start-Up MongoDB
-    systemctl enable mongod
-    systemctl start mongod
-
-    #Check MongoDB Service Status
-    systemctl status mongod
+    add_service mongod
 
 
 

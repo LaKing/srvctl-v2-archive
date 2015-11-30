@@ -169,8 +169,7 @@ smtp-amavis unix -    -    n    -    2 smtp
         cat /root/key.pem > /etc/postfix/key.pem
 
         postmap /etc/postfix/relaydomains
-        systemctl enable postfix.service
-        systemctl start postfix.service
+        add_service postfix
 
         make_aliases_db ''
 

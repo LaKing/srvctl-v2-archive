@@ -1,5 +1,4 @@
-systemctl start firewalld.service
-systemctl enable firewalld.service
+add_service firewalld
 
 zone=$(firewall-cmd --get-default-zone)
 services=" $(firewall-cmd --zone=$zone --list-services) "

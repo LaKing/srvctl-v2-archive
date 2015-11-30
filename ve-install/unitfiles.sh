@@ -72,3 +72,5 @@ WantedBy=multi-user.target
 '
 fi
 
+systemctl daemon-reload
+

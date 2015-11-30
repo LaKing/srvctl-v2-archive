@@ -120,7 +120,7 @@ cat $conf > /root/.log.io/log_server.conf
                 rm -rf  /var/log/logio/*
 
 set_file /srv/logio.sh '#!/bin/bash
-echo $USER" starting "$0 
+echo $(whoami)" starting "$0 
 
 mkdir -p /var/log/logio
 chown -R root:srv /var/log/logio
@@ -139,9 +139,7 @@ chown root:srv /srv/logio.sh
 
 source $install_dir/ve-install/unitfiles.sh
 
-        systemctl enable logio.service
-        systemctl start logio.service
-        systemctl status logio.service
+add_service logio
 
 ## TODO: increase font size to 20
 ## TODO restart után nem indul
@@ -160,5 +158,7 @@ man '
     It should be reached on the log. subdomain with http - this however needs to enabled on the host. (pound-enable-log)
     Homepage: http://logio.org/
 '
+
+
 
 

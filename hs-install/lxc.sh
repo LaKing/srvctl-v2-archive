@@ -183,9 +183,7 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
 
         ln -s /etc/libvirt/qemu/networks/primary.xml /etc/libvirt/qemu/networks/autostart/primary.xml 2> /dev/null
 
-        systemctl enable libvirtd.service
-        systemctl start  libvirtd.service
-        systemctl status libvirtd.service
+        add_service libvirtd
         
         #### RESTART REQUIRED HERE, if libvirt networks got modified.
         if [ -z "$(ip addr show srv-net 2> /dev/null | grep UP)" ]

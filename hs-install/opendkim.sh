@@ -43,10 +43,7 @@ InternalHosts        refile:/var/opendkim/TrustedHosts
 '
         regenerate_opendkim 
 
-        systemctl stop opendkim.service
-        systemctl enable opendkim.service
-        systemctl start opendkim.service
-        systemctl status opendkim.service
+        add_service opendkim
         
         
 else

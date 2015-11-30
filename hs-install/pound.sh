@@ -77,22 +77,22 @@ End
         ## The pound-served custom error documents
 
 set_file /var/www/html/414.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
-<b>Error 414</b> @ '$HOSTNAME'<br />
+<b>Error 414</b> @ '$(hostname)'<br />
 Request URI is too long.
 </font><p></body>'
 
 set_file /var/www/html/500.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
-<b>Error 500</b> @ '$HOSTNAME'<br />
+<b>Error 500</b> @ '$(hostname)'<br />
 An internal server error occurred. Please try again later.
 </font><p></body>'
 
 set_file /var/www/html/501.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
-<b>Error 501</b> @ '$HOSTNAME'<br />
+<b>Error 501</b> @ '$(hostname)'<br />
 Request URI is too long.
 </font><p></body>'
 
 set_file /var/www/html/503.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
-<b>Error 503</b> @ '$HOSTNAME'<br />
+<b>Error 503</b> @ '$(hostname)'<br />
 The service is not available. Please try again later.
 </font><p></body>'
 
@@ -129,12 +129,11 @@ The service is not available. Please try again later.
         systemctl restart rsyslog.service
 
 
-        systemctl stop pound.service
-        systemctl enable pound.service
-        systemctl start pound.service
-        systemctl status pound.service
+        add_service pound
 
 else
     msg "Pound config found."
 fi ## install pound
+
+
 

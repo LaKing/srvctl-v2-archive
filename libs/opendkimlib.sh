@@ -55,8 +55,7 @@ function regenerate_opendkim {
     done
     
     
-    systemctl enable opendkim.service
-    systemctl restart opendkim.service
+    add_service opendkim
     
     test=$(systemctl is-active opendkim.service)
 

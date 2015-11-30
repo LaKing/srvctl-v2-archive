@@ -142,7 +142,7 @@ then ## no identation.
                 echo $password > $dir/.admin
                 chmod 000 $dir/.admin
 
-                systemctl restart httpd.service
+                add_service httpd
                 
                 log "Joomla! installed. https://"$HOSTNAME"/$URI/administrator admin:$password"
 

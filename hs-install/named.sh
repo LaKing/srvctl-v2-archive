@@ -7,8 +7,7 @@ then
         pm bind bind-utils
         pm ntp
         
-        systemctl start ntpd.service
-        systemctl enable ntpd.service
+        add_service ntpd
         
         ## DNS needs NTPD enabled and running, otherwise queries may get no response.
         

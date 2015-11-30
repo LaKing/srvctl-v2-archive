@@ -16,23 +16,19 @@ log "Install virus-scanners"
 pm amavisd-new
 pm clamav-server-systemd
 
-systemctl start amavisd.service
-systemctl status amavisd.service
-systemctl enable amavisd.service
-
-systemctl start spamassassin
-systemctl status spamassassin
-systemctl enable spamassassin
+add_service amavisd
+add_service spamassassin
 
 /sbin/chkconfig amavisd on
 /sbin/chkconfig clamd.amavisd on
 
 ## TODO here - check / enable it for real
-systemctl start clamd@amavisd 
 systemctl enable clamd@amavisd 
+systemctl start clamd@amavisd 
+systemctl status clamd@amavisd 
 
 sed_file /etc/amavisd/amavisd.conf "mydomain = 'example.com';   " "mydomain = '$CDN';   "
-sed_file /etc/amavisd/amavisd.conf "myhostname = 'host.example.com';  " "myhostname = '$HOSTNAME';  "
+sed_file /etc/amavisd/amavisd.conf "# myhostname = 'host.example.com';  " "myhostname = '$(hostname)';  "
 
 # $notify_method  = 'smtp:[127.0.0.1]:10025';
 # $forward_method = 'smtp:[127.0.0.1]:10025';  # set to undef with milter!
@@ -42,4 +38,7 @@ else
     echo freshclam
     freshclam
 fi
+
+
+
 

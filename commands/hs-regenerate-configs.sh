@@ -53,10 +53,7 @@ then
             
             ## make logfiles for apache log - kind of cosmetic action
             regenerate_logfiles
-            
-            ## doesent really change much  - TODO, place it to update-install?
-            regenerate_sudo_configs
-         
+               
 ok
 fi ## regenerate
 

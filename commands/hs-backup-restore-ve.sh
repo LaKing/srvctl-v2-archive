@@ -222,7 +222,7 @@ then
                 source $install_dir/ve-install/unitfiles.sh
             fi
             
-            ssh $C 'for s in $(ls /root/etc/systemd/system/multi-user.target.wants); systemctl enable $u && systemctl start $u; done'
+            ssh $C 'for s in $(ls /etc/srvctl/system); systemctl enable $u && systemctl start $u; done'
         fi
         
         if [ -f $from/log.7z ]

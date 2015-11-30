@@ -90,7 +90,7 @@ then
         #echo "PREFIXv6: $PREFIXv6"
         echo "dns_share: $dns_share"
         echo "BACKUP_PATH: $BACKUP_PATH"
-        echo "php_timezone: $php_timezone"
+
         echo "debug: $debug"
         #echo ": $"
         echo ""
@@ -98,7 +98,7 @@ then
 
         msg "Checking for services"
         
-        for service in $(ls /etc/systemd/system/basic.target.wants) $(ls /etc/systemd/system/multi-user.target.wants) $(ls /etc/systemd/system/multi-user.target.wants | grep '.service')
+        for service in $(ls /etc/srvctl/system)
         do
             if [ $(systemctl is-active $service) == "active" ]
             then
@@ -180,7 +180,9 @@ then
         then
             err "CHECK $_c AT spamhouse.org -  http://www.spamhaus.org/query/domain/$_c"
         fi
-    done    
+    done   
+    
+    msg done 
 
 ok
 fi

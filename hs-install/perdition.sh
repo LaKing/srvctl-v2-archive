@@ -174,25 +174,11 @@ FLAGS="-O localhost -r"'
 
         systemctl daemon-reload
 
-        systemctl stop imap4.service
-        systemctl enable imap4.service
-        systemctl start imap4.service
-        systemctl status imap4.service
+        add_service imap4
+        add_service imap4s.service    
+        add_service pop3s.service
+        add_service saslauthd.service
 
-        systemctl stop imap4s.service
-        systemctl enable imap4s.service
-        systemctl start imap4s.service
-        systemctl status imap4s.service
-
-        systemctl stop pop3s.service
-        systemctl enable pop3s.service
-        systemctl start pop3s.service
-        systemctl status pop3s.service
-
-        systemctl stop saslauthd.service
-        systemctl enable saslauthd.service
-        systemctl start saslauthd.service
-        systemctl status saslauthd.service
 else
     msg "Perdition is already installed."
 fi ## install perdition

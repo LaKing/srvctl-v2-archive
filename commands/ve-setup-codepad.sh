@@ -84,8 +84,7 @@ then
                                 ln -s /var/www/html $project_path
                         fi
         
-                        systemctl restart httpd.service
-                        systemctl enable httpd.service
+                        add_service httpd
 
                         log_path="/var/log/httpd/error_log"
                 fi
@@ -93,8 +92,7 @@ then
                 if [ "$project_type" == "node" ]
                 then
 
-                        systemctl stop httpd.service
-                        systemctl disable httpd.service
+                        rm_service httpd
 
                         mkdir -p $project_path
                         chown srv:codepad $project_path
@@ -175,7 +173,7 @@ then
                 chmod 750 /var/log/codepad
 
                 set_file /srv/codepad.sh '#!/bin/bash
-echo $USER" starting "$0 
+echo $(whoami)" starting "$0 
 
 mkdir -p /var/log/codepad
 chown codepad:srv /var/log/codepad
@@ -202,11 +200,7 @@ done
                 ## proper way is to create a service to run codepad
                 source $install_dir/ve-install/unitfiles.sh
 
-
-                systemctl daemon-reload
-
-                systemctl enable codepad.service
-                systemctl start codepad.service
+                add_service codepad
 
 
                 if [ "$project_type" == "node" ]
@@ -323,7 +317,7 @@ done
                         chmod 750 /var/log/node-project
 
                         set_file /srv/node-project/run.sh '#!/bin/bash
-echo $USER" starting "$0 
+echo $(whoami)" starting "$0 
 
 mkdir -p /var/log/node-project
 chown node:srv /var/log/node-project
@@ -350,10 +344,8 @@ source $install_dir/ve-install/unitfiles.sh
                                 ## this is needed for nodemon
                                 chmod 777 /srv
                                 ## // TODO nodemon needs to write to /srv 
-                                systemctl daemon-reload
 
-                                systemctl enable node-project.service
-                                systemctl start node-project.service
+                                add_service node_project
 
                         fi ## if node-project
 
@@ -367,11 +359,11 @@ source $install_dir/ve-install/unitfiles.sh
         cd /var/git
 
         git config --global user.name 'codepad'
-        git config --global user.email codepad@$HOSTNAME
+        git config --global user.email codepad@$(hostname)
         git config --global push.default simple
 
         su codepad -s /bin/bash -c "git config --global user.name 'codepad'"
-        su codepad -s /bin/bash -c "git config --global user.email codepad@$HOSTNAME"
+        su codepad -s /bin/bash -c "git config --global user.email codepad@$(hostname)"
         su codepad -s /bin/bash -c "git config --global push.default simple"
 
         ## init bare git repository
@@ -416,24 +408,7 @@ source $install_dir/ve-install/unitfiles.sh
 
         iptables-save > /etc/sysconfig/iptables
 
-        systemctl start iptables.service
-        systemctl enable iptables.service
-
-## shortcut to restart codepad
-set_file /bin/rc '#!/bin/bash
-
-systemctl restart codepad.service
-systemctl status codepad.service
-systemctl restart logio.service
-systemctl status logio.service
-
-sleep 2
-
-cat /var/log/codepad/err
-tail /var/log/codepad/log
-'
-chmod +x /bin/rc
-
+        add_service iptables
 
         msg "Codepad: https://dev.$C admin:$adminpass"        
 
@@ -449,4 +424,6 @@ man '
     Default is to create a node project, and a basic hello world application. 
     Homepage: http://codepad.etherpad.org/ and http://D250.hu
 '
+
+
 

@@ -38,10 +38,7 @@ function setup_mariadb {
                 ## TODO connection check
                 msg "Install Mysql/MariaDB."        
                 dnf -y install mariadb-server
-                systemctl enable mariadb.service
-                systemctl start mariadb.service
-
-                systemctl status mariadb.service
+                add_service mariadb
 
         fi
         
@@ -157,6 +154,7 @@ function add_mariadb_db {
         
         msg "Added MariaDB database $db_name  $db_usr:$db_pwd"
 }
+
 
 
 

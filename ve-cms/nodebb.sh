@@ -92,8 +92,7 @@ npm install socket.io-client
 npm install socket.io-redis
 npm install toobusy-js
 
-systemctl disable httpd
-systemctl stop httpd
+rm_service httpd
 
 ## No identation --- install nodeBB ---
 

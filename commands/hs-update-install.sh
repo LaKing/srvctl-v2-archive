@@ -211,6 +211,22 @@ source $install_dir/hs-install/antivirus.sh
 #source $install_dir/hs-install/openvpn.sh
 source $install_dir/hs-install/firewall.sh
 
+regenerate_sudo_configs
+      
+    add_service named  
+    add_service sshd
+    add_service libvirtd  
+    add_service ntpd   
+    add_service pound
+    add_service postfix 
+    add_service saslauthd 
+    add_service spamassassin
+    add_service pop3s 
+    add_service imap4 
+    add_service imap4s
+    add_service amavisd 
+    add_service opendkim
+
 
 
 msg ".. update-install process complete."

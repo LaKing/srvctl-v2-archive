@@ -296,8 +296,8 @@ then
  
         ssh $C "newaliases"
         ssh $C "dnf -y install dovecot"
-        ssh $C "systemctl enable dovecot.service"
-        ssh $C "systemctl start dovecot.service"
+        ssh $C "srvctl add dovecot"
+
 
         
         ## if this is a dev. site install codepad

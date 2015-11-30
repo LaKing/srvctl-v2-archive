@@ -3,13 +3,13 @@
 ## start or restart service
 hint "SERVICE OP | OP SERVICE" "start|stop|restart|status a service via systemctl.  +|-|!|?"
 
-if [ "$ARG" == "start" ] || [ "$ARG" == "+" ] || [ "$ARG" == "restart" ] || [ "$ARG" == "!" ] || [ "$ARG" == "stop" ]  || [ "$ARG" == "-" ] || [ "$ARG" == "status" ]  || [ "$ARG" == "?" ]
+if [ "$ARG" == "add" ] || [ "$ARG" == "start" ] || [ "$ARG" == "+" ] || [ "$ARG" == "restart" ] || [ "$ARG" == "!" ] || [ "$ARG" == "stop" ]  || [ "$ARG" == "-" ] || [ "$ARG" == "status" ]  || [ "$ARG" == "?" ] || [ "$CMD" == "remove" ]
 then
     OP=$ARG
     SERVICE=$CMD
 fi 
 
-if [ "$CMD" == "start" ] || [ "$CMD" == "+" ] || [ "$CMD" == "restart" ] || [ "$CMD" == "!" ] || [ "$CMD" == "stop" ]  || [ "$CMD" == "-" ] || [ "$CMD" == "status" ]  || [ "$CMD" == "?" ]
+if [ "$ARG" == "add" ] || [ "$CMD" == "start" ] || [ "$CMD" == "+" ] || [ "$CMD" == "restart" ] || [ "$CMD" == "!" ] || [ "$CMD" == "stop" ]  || [ "$CMD" == "-" ] || [ "$CMD" == "status" ]  || [ "$CMD" == "?" ] || [ "$CMD" == "remove" ]
 then
     OP=$CMD
     SERVICE=$ARG
@@ -21,15 +21,13 @@ then
   if $isROOT   
   then
   
-    if [ "$OP" == "start" ] || [ "$OP" == "+" ] 
+    if [ "$OP" == "add" ] || [ "$OP" == "+" ] 
     then
-        systemctl enable $SERVICE.service
-        systemctl start  $SERVICE.service
-
+        add_service $SERVICE
     fi ## start
 
 
-    if [ "$OP" == "restart" ] || [ "$OP" == "!" ] 
+    if [ "$OP" == "start" ] || [ "$OP" == "restart" ] || [ "$OP" == "!" ] 
     then
         systemctl enable  $SERVICE.service
         systemctl restart $SERVICE.service
@@ -37,11 +35,17 @@ then
     fi ## restart
 
 
-    if [ "$OP" == "stop" ]  || [ "$OP" == "-" ] 
+    if [ "$OP" == "stop" ] 
     then
         systemctl disable $SERVICE.service
         systemctl stop $SERVICE.service
 
+    fi ## disable
+    
+    
+    if [ "$OP" == "remove" ]  || [ "$OP" == "-" ] 
+    then
+        rm_service $SERVICE
     fi ## disable
  
   fi
@@ -64,4 +68,5 @@ man '
     to stop and disable a service the operator is "-" or "stop"
         
 '
+
 
