@@ -137,26 +137,7 @@ then
         
         ## ipcalc is provided by initscripts.
         pm sipcalc
-        
-        ## network config validation
 
-        if [ ! -z $(ipcalc -c -4 $HOSTIPv4) ]
-        then
-            err "Invalid srvctl config: HOSTIPv4 $HOSTIPv4"
-            exit
-        fi
-
-        if [ ! -z $(ipcalc -c -6 $HOSTIPv6) ]
-        then
-            err "Invalid srvctl config: HOSTIPv6 $HOSTIPv6"
-            exit
-        fi
-
-        if [ ! -z $(ipcalc -c -6 $RANGEv6) ]
-        then
-            err "Invalid srvctl config RANGEv6 $RANGEv6"
-            exit
-        fi
         
         pm libvirt-daemon-driver-network libvirt-daemon-config-network libvirt-daemon-config-nwfilter
 

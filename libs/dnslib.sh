@@ -20,10 +20,27 @@ function create_named_zone {
     named_slave_zone=$named_live_path/$D.slave.zone
                 
     mail_server="mail"
-    spf_string="v=spf1 ip:$HOSTIPv4 a mx -all"
+    spf_string="v=spf1"
+    
+    while read IP
+    do
+        get_pure_ip $IP
+        spf_string="$spf_string ip4:$ip"
+    done < /var/srvctl/ifcfg/ipv4
+ 
+    if [ -f /var/srvctl/ifcfg/ipv6 ]
+    then
+        while read IP
+        do
+            get_pure_ip $IP
+            spf_string="$spf_string ip6:$ip"
+        done < /var/srvctl/ifcfg/ipv6
+    fi
+    
+    spf_string="$spf_string a mx -all"
+    
     dkim_selector="default"
-        
-        
+            
     if [ -f "$SRV/$D/settings/dns-custom-zone" ] && [ ! -z "$(cat $SRV/$D/settings/dns-custom-zone)" ]
     then
         cat $SRV/$D/settings/dns-custom-zone >> $named_zone
@@ -32,7 +49,7 @@ function create_named_zone {
         
     if [ -f "$SRV/$D/settings/use-google-apps-mail" ] 
     then
-        spf_string="v=spf1 ip:$HOSTIPv4 a mx include:_spf.google.com ~all"
+        spf_string='${spf_string:0:-5} include:_spf.google.com ~all'
     fi
         
     if [ -f "$SRV/$D/settings/dns-mx-record" ] && [ ! -z "$(cat $SRV/$D/settings/dns-mx-record)" ]
@@ -54,7 +71,8 @@ function create_named_zone {
     echo '## srvctl named slave conf '$D > $named_slave
     echo 'zone "'$D'" {' >> $named_slave
     echo '        type slave;'  >> $named_slave
-    echo '        masters {'$HOSTIPv4';};'  >> $named_slave
+    get_primary_ip
+    echo '        masters {'$ip';};'  >> $named_slave
     echo '        file "'$named_slave_zone'";' >> $named_slave
     echo '};' >> $named_slave
 
@@ -72,9 +90,10 @@ function create_named_zone {
         echo $serial > $serial_file
     fi
 
-        ## TODO add IPv6 support
-        ## Create Basic Zonefile
-        
+    ## TODO add IPv6 support
+    ## Create Basic Zonefile
+    get_primary_ip
+
 set_file $named_zone '$TTL 1D
 @        IN SOA        @ hostmaster.'$CDN'. (
                                         '$serial'        ; serial
@@ -85,8 +104,8 @@ set_file $named_zone '$TTL 1D
         IN         NS        ns1.'$CDN'.
         IN         NS        ns2.'$CDN'.
         IN         NS        ns3.'$CDN'.
-*        IN         A        '$HOSTIPv4'
-@        IN         A        '$HOSTIPv4'
+*        IN         A        '$ip'
+@        IN         A        '$ip'
 '
 
     if [ -f "$SRV/$D/settings/use-google-apps-mail" ] 
@@ -222,7 +241,7 @@ function regenerate_dns {
                 then
                         for A in $(cat /$SRV/$_C/settings/aliases)
                         do
-                                #msg "$A is an alias of $_C"
+                                dbg "$A is an alias of $_C"
                                 create_named_zone $A
                                 echo 'include "/var/named/srvctl/'$A'.conf";' >> $named_local
                                 #echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf

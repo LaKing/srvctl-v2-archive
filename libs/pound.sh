@@ -379,6 +379,7 @@ function regenerate_pound_files {
 
                         for A in $(echo $_C && cat $SRV/$_C/settings/aliases 2> /dev/null)
                         do
+                                
                                 ## dnl will count the dots in the domain - for priorizing domains with more dots
                                 dnl=$(echo $A | grep -o "\." | grep -c "\.")
 # TODO: BUGGED!!!!

@@ -11,7 +11,7 @@
 
 install_bin=$(realpath "$BASH_SOURCE")
 install_dir=${install_bin:0:-10}
-
+install_ver=$(cat $install_dir/version)
 ## set FEDORA to the corresponding fedora version on this computer
 FEDORA=0
 FEDORA_RELEASE="$(cat /etc/fedora-release)"

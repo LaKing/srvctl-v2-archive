@@ -11,7 +11,6 @@ function set_is_running {
                 _c=$1
         fi        
 
-
         info=$(lxc-info -s -n $_c)
         state=${info:16}
         if [ "$state" == "RUNNING" ]
@@ -58,12 +57,14 @@ function get_state {
 
         info=$(lxc-info -s -n $C)
         state=${info:16}
+        is_running=false
 
         if [ "$state" == "RUNNING" ] && [ ! -z "$ip" ]
         then
                 ping_ms=$(ping -r -I srv-net -W 1 -c 1 $ip | grep rtt) 
                 msc=$green
                 ms=${ping_ms:23:5}"ms"
+                is_running=true
         else
                 ms=$state
         fi
@@ -79,6 +80,8 @@ function get_state {
 
 }
 
+RESP_TEST_COMM='curl -o /dev/null -k -s -w %{time_total}'
+
 function get_pound_state {
 
         ps='none'
@@ -87,9 +90,37 @@ function get_pound_state {
           ps=$(poundctl -c /var/lib/pound/pound.cfg | grep $ip'' | tail -c 5)
           
         fi
-        msc=$yellow
-        printf ${msc}"%-5s"${NC} $ps
-
+        
+        if [ "$ps" != "live" ]
+        then
+            printf ${red}"%-12s"${NC} ERR!
+            return
+        fi
+        
+        if ! $is_running
+        then
+            printf ${yellow}"%-12s"${NC} "----- ----- "    
+            return
+        fi
+        
+        http__rt=$(curl -o /dev/null -k -s -w %{time_total} http://$C)
+        http__rc=$?
+        https_rt=$(curl -o /dev/null -k -s -w %{time_total} https://$C)
+        https_rc=$?
+        
+        if [ $http__rc != 0 ]
+        then
+            printf ${red}"%-6s"${NC} $http__rt  
+        else
+            printf ${green}"%-6s"${NC} $http__rt 
+        fi
+        
+        if [ $https_rc != 0 ] 
+        then
+            printf ${red}"%-6s"${NC} $https_rt
+        else
+            printf ${green}"%-6s"${NC} $https_rt
+        fi
 }
 
 function get_disk_usage {
@@ -107,24 +138,31 @@ function get_logs_usage {
 }
 
 function get_dig_A {
+    
+        if [ ${C: -6} == ".local" ]
+        then
+            printf ${green}"%-3s"${NC} "--"
+            return
+        fi
 
         dig_A=$(dig +time=1 +short $C)        
-
-        if [ "$dig_A" == "$HOSTIPv4" ]
+        
+        if [ -z "$dig_A" ]
         then
-                if [ "$SRV/$C/dns-provider" == "$CDN" ]
+            printf ${red}"%-3s"${NC} "??"
+            return
+        fi
+        
+        if grep -q "$dig_A" /var/srvctl/ifcfg/ipv4
+        then
+                if [ "$(cat $SRV/$C/dns-provider)" == "$CDN" ]
                 then
                     printf ${green}"%-3s"${NC} "OK"
                 else
-                    printf ${yellow}"%-3s"${NC} "~k"
+                    printf ${yellow}"%-3s"${NC} "ok"
                 fi
         else
-                if [ -z "$dig_A" ]
-                then
-                    printf ${red}"%-3s"${NC} " ?"
-                else
-                    printf ${red}"%-3s"${NC} "!?"
-                fi
+            printf ${red}"%-3s"${NC} " ?"
         fi
 
 
@@ -134,20 +172,44 @@ function get_dig_A {
 }
 
 function get_dig_MX {
-
-        dig_MX=$(dig +time=1 +short $(dig +time=1 +short $C MX | cut -d \  -f 2))
         
-
-        if [ "$dig_MX" == "$HOSTIPv4" ]
+        if [ ${C: -6} == ".local" ]
         then
-                printf ${yellow}"%-3s"${NC} "OK"
-        else
-                if [ -z "$dig_MX" ]
+            printf ${green}"%-3s"${NC} "--"
+            return
+        fi
+        
+        if [ ${C:0:5} == "mail." ]
+        then
+            printf ${green}"%-3s"${NC} "--"
+            return
+        fi
+
+        dig_MX=$(dig +time=1 +short $C MX | cut -d \  -f 2)
+        
+        if [ -z "$dig_MX" ]
+        then
+            printf ${red}"%-3s"${NC} "--"
+            return
+        fi
+
+        if [ "$dig_MX" == "mail.$C." ]
+        then
+            dig_A=$(dig +time=1 +short mail.$C)     
+            if [ -z "$dig_A" ]
+            then
+                printf ${red}"%-3s"${NC} "??"
+                return
+            fi
+                if grep -q "$dig_A" /var/srvctl/ifcfg/ipv4
                 then
-                    printf ${red}"%-3s"${NC} " ?"
+                    printf ${green}"%-3s"${NC} "OK"
                 else
-                    printf ${red}"%-3s"${NC} "!?"
+                    printf ${yellow}"%-3s"${NC} "<>"
                 fi
+                
+        else
+                printf ${red}"%-3s"${NC} "<>"
         fi
 }
 

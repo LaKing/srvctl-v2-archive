@@ -3,13 +3,18 @@ then ## no identation.
 
 ## regenerate configs 
 hint "regenerate [all]" "Regenerate configuration files, and restart affected services. (!)"
-if [ "$CMD" == "regenerate" ] || [ "$CMD" == "regenerate-all" ] || [ "$CMD" == "!" ]
+if [ "$CMD" == "regenerate" ] || [ "$CMD" == "regenerate-all" ] || [ "$CMD" == "!" ] || [ "$CMD" == "!!" ]
 then
 
-        if [ "$CMD" == "regenerate-all" ] || [ "$ARG" == "all" ]
+        if [ "$CMD" == "regenerate-all" ] || [ "$ARG" == "all" ] || [ "$CMD" == "!!" ]
         then
-           all_arg_set=true
+            all_arg_set=true
+            
+            
         fi
+        
+            
+        
             ## counter linearly assigns a unique number to containers.
             regenerate_counter
 
@@ -80,4 +85,5 @@ man '
 '
 
 fi
+
 

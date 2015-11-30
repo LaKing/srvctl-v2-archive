@@ -119,17 +119,6 @@ then
         ## srvctl 2.x installation dir
         mkdir -p $rootfs/$install_dir
 
-set_file $rootfs/etc/srvctl/config '## srvctl generated
-## MYSQL / MARIADB conf file that stores the mysql root password - in containers
-MDF="'$MDF'"
-
-## for php.ini in containers
-php_timezone="'$php_timezone'"
-
-## IPv4 Address ## TODO: dig command not available on a minimal-container, get it with: $(dig +time=1 +short $(hostname))
-HOSTIPv4="'$HOSTIPv4'"
-'
-
         ln -s /var/srvctl/locale-archive $rootfs/usr/lib/locale/locale-archive 
         
         rm -rf $rootfs/var/cache/dnf/*
@@ -155,57 +144,15 @@ HOSTIPv4="'$HOSTIPv4'"
         #rsync -a /etc/aliases $rootfs/etc
         #rsync -a /etc/aliases.db $rootfs/etc
         make_aliases_db $rootfs
-
-        echo '
-
-# srvctl configuration
-## Listen on ..
-inet_interfaces = all
-
-## If required Catch all mail defined in ..
-# virtual_alias_maps = hash:/etc/postfix/catchall
-
-## And send it to ..
-home_mailbox = Maildir/
-
-## Max 25MB mail size
-message_size_limit=26214400
-
-        ' >> $rootfs/etc/postfix/main.cf
+        write_ve_postfix_main
         
-if $isMX
-then
-
-        echo '
-## we need to change myhostname
-myorigin = '${C:5}'
-        
-## set localhost.localdomain in mydestination to enable local mail delivery
-mydestination = $myhostname, '${C:5}', localhost, localhost.localdomain
-        ' >> $rootfs/etc/postfix/main.cf
-
-else
-
-echo '
-## set localhost.localdomain in mydestination to enable local mail delivery
-mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
-        ' >> $rootfs/etc/postfix/main.cf
-        
-fi
-
-
 
         echo "@$C root" > $rootfs/etc/postfix/catchall
         postmap $rootfs/etc/postfix/catchall
 
-        ## TODO remove this as it is part of regenerate_etc_hosts
-        #echo "$C #"  >> /etc/postfix/relaydomains
-        #postmap /etc/postfix/relaydomains
-        
-
         ln -s '/usr/lib/systemd/system/postfix.service' $rootfs'/etc/systemd/system/multi-user.target.wants/postfix.service'
 
-
+        regenerate_opendkim
 ## Apache
 
         ## enable the webserver
@@ -235,7 +182,7 @@ fi
         
         if [ "$C" == "default-host.local" ]
         then            
-            echo '<b>'$HOSTIPv4'</b> - '$(hostname) >> $index       
+            hostname >> $index
         else        
             echo '<b>'$C'</b> @ '$(hostname) >> $index
         fi 

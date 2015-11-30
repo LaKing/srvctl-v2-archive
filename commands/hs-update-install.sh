@@ -23,8 +23,13 @@ then
             exit
         fi
     
-    source $install_dir/hs-install/lxc.sh
-
+    ## privately for the host
+    mkdir -p /var/srvctl-host
+    ## shared for containers
+    mkdir -p /var/srvctl
+    ## always local
+    mkdir -p /etc/srvctl
+        
         ## TODO make sure networking is set and okay.
         # /etc/sysconfig/network-scripts/ifcfg-em1
         # /etc/sysconfig/network
@@ -32,6 +37,11 @@ then
         # systemctl remove NetworkManager
         # systemctl enable network.service
         # systemctl start network.service
+    
+    ## create files in /var/srvctl/ifcfg
+    import_network_configuration
+    ## geoinfo created, adding timezone info
+    timedatectl | grep 'Time zone' | awk '{print $3}' > /var/srvctl/timezone
         
     ## containers wont start with selinux enabled. See https://bugzilla.redhat.com/show_bug.cgi?id=1227071
     sed_file /etc/selinux/config "SELINUX=enforcing" "SELINUX=disabled"
@@ -56,6 +66,7 @@ then
         msg "Found config file at /etc/srvctl/config"
     fi
 
+
 ## Requirement checks .--
 ## certificate
                 if [ ! -f /root/crt.pem ]
@@ -73,9 +84,8 @@ then
 
                         if [ ! "$cert_status" == "OK" ]
                         then
-                                err "Requirement-check, error: certificate check for /root/crt.pem - Exiting"
+                                err "Requirement-check, error: certificate check for /root/crt.pem"
                                 #exit
-
                         fi
 
 ## authorized keys. own hosts should have custom values that add into the config when regenerating.
@@ -85,10 +95,6 @@ then
                         cat /root/.ssh/known_hosts > /root/.ssh/own_hosts
                 fi
 
-
-
-
-source $install_dir/hs-install/lxc.sh
 
         ## srvctl
 
@@ -105,12 +111,9 @@ source $install_dir/hs-install/lxc.sh
         mkdir -p $SRV
         mkdir -p $TMP
         
-        mkdir -p /var/srvctl-host
-        mkdir -p /var/srvctl
-        mkdir -p /etc/srvctl
+
 
         ## this will save a little space. 
-        ## TODO: I'm not a distro engineer, but I think there is space for optimalisation. Move locale-archive to shar efolder
 
         if [ ! -f /var/srvctl/locale-archive ]
         then
@@ -129,6 +132,8 @@ source $install_dir/hs-install/lxc.sh
         fi
 
 
+
+source $install_dir/hs-install/lxc.sh
 source $install_dir/hs-install/lxc-template.sh
 
 source $install_dir/hs-install/pound.sh
@@ -147,7 +152,6 @@ source $install_dir/hs-install/perdition.sh
 ## DNS
 source $install_dir/hs-install/named.sh
 
-## TODO: firewall-config. open ports permanently
 
 ## TODO IF install dovecot, add listen = 127.0.0.1 to dovecot.conf
 ## and enable
@@ -194,26 +198,6 @@ dnf -y install dnf-plugin-system-upgrade
 # pm qbittorrent
 
 ## TODO run clamscan ...
-
-
-
-
-scd=/root/srvctl-devel
-if [ ! -d $scd ] 
-then
-        log "Creating srvctl-shortcuts in $scd"
-        ## some quick links for root
-        ## this has no real imporance so it can be any directory for your convinience
-        mkdir -p $scd
-
-        ln -s $SRV $scd/$SRV
-        ln -s /etc/hosts $scd/hosts        
-        ln -s /etc/pound.cfg $scd/pound.cfg
-
-        #ln -s /usr/local/etc/lxc/lxc.conf $scd/lxc.conf
-        #ln -s /usr/local/share/lxc/templates/lxc-fedora-srv $scd/lxc-fedora-srv
-        #ln -s /usr/local/var/cache/lxc/fedora $scd/cache-lxc-fedora 
-fi
 
 
 if [ -s /root/.ssh/authorized_keys  ]

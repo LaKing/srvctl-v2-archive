@@ -49,7 +49,7 @@ then
         printf ${yellow}"%-48s"${NC} "HOSTNAME"
         printf ${yellow}"%-14s"${NC} "IP-LOCAL"
         printf ${yellow}"%-3s"${NC} "IN"
-        printf ${yellow}"%-5s"${NC} "HTTP"
+        printf ${yellow}"%-12s"${NC} "HTTP  HTTPS "
         printf ${yellow}"%-4s"${NC} "RES"
         printf ${yellow}"%-3s"${NC} "MX"        
         printf ${yellow}"%-5s"${NC} "DISK"

@@ -6,13 +6,8 @@ then ## no identation.
         hint "wordpress [path]" "Install Wordpress. Optionally to a folder (URI)."
         if [ "$CMD" == "add-cms" ] && [ "$OPA" == "wordpress" ]
         then
-                pm wordpress
-
-                secure_mariadb
 
                 URI=$ARG
-
-
 
                 if [ -z $URI ]
                 then
@@ -31,15 +26,11 @@ then ## no identation.
                         dir=/var/www/html/$URI
                         dbd=$(cat /etc/hostname | cut -f1 -d"." )'_wp_'$URI                
                 fi
+                
+                install_php
 
                 ## for dependencies.
-                pm unzip
                 pm wordpress
-
-                ## set params in php.ini, ...          
-                sed_file /etc/php.ini ";date.timezone =" "date.timezone = $php_timezone"
-                sed_file /etc/php.ini  "upload_max_filesize = 2M" "upload_max_filesize = 25M"
-                sed_file /etc/php.ini  "post_max_size = 8M" "post_max_size = 25M"
 
                 wd=/root
                 curl https://wordpress.org/latest.zip > $wd/latest.zip
@@ -50,10 +41,9 @@ then ## no identation.
                 rm -rf $wd/wordpress
                 rm -rf $wd/unzip.log
                 chown -R apache:apache $dir
-        
-                cf=$dir/wp-config.php
 
                 add_mariadb_db        
+                secure_mariadb
 
                 ## save these params to the wp folder
                 f=$dir/wp-config.php

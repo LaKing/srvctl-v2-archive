@@ -13,7 +13,7 @@ then
 PidFile        /var/run/opendkim/opendkim.pid
 
 ##  Selects operating modes. Valid modes are s (sign) and v (verify). Default is v.
-Mode        v
+Mode        vs
 
 
 Syslog        yes
@@ -34,10 +34,10 @@ Canonicalization        relaxed/relaxed
 Selector        default
 MinimumKeyBits        1024
 
-KeyTable        /var/srvctl-host/opendkim/KeyTable
-SigningTable        refile:/var/srvctl-host/opendkim/SigningTable
-ExternalIgnoreList        refile:/var/srvctl-host/opendkim/TrustedHosts
-InternalHosts        refile:/var/srvctl-host/opendkim/TrustedHosts
+KeyTable        /var/opendkim/KeyTable
+SigningTable        refile:/var/opendkim/SigningTable
+ExternalIgnoreList        refile:/var/opendkim/TrustedHosts
+InternalHosts        refile:/var/opendkim/TrustedHosts
 
 
 '

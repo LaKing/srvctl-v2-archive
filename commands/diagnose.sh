@@ -58,6 +58,7 @@ then
         echo "FEDORA_RELEASE: $FEDORA_RELEASE"
         echo "install_bin: $install_bin"
         echo "install_dir: $install_dir"
+        echo "install_ver: $install_ver"
         echo "C: $C"
         echo "onVE: $onVE"
         echo "onHS: $onHS"
@@ -83,10 +84,10 @@ then
         echo "MDF: $MDF"
         echo "CMP: $CMP"
         echo "CDN: $CDN"
-        echo "HOSTIPv4: $HOSTIPv4"
-        echo "HOSTIPv6: $HOSTIPv6"
-        echo "RANGEv6: $RANGEv6"
-        echo "PREFIXv6: $PREFIXv6"
+
+        #echo "HOSTIPv6: $HOSTIPv6"
+        #echo "RANGEv6: $RANGEv6"
+        #echo "PREFIXv6: $PREFIXv6"
         echo "dns_share: $dns_share"
         echo "BACKUP_PATH: $BACKUP_PATH"
         echo "php_timezone: $php_timezone"
@@ -136,6 +137,10 @@ then
         echo ''
         
 
+        msg "Host network addresses"
+        cat /var/srvctl/ifcfg/ipv* 
+        echo ''
+        
     if $onHS && $isROOT
     then    
         zone=$(firewall-cmd --get-default-zone)
@@ -154,14 +159,29 @@ then
         done
     fi
     
-        msg "Uptime: $(uptime)"
-        msg "CONNECTED SHELL USERS"
-        w
-        
-        if [ ! -z "$(curl http://www.spamhaus.org/query/bl?ip=$HOSTIPv4 2> /dev/null | grep "$HOSTIPv4 is listed")" ]
+    msg "Uptime: $(uptime)"
+    msg "CONNECTED SHELL USERS"
+    w
+    
+    msg 'Query spamhouse.org'    
+    while read IP
+    do
+        get_pure_ip $IP
+        if [ ! -z "$(curl http://www.spamhaus.org/query/ip/$ip 2> /dev/null | grep "$ip is listed")" ]
         then
-            err "CHECK $HOSTIPv4 AT spamhouse.org -  http://www.spamhaus.org/query/bl?ip=$HOSTIPv4"
+            err "CHECK $ip AT spamhouse.org -  http://www.spamhaus.org/query/ip/$ip"
         fi
+    done < /var/srvctl/ifcfg/ipv4
+        
+        
+    for _c in $(lxc_ls)
+    do
+        if [ ! -z "$(curl http://www.spamhaus.org/query/domain/$_c 2> /dev/null | grep "$_c is listed")" ]
+        then
+            err "CHECK $_c AT spamhouse.org -  http://www.spamhaus.org/query/domain/$_c"
+        fi
+    done    
+
 ok
 fi
 man '

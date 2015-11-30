@@ -77,7 +77,10 @@ function regenerate_config_files {
                         #ssh $_C "systemctl restart sshd.service"
 
             fi
-
+            
+            ## temporary - regenerate MTA structure
+            write_ve_postfix_main $_C
+            
         done
 }
 
@@ -126,9 +129,9 @@ function regenerate_etc_hosts {
                                         do
                                                 if [ "$A" == "$(hostname)" ]
                                                 then
-                                                        ntc "$_C alias: $A - is the host itself!"
+                                                        err "$_C alias: $A - is the host itself!"
                                                 else
-                                                        # ntc "$A is an alias of $_C"
+                                                        dbg "$A is an alias of $_C"
                                                         echo $ip'                '$A >>  $TMP/hosts
                                                         
                                                         if [ ! -d $SRV/mail.$A ] && [ ! -d $SRV/mail.$_C ] && [ "${A:0:5}" != "mail." ] && [ "${_C:0:5}" != "mail." ]
