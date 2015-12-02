@@ -3,6 +3,7 @@ function write_ve_postfix_main {
 _c=$1
 to=/dev/null
 isMX=false
+hasMX=false
 
 if $onHS
 then
@@ -14,9 +15,15 @@ then
     to=/etc/postfix/main.cf 
 fi
 
-if [ ${_c:0:5} == "mail." ]
+if [ "${_c:0:5}" == "mail." ]
 then
     isMX=true
+    hasMX=true
+fi
+
+if [ -d $SRV/mail.$_c/rootfs ]
+then
+    hasMX=true
 fi
 
 echo '
@@ -55,8 +62,6 @@ mail_owner = postfix
 inet_interfaces = all
 inet_protocols = all
 
-mydestination = $myhostname, localhost.$mydomain, localhost
-
 # REJECTING MAIL FOR UNKNOWN LOCAL USERS
 unknown_local_recipient_reject_code = 550
 
@@ -64,7 +69,7 @@ unknown_local_recipient_reject_code = 550
 #relay_domains = $mydestination
 
 # INTERNET OR INTRANET
-relayhost = [10.10.0.1]
+#### relayhost = [10.10.0.1]
 
 # REJECTING UNKNOWN RELAY USERS
 #relay_recipient_maps = hash:/etc/postfix/relay_recipients
@@ -104,9 +109,12 @@ message_size_limit=26214400
 
 ' > $to
 
-if $isMX
+if $hasMX
 then
 
+    if $isMX
+    then
+## this is mail.
 echo '
 ## we need to change myhostname
 myorigin = '${_c:5}'
@@ -115,13 +123,24 @@ myorigin = '${_c:5}'
 mydestination = $myhostname, '${_c:5}', localhost, localhost.localdomain
 ' >> $to
 
+    else
+## this is not the mail
+
+echo '
+## set localhost.localdomain in mydestination to enable local mail delivery
+mydestination = localhost, localhost.localdomain
+' >> $to
+        
+    fi
+
 else
 
+## no seperate mail.
 echo '
 ## set localhost.localdomain in mydestination to enable local mail delivery
 mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 ' >> $to
-        
+
 fi
 
 }

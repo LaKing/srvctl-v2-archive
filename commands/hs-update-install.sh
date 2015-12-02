@@ -78,12 +78,19 @@ then
                 then
                         create_certificate /root
                 fi
-                        #ca_bundle=/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
-
-                        cert_status=$(openssl verify -CAfile /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt /root/crt.pem | tail -n 1 | tail -c 3)
-
-                        if [ ! "$cert_status" == "OK" ]
+                        ca_bundle=/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
+                        
+                        if [ -f /root/ca-bundle.pem ]
                         then
+                            ca_bundle=/root/ca-bundle.pem
+                        fi
+
+                        cert_status=$(openssl verify -CAfile $ca_bundle /root/crt.pem | tail -n 1 | tail -c 3)
+
+                        if [ "$cert_status" == "OK" ]
+                        then
+                                msg "Cerificate is OK!"
+                        else
                                 err "Requirement-check, error: certificate check for /root/crt.pem"
                                 #exit
                         fi

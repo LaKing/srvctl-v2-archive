@@ -67,7 +67,9 @@ function regenerate_pound_files {
         ## $_C is the local version of $C
         for _C in $(lxc-ls)
         do  
-        
+            if true
+            then
+            ## DISABLED
                 if [ ! -d "$SRV/$_C/cert" ]
                 then
                     create_certificate $_C
@@ -122,7 +124,8 @@ function regenerate_pound_files {
                         fi
 
                 done
-
+            fi
+            
                 ## create configs
                 _ip=$(cat $SRV/$_C/config.ipv4)                
                 _http_port=80
