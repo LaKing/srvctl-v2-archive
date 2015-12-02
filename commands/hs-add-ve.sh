@@ -144,7 +144,7 @@ then
         #rsync -a /etc/aliases $rootfs/etc
         #rsync -a /etc/aliases.db $rootfs/etc
         make_aliases_db $rootfs
-        write_ve_postfix_main
+        write_ve_postfix_main $C
         
 
         echo "@$C root" > $rootfs/etc/postfix/catchall
@@ -198,6 +198,8 @@ then
 
         ## we regenerate re-link all log files. like in regenerate_logfiles
         mkdir -p /var/log/httpd
+        rm -rf /var/log/httpd/$C-access_log
+        rm -rf /var/log/httpd/$C-error_log
         ln -s $rootfs/var/log/httpd/access_log /var/log/httpd/$C-access_log
         ln -s $rootfs/var/log/httpd/error_log /var/log/httpd/$C-error_log
 
@@ -296,6 +298,8 @@ then
  
         ssh $C "newaliases"
         ssh $C "dnf -y install dovecot"
+        
+        ## TODO add dovecot, apache, stc ,...
         ssh $C "srvctl add dovecot"
 
 

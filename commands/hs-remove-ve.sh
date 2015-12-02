@@ -51,6 +51,10 @@ then
                                 fi
                         fi
                 done
+                
+                
+                rm -rf /var/log/httpd/$C-access_log
+                rm -rf /var/log/httpd/$C-error_log
 
                 ## TODO regenerate everything
                 regenerate_etc_hosts

@@ -9,7 +9,7 @@ then
     SERVICE=$CMD
 fi 
 
-if [ "$ARG" == "add" ] || [ "$CMD" == "start" ] || [ "$CMD" == "+" ] || [ "$CMD" == "restart" ] || [ "$CMD" == "!" ] || [ "$CMD" == "stop" ]  || [ "$CMD" == "-" ] || [ "$CMD" == "status" ]  || [ "$CMD" == "?" ] || [ "$CMD" == "remove" ]
+if [ "$CMD" == "add" ] || [ "$CMD" == "start" ] || [ "$CMD" == "+" ] || [ "$CMD" == "restart" ] || [ "$CMD" == "!" ] || [ "$CMD" == "stop" ]  || [ "$CMD" == "-" ] || [ "$CMD" == "status" ]  || [ "$CMD" == "?" ] || [ "$CMD" == "remove" ]
 then
     OP=$CMD
     SERVICE=$ARG
@@ -31,7 +31,7 @@ then
     then
         systemctl enable  $SERVICE.service
         systemctl restart $SERVICE.service
-
+        systemctl status $SERVICE.service
     fi ## restart
 
 
@@ -39,7 +39,7 @@ then
     then
         systemctl disable $SERVICE.service
         systemctl stop $SERVICE.service
-
+        systemctl status $SERVICE.service
     fi ## disable
     
     
@@ -50,7 +50,6 @@ then
  
   fi
   
-  systemctl status $SERVICE.service
   ok
 
 fi

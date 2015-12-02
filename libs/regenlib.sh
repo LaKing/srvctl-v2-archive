@@ -500,14 +500,14 @@ lxc.network.ipv4.gateway = auto
 
     ## IPv6
     ## four digit hex part only
-    _ip6=$(to_ipv6 $_counter)
+    #_ip6=$(to_ipv6 $_counter)
 
-    if [ "$RANGEv6" != "::1" ] 
-    then
-        echo '## networking IPv6' >> $SRV/$_c/config
-        echo 'lxc.network.ipv6.gateway = auto' >> $SRV/$_c/config
-        echo 'lxc.network.ipv6='$IPv6_RANGE_NETBLOCK':0:1010:'$_ip6':1' >> $SRV/$_c/config
-    fi
+    #if [ "$RANGEv6" != "::1" ] 
+    #then
+    #    echo '## networking IPv6' >> $SRV/$_c/config
+    #    echo 'lxc.network.ipv6.gateway = auto' >> $SRV/$_c/config
+    #    echo 'lxc.network.ipv6='$IPv6_RANGE_NETBLOCK':0:1010:'$_ip6':1' >> $SRV/$_c/config
+    #fi
 
 
 

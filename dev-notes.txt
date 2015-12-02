@@ -111,6 +111,9 @@ networking-scripts
 ## email sending
 ## echo BODY | mail -s SUBJECT user@host
 ##
+## To flush the que stuck in postfix
+## postqueue -f
+
 
 ################ Using vncserver ################xx
 User needs a ~/.vnc/xstartup

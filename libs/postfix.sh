@@ -66,10 +66,10 @@ inet_protocols = all
 unknown_local_recipient_reject_code = 550
 
 # TRUST AND RELAY CONTROL
-#relay_domains = $mydestination
+##### TODO needfix ### relay_domains = $mydestination
 
 # INTERNET OR INTRANET
-#### relayhost = [10.10.0.1]
+## relayhost = 10.10.0.1
 
 # REJECTING UNKNOWN RELAY USERS
 #relay_recipient_maps = hash:/etc/postfix/relay_recipients
@@ -142,6 +142,7 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 ' >> $to
 
 fi
-
+echo restart postfix $_c 
+ssh $_c 'systemctl restart postfix.service'
 }
 
