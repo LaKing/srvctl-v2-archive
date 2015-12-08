@@ -32,6 +32,7 @@ mail_owner = postfix
 
 # RECEIVING MAIL
 inet_interfaces = all
+mynetworks = 127.0.0.0/8 10.0.0.0/8 192.168.0.0/16 [::1]/128 [fe80::]/64
 
 # Enable IPv4, and IPv6 if supported
 inet_protocols = all
@@ -97,7 +98,6 @@ smtpd_milters           = inet:127.0.0.1:8891
 non_smtpd_milters       = $smtpd_milters
 milter_default_action   = accept
 
-## dont forget to postmap /etc/postfix/relaydomains
 '
 
         fi ## add postfix directives

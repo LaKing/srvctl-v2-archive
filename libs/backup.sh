@@ -126,6 +126,7 @@ function backup_unmount { #container
 }
 
 ## rsync-backup scripts
+du_args=" -hs --apparent-size "
 
 ## local backup from a local folder
 function local_backup {
@@ -137,23 +138,42 @@ function local_backup {
     do
         mkdir -p $LOG/backup/$HOSTNAME
         backup_log=$LOG/backup/$HOSTNAME/log
-        echo $(hostname):$i
+        
+        ntc $(hostname):$i       
+        
         mkdir -p $backup_target/$(dirname $i)
+        
+        if [ "$(systemctl status | grep rsync | grep $backup_target | grep $i | wc -l)" != "0" ]
+        then
+            err "running"
+            systemctl status | grep rsync | grep $backup_target | grep $i 
+            echo ''
+            continue
+        fi
+        
+        du $du_args $i
+        du $du_args $backup_target/$i
+        find $i | wc -l
+        find $backup_target/$i | wc -l
+        
 
-        du -hs $backup_target/$i
-        du -hs $i
-
-        log "local_backup $(hostname):$i"
+        logs "local_backup $(hostname):$i"
 
         if $BACKUP
         then
             if rsync --delete -av $i $backup_target/$(dirname $i) >> $backup_log
             then
-                log "done $(hostname) @ $i"
+                logs "done $(hostname) @ $i"
             else
                 log "done $(hostname) @ $i"
                 echo "done $(hostname) @ $i"
             fi
+        fi
+        
+        
+        if ! $BACKUP
+        then
+            echo "# rsync --delete -av $i $backup_target/$(dirname $i) >> $backup_log"
         fi
         echo ''
     done
@@ -174,26 +194,52 @@ function server_backup {
         mkdir -p $LOG/backup/$backup_hostname/$i
         backup_log=$LOG/backup/$backup_hostname/$i/log
         
-        echo $backup_host:$i
+        ntc  $backup_host:$i
         mkdir -p $backup_target/$i
-        du -hs $backup_target/$i
+
+        if [ "$(systemctl status | grep rsync | grep $backup_target | grep $i | wc -l)" != "0" ]
+        then
+            err "running"
+            systemctl status | grep rsync | grep $backup_target | grep $i 
+            echo ''
+            continue
+        fi
+        
         logs "backup @  $backup_host:$i"
 
-        cmd='echo "$(du -hs '$i') $(hostname)/'$i'"'
+        cmd='echo "$(du '"$du_args"' '$i') $(hostname)/'$i'"'
         if ssh -n -o BatchMode=yes $backup_host "$cmd"
         then
             if $BACKUP
             then
                 if rsync --delete -avze ssh $backup_host:/$i $backup_target/$(dirname $i) >> $backup_log
                 then
-                    log "backup done  $backup_host @ $i"
+                    logs "done  $backup_host @ $i"
                 else
                     log "ERROR $backup_host @ $i"
-                    echo "ERROR $backup_host @ $i"
+                    err "ERROR $backup_host @ $i"
+                    
                 fi
             fi
         else
-            echo "!! Connection failed to $backup_host."
+            err "!! Connection failed to $backup_host."
+        fi
+        
+        du $du_args $backup_target/$i
+        
+        
+        cmd='find '$i' | wc -l'
+        if ! ssh -n -o BatchMode=yes $backup_host "$cmd"
+        then
+            err "!! Connection failed to $backup_host."
+        fi
+        
+        find $backup_target/$i | wc -l
+        
+        
+        if ! $BACKUP
+        then
+            echo "# rsync --delete -avze ssh $backup_host:/$i $backup_target/$(dirname $i) >> $backup_log"
         fi
         echo ''
     done
@@ -215,12 +261,20 @@ function remote_backup {
         mkdir -p $LOG/backup/$backup_hostname/$i
         backup_log=$LOG/backup/$backup_hostname/$i/log
         
-        echo $backup_hostname:$i 
+        ntc $backup_hostname:$i 
         mkdir -p $backup_target/$i
-        du -hs $backup_target/$i
+        
+        if [ "$(systemctl status | grep rsync | grep $backup_target | grep $i | wc -l)" != "0" ]
+        then
+            err "running"
+            systemctl status | grep rsync | grep $backup_target | grep $i 
+            echo ''
+            continue
+        fi
+        
         logs "backup @  $backup_host:$i"
 
-        cmd='echo "$(du -hs '$i') $(hostname)/'$i'"'
+        cmd='echo "$(du '"$du_args"' '$i') $(hostname)/'$i'"'
         if ssh -o BatchMode=yes $backup_proxy "ssh -n -o BatchMode=yes $backup_host '$cmd'"
         then
 
@@ -228,15 +282,29 @@ function remote_backup {
             then
                 if rsync --delete -avz -e "ssh -A $backup_proxy ssh" $backup_host:/$i $backup_target/$(dirname $i) >> $backup_log
                 then
-                    log "done  $backup_host @ $i"
+                    logs "done  $backup_host @ $i"
                 else
                     log "ERROR $backup_host @ $i"
-                    echo "ERROR $backup_host @ $i"
+                    err "ERROR $backup_host @ $i"
                 fi
             fi
         else
-            echo "!! Connection failed to $backup_proxy"
+            err "!! Connection failed to $backup_proxy"
         fi
+        du $du_args $backup_target/$i
+    
+        cmd='find '$i' | wc -l'
+        if ! ssh -o BatchMode=yes $backup_proxy "ssh -n -o BatchMode=yes $backup_host '$cmd'"
+        then
+            err "!! Connection failed to $backup_proxy"
+        fi
+        find $backup_target/$i | wc -l
+    
+        if ! $BACKUP
+        then
+            echo "# rsync --delete -avz -e "ssh -A $backup_proxy ssh" $backup_host:/$i $backup_target/$(dirname $i) >> $backup_log"
+        fi
+        
         echo ''
     done
     echo ''

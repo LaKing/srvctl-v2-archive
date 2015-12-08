@@ -135,13 +135,16 @@ set_file $named_zone '$TTL 1D
     ## add SPF
     echo '@    IN    TXT    "'$spf_string'"' >> $named_zone
 
-    ## Add DKIM
-    for i in $SRV/$D/opendkim/*.txt
-    do
-        selector="$(basename $i)"
-        selector="${selector:0:-4}"
-        cat $SRV/$D/opendkim/$selector.txt >> $named_zone
-    done
+    if [ -d $SRV/$D/opendkim ]
+    then
+        ## Add DKIM
+        for i in $SRV/$D/opendkim/*.txt
+        do
+            selector="$(basename $i)"
+            selector="${selector:0:-4}"
+            cat $SRV/$D/opendkim/$selector.txt >> $named_zone
+        done
+    fi
     
     if [ -d $SRV/mail.$D/opendkim ] 
     then 

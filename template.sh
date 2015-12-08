@@ -16,6 +16,6 @@ then ## no identation.
 fi
 
 man '
-    DO something! an empty plugin-like demo thingie for hisi.hr
+    DO something! an empty plugin-like demo.
 '
 

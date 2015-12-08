@@ -360,7 +360,7 @@ function make_aliases_db {
 
 #argument $1=filesystem
 
-if [ ! -f /etc/aliases.db ] || $all_arg_set
+if [ ! -f $1/etc/aliases.db ] || $all_arg_set
 then
 
 ## We will mainly use these files to copy over to clients. Main thing is: info should not be aliased.
@@ -464,6 +464,8 @@ decode:                root
 '
 
 ## TODO alternatives set postfix as default MTA - or newaliases wont work.
+
+postalias $1/etc/aliases
 
 fi ## set aliases
 }

@@ -6,8 +6,6 @@ then ## no identation.
 ### regenerate-related functions
 
 
-
-
 function regenerate_config_files {
 
         ## scan for imported containers         

@@ -2,17 +2,20 @@ function write_ve_postfix_main {
 
 _c=$1
 to=/dev/null
+cf=/dev/null
 isMX=false
 hasMX=false
 
 if $onHS
 then
-    to=$SRV/$_c/rootfs/etc/postfix/main.cf
+    to=$TMP/$_c-srvctl.main.cf
+    cf=$SRV/$_c/rootfs/etc/postfix/main.cf
 fi
 
 if $onVE
 then
-    to=/etc/postfix/main.cf 
+    to=$TMP/srvctl.main.cf
+    cf=/etc/postfix/main.cf
 fi
 
 if [ "${_c:0:5}" == "mail." ]
@@ -27,7 +30,8 @@ then
 fi
 
 echo '
-## srvctl-generated postfix main.cf '$install_ver'
+## srvctl-generated postfix main.cf 2.6.0.0
+## Do not edit manually, changes will be overwritten!
 
 # COMPATIBILITY
 compatibility_level = 2
@@ -66,10 +70,10 @@ inet_protocols = all
 unknown_local_recipient_reject_code = 550
 
 # TRUST AND RELAY CONTROL
-##### TODO needfix ### relay_domains = $mydestination
+relay_domains = $mydestination
 
 # INTERNET OR INTRANET
-## relayhost = 10.10.0.1
+relayhost = 10.10.0.1
 
 # REJECTING UNKNOWN RELAY USERS
 #relay_recipient_maps = hash:/etc/postfix/relay_recipients
@@ -142,7 +146,16 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 ' >> $to
 
 fi
-echo restart postfix $_c 
-ssh $_c 'systemctl restart postfix.service'
+
+if ! cmp $to $cf >/dev/null 2>&1
+then
+    ntc "Postfix configuration update for $_c"
+    diff $to $cf
+    bak $cf
+    cat $to > $cf
+    ssh $_c 'systemctl restart postfix.service' &
+fi
+
+rm -rf $to
 }
 

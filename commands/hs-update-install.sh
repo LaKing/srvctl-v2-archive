@@ -189,10 +189,6 @@ useradd -r -u 104 -g 104 -s /sbin/nologin -d /tmp codepad 2> /dev/null
 ## User tools
 source $install_dir/hs-install/usertools.sh
 
-## maintenance system tools
-dnf -y install dnf-plugin-system-upgrade
-
-
 ## public ftp server
 # pm vsftpd
 # systemctl enable vsftpd.service

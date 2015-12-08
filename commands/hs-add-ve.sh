@@ -296,7 +296,7 @@ then
 ## Fedora 20 and fedora 21 as well.
 ## TODO bugcheck - does dovecot hang on postinit script?
  
-        ssh $C "newaliases"
+        ssh $C "postalias /etc/aliases"
         ssh $C "dnf -y install dovecot"
         
         ## TODO add dovecot, apache, stc ,...
