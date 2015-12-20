@@ -71,13 +71,22 @@ then
         get_disk_usage
         get_users
         
-        if [ -f $SRV/$C/err.log ]
+        if [ -f $SRV/$C/dns.log ]
         then
             echo ''
             while read line
             do
                 err "$line"
-            done < $SRV/$C/err.log
+            done < $SRV/$C/dns.log
+        fi
+        
+        if [ -f $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log ]
+        then
+            echo ''
+            while read line
+            do
+                ntc "$line"
+            done < $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log
         fi
         echo ''
     done
@@ -218,6 +227,8 @@ man '
     A Quick list of acessible container names to be processed further in other scripts..
 '
 fi ## of onHS
+
+
 
 
 

@@ -20,7 +20,7 @@ then
   
   if $isROOT   
   then
-  
+
     if [ "$OP" == "add" ] || [ "$OP" == "+" ] 
     then
         add_service $SERVICE
@@ -47,8 +47,14 @@ then
     then
         rm_service $SERVICE
     fi ## disable
- 
+  
+  else
+
+   systemctl status $SERVICE.service
+   
   fi
+  
+
   
   ok
 

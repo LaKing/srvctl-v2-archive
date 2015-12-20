@@ -4,6 +4,42 @@ if $onHS
 then ## no identation.
 
 ### regenerate-related functions
+function regenerate_var_ve {
+        
+        msg "Regenerate VE shares"
+        
+        mkdir -p /var/srvctl-ve
+        chmod -R 700 /var/srvctl-ve
+        
+        
+        for _C in $(lxc-ls)
+        do
+            dest=/var/srvctl-ve/$_C
+            mkdir -p $dest
+            
+            ## if container is accessed with IPv6 this migh come handy ...
+            #rm -rf $dest/cert/*
+            #cp -ru $SRV/$_C/cert $dest
+            
+            rm -rf $dest/settings/*
+            cp -ru $SRV/$_C/settings $dest
+            
+            rm -rf $dest/users/*
+            for _U in $(cat $SRV/$_C/settings/users)
+            do
+                mkdir -p $dest/users/$_U
+                mkdir -p /var/srvctl-host/users/$_U
+                chmod -R 700 /var/srvctl-host/users/$_U
+                
+                if [ ! -f /var/srvctl-host/users/$_U/password-auto ]
+                then
+                    get_password
+                    echo $password > /var/srvctl-host/users/$_U/password-auto
+                fi
+                
+            done 
+        done
+}
 
 
 function regenerate_config_files {
@@ -11,11 +47,15 @@ function regenerate_config_files {
         ## scan for imported containers         
         for _C in $(ls $SRV)
         do            
-
-            if ! $(is_fqdn $_C)
+            if [ $_C == "lost+found" ]
             then
               continue
             fi
+            
+            #if ! $(is_fqdn $_C)
+            #then
+            #  continue
+            #fi
             
             if [ -f "$SRV/$_C" ]
             then
@@ -77,7 +117,9 @@ function regenerate_config_files {
             fi
             
             ## temporary - regenerate MTA structure
-            write_ve_postfix_main $_C
+            
+            #write_ve_postfix_main $_C
+            #ssh $_C 'systemctl restart postfix.service' &
             
         done
 }
@@ -239,6 +281,20 @@ function regenerate_users {
                             ntc "Add user $_U"
                             add_user $_U
                         fi
+                        
+                        if [ -z "$(su $_U -c 'cd ~ && git config --global user.email')" ]
+                        then
+                            su $_U -c "cd ~ && git config --global user.email $_U@$HOSTNAME"
+                        fi
+                        if [ -z "$(su $_U -c 'cd ~ && git config --global user.name')" ]
+                        then
+                            su $_U -c "cd ~ && git config --global user.name $_U"
+                        fi
+                        if [ -z "$(su $_U -c 'cd ~ && git config --global push.default')" ]
+                        then
+                            su $_U -c "cd ~ && git config --global push.default simple"
+                        fi
+
                 done
         done
 }
@@ -415,16 +471,23 @@ function regenerate_logfiles {
 
 function regenerate_counter {
 
-__c=0
-        for _C in $(lxc-ls)
-        do
-                __n=$(cat $SRV/$_C/config.counter)
+    __c=0
+    
+    for _C in $(lxc-ls)
+    do
+        __n=$(cat $SRV/$_C/config.counter)
 
-                if [ "$__n" -gt "$__c" ]
-                then
-                        __c=$__n
-                fi
-        done
+        if [ "$__n" -gt "$__c" ]
+        then
+            __c=$__n
+        fi
+    
+    done
+        
+    __c=$(($__c+1))
+        
+    if [ -f /var/srvctl-host/counter ]
+    then
         
         counter=$(cat /var/srvctl-host/counter)
         if ! [ "$counter" -eq "$__c" ]
@@ -432,7 +495,7 @@ __c=0
                 msg "Counter: $counter vs $__c"
                 ## todo, .. should the counter set __c ?
         fi
-        
+    fi    
 }
 
 
@@ -569,6 +632,7 @@ function wait_for_ve_online {
         done
 
         echo -n " online "
+        echo ''
 }
 
 

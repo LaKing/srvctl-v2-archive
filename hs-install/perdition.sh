@@ -140,45 +140,15 @@ ExecStart=/usr/sbin/perdition.pop3s --pid_file /var/run/perdition/perdition-pop3
 WantedBy=multi-user.target
 '
 
-set_file /etc/sasl2/smtpd.conf 'pwcheck_method: saslauthd
-mech_list: LOGIN'
 
-
-        cat /root/ca-bundle.pem > /etc/perdition/ca-bundle.pem
-        cat /root/crt.pem > /etc/perdition/crt.pem
-        cat /root/key.pem > /etc/perdition/key.pem
-
-        ## saslauthd
-        if ! diff /root/saslauthd /usr/sbin/saslauthd >/dev/null ; then
-                 rm -fr /usr/sbin/saslauthd
-                cp /root/saslauthd /usr/sbin/saslauthd
-                chmod 755 /usr/sbin/saslauthd
-                saslauthd -v
-        fi
-
-        bak /etc/sysconfig/saslauthd
-
-        set_file /etc/sysconfig/saslauthd '# Directory in which to place saslauthds listening socket, pid file, and so
-# on.  This directory must already exist.
-SOCKETDIR=/run/saslauthd
-
-
-# Mechanism to use when checking passwords.  Run "saslauthd -v" to get a list
-# of which mechanism your installation was compiled with the ablity to use.
-MECH=rimap
-
-
-# Additional flags to pass to saslauthd on the command line.  See saslauthd(8)
-# for the list of accepted flags.
-FLAGS="-O localhost -r"'
-
-        systemctl daemon-reload
 
         add_service imap4
-        add_service imap4s.service    
-        add_service pop3s.service
-        add_service saslauthd.service
+        add_service imap4s    
+        add_service pop3s
 
+        
+        systemctl daemon-reload
+        
 else
     msg "Perdition is already installed."
 fi ## install perdition

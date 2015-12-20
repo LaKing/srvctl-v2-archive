@@ -26,10 +26,10 @@ then
             source /etc/srvctl/backup-hosts-include
         fi
         
+        local_backup /srv
         local_backup /etc
         local_backup /root
-        local_backup /var/log
-        local_backup /var/spool
+        local_backup /var
         
         if [ -f /etc/srvctl/hosts ]
         then
@@ -44,7 +44,7 @@ then
                 fi
             done < /etc/srvctl/hosts
         else
-             err "No hosts file. Missing /etc/srvctl/hosts from configs."
+             ntc "No hosts file. Missing /etc/srvctl/hosts from configs."
         fi
         
         msg "Done."

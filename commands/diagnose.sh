@@ -64,6 +64,7 @@ then
         echo "onHS: $onHS"
         echo "USER: $USER / $(whoami)"
         echo "HOST: $C / $(hostname)"
+        echo "HOSTIPv4: $HOSTIPv4"
         echo "SC_USER: $SC_USER"
         echo "isUSER: $isUSER"
         echo "isROOT: $isROOT"
@@ -88,7 +89,7 @@ then
         #echo "HOSTIPv6: $HOSTIPv6"
         #echo "RANGEv6: $RANGEv6"
         #echo "PREFIXv6: $PREFIXv6"
-        echo "dns_share: $dns_share"
+
         echo "BACKUP_PATH: $BACKUP_PATH"
 
         echo "debug: $debug"
@@ -141,7 +142,13 @@ then
         cat /var/srvctl/ifcfg/ipv* 
         echo ''
         
-    if $onHS && $isROOT
+        
+    msg "Uptime: $(uptime)"
+    msg "CONNECTED SHELL USERS"
+    w
+        
+        
+  if $onHS && $isROOT
     then    
         zone=$(firewall-cmd --get-default-zone)
         services=" $(firewall-cmd --zone=$zone --list-services) "
@@ -157,11 +164,8 @@ then
             echo $i - $(firewall-cmd --get-zone-of-interface=$i)
             echo ''
         done
-    fi
     
-    msg "Uptime: $(uptime)"
-    msg "CONNECTED SHELL USERS"
-    w
+
     
     msg 'Query spamhouse.org'    
     while read IP
@@ -176,14 +180,54 @@ then
         
     for _c in $(lxc_ls)
     do
+    echo $_c
         if [ ! -z "$(curl http://www.spamhaus.org/query/domain/$_c 2> /dev/null | grep "$_c is listed")" ]
         then
             err "CHECK $_c AT spamhouse.org -  http://www.spamhaus.org/query/domain/$_c"
         fi
     done   
     
-    msg done 
+    msg "Container error-messages" 
 
+    for C in $(lxc_ls)
+    do      
+        if [ -f $SRV/$C/dns.log ]
+        then
+            echo ''
+            while read line
+            do
+                err "$line"
+            done < $SRV/$C/dns.log
+        fi
+        
+        if [ -f $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log ]
+        then
+            echo ''
+            while read line
+            do
+                ntc "$line"
+            done < $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log
+        fi
+
+    done
+    
+    msg "Certificates"
+    
+    for _d in $(ls /etc/srvctl/cert)
+    do
+       pound_pem=/etc/srvctl/cert/$_d/pound.pem
+       check_pound_pem
+    done
+ 
+    for _c in $(lxc_ls)
+    do
+       pound_pem=$SRV/$_c/cert/pound.pem
+       check_pound_pem
+    done
+   
+    
+    
+  fi
 ok
 fi
 man '
@@ -192,6 +236,8 @@ man '
 '
 
 #fi ## isROOT
+
+
 
 
 

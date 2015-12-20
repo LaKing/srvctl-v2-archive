@@ -12,7 +12,13 @@ function argument {
                   err "No container-name supplied .."
                   exit
                 fi
-
+                
+                if [ "$1" == "D" ] 
+                then
+                  err "No domain-name supplied .."
+                  exit
+                fi
+                
                 if [ "$1" == "U" ] 
                 then
                   err "No username supplied .."
@@ -35,6 +41,11 @@ function argument {
         if [ "$1" == "C" ]
         then
             C=$arg
+        fi
+        
+        if [ "$1" == "D" ]
+        then
+            D=$arg
         fi
         
         if [ "$1" == "U" ]
@@ -82,113 +93,6 @@ function to_ipv6 {
         echo $(printf '%x\n'  $__counter)
     
 }
-
-
-
-function create_certificate { ## for container $C
-
-        ## Prepare self-signed Certificate creation
-
-        # default        
-        Cname=$C
-        cert_path=$SRV/$C/cert
-
-        if [ ! -z "$1" ]
-        then
-            if [ -d "$1" ]
-            then
-                ## argument is a directory, eg. /root
-                Cname=$(hostname)
-                cert_path=$1
-            else 
-                ## argument must be a VE
-                Cname=$1
-                cert_path=$SRV/$Cname/cert
-            fi
-        fi        
-        
-        
-
-        ssl_days=1085
-        ssl_random=$cert_path/random.txt
-        ssl_config=$cert_path/$Cname.txt
-        ssl_key=$cert_path/$Cname.key
-        ssl_org=$cert_path/$Cname.key.org
-        ssl_crt=$cert_path/$Cname.crt
-        ssl_csr=$cert_path/$Cname.csr
-        ssl_pem=$cert_path/$Cname.pem
-
-        msg "Create certificate for $Cname."
-
-        mkdir -p $cert_path
-
-        ## TODO generate a self signed wildcard certificate!
-        
-
-        set_file $ssl_config "       RANDFILE               = $ssl_random
-
-        [ req ]
-        default_bits           = 2048
-        default_keyfile        = keyfile.pem
-        distinguished_name     = req_distinguished_name
-        attributes             = req_attributes
-        prompt                 = no
-        x509_extensions        = v3_req
-        output_password        = $ssl_password
-
-        [ req_distinguished_name ]
-        C                      = $CCC
-        ST                     = $CCST
-        L                      = $CCL
-        O                      = $CMP
-        OU                     = $CMP CA
-        CN                     = $Cname
-        emailAddress           = webmaster@$Cname
-
-
-        [v3_req]
-        keyUsage = keyEncipherment, dataEncipherment
-        extendedKeyUsage = serverAuth
-        subjectAltName = @alt_names
-        [alt_names]
-        DNS.1 = $Cname
-        DNS.2 = *.$Cname
-
-        [ req_attributes ]
-        challengePassword              = A challenge password"
-
-        #### create certificate for https ### good howto: http://www.akadia.com/services/ssh_test_certificate.html        
-
-        ## Step 1: Generate a Private Key
-        openssl genrsa -des3 -passout pass:$ssl_password -out $ssl_key 2048
-
-        ## Step 2: Generate a CSR (Certificate Signing Request)
-        openssl req -new -passin pass:$ssl_password -passout pass:$ssl_password -key $ssl_key -out $ssl_csr -days $ssl_days -config $ssl_config
-        
-        ## Step 3: Remove Passphrase from Key
-        cp $ssl_key $ssl_org
-        openssl rsa -passin pass:$ssl_password -in $ssl_org -out $ssl_key        
-        
-        ## Step 4: Generating a Self-Signed Certificate
-        ## later on, use signed certificates, eg. verisign, startssl or netlock.hu
-        ## To use your own CA openssl ca -batch -out $ssl_crt -config /etc/pki/[YOU_AS_CA]/openssl.cnf -passin pass:[YOU_AS_CA_PASS] -in $ssl_csr
-        ## We will generate now a self-signed certificate
-        openssl x509 -req -days $ssl_days -passin pass:$ssl_password  -in $ssl_csr -signkey $ssl_key -out $ssl_crt
-
-        ## create a certificate keychain in pem format
-        cat $ssl_key >  $ssl_pem
-        cat $ssl_crt >> $ssl_pem
-
-
-        if [ "$1" == "/root" ]
-        then
-                cat $ssl_key >  /root/key.pem
-                cat $ssl_crt >  /root/crt.pem
-        fi
-}
-
-
-
 
 function create_keypair { ## for user $U
         U=$1
@@ -284,7 +188,6 @@ function add_user {
     update_password $U
     create_keypair $U
     chown -R $U:$U /home/$U 2> /dev/null
-
 }
 
 function  get_randomstr {
@@ -334,8 +237,20 @@ function sudomize {
     fi
 }
 
-function authorize { ## sudo access container $C for current user
+function authorize { ## sudo access to container $C for current user
     _aok=false
+    
+    if [ -z "$C" ]
+    then
+        err "No container specified."
+        exit 34
+    fi
+    
+    if [ ! -d $SRV/$C/rootfs ]
+    then
+        err "No such container."
+        exit 35
+    fi
     
     if $isSUDO
     then   
@@ -351,7 +266,7 @@ function authorize { ## sudo access container $C for current user
         if ! $_aok
         then
             err "Permission denied. $SC_USER@$C"
-            exit
+            exit 7
         fi
     fi  
 }

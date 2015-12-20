@@ -300,7 +300,7 @@ done
  https_server.listen(8443);
 
  // Put a friendly message on the terminal
- console.log("Server running at http://kelevra.d250.hu/ and at https://kelevra.d250.hu/");
+ console.log("Server running at http and at https");
 
 
  console.log("END");
@@ -331,6 +331,9 @@ cd /srv/node-project
 
 nodemon /srv/node-project/server.js 1> /var/log/node-project/log 2> /var/log/node-project/err
 '
+
+
+
 
 source $install_dir/ve-install/unitfiles.sh
      

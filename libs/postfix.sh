@@ -29,6 +29,8 @@ then
     hasMX=true
 fi
 
+## TODO test.$myhostname, dev.$myhostname, sys.$myhostname, www.$myhostname, log, .. etc
+
 echo '
 ## srvctl-generated postfix main.cf 2.6.0.0
 ## Do not edit manually, changes will be overwritten!
@@ -147,13 +149,16 @@ mydestination = $myhostname, mail.$myhostname, localhost, localhost.localdomain
 
 fi
 
-if ! cmp $to $cf >/dev/null 2>&1
-then
-    ntc "Postfix configuration update for $_c"
-    diff $to $cf
-    bak $cf
+if [ -f $cf ]
+then 
+    if ! cmp $to $cf >/dev/null 2>&1
+    then
+        ntc "Postfix configuration update for $_c"
+        bak $cf
+        cat $to > $cf
+    fi
+else
     cat $to > $cf
-    ssh $_c 'systemctl restart postfix.service' &
 fi
 
 rm -rf $to

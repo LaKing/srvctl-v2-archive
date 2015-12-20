@@ -1,9 +1,8 @@
 ## IMAP4S proxy
 if [ ! -f /etc/opendkim.conf ] || $all_arg_set
 then
-        bak /etc/opendkim.conf
 
-        log "Install opendkim, to sign e-mail's."
+        msg "Install opendkim, to sign e-mail's."
 
         pm opendkim
 

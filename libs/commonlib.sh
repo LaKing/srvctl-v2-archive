@@ -31,7 +31,7 @@ function hint_commands {
         hint
     done
         
-    if [ -d /root/srvctl-includes ]
+    if [ -d /root/srvctl-includes ] && [ ! -z "$(ls /root/srvctl-includes)" ]
     then
         for sourcefile in /root/srvctl-includes/*
         do

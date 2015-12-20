@@ -1,7 +1,7 @@
 ## print unitfiles used on the VE
 
 systempath="/lib/systemd/system"
-binarypath=""
+binarypath="/srv"
 
 if $onHS
 then

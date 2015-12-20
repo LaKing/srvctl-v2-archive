@@ -7,8 +7,9 @@ then
     exit
 fi
 
+msg "Install/update srvctl"
 
-if [ -z "$(type -a git | grep 'git is ')" ]
+if ! [ -f /usr/bin/git ]
 then
     dnf -y install git
 fi
@@ -20,7 +21,7 @@ fi
 
 if [ ! -d "$install_dir" ]
 then
-    ## srvctl is not installed, or thes function was called outside of srvctl
+    ## srvctl is not installed, or this function was called outside of srvctl
     echo "Installing to /usr/share/srvctl"
     mkdir -p /usr/share
     git clone git clone https://github.com/LaKing/srvctl.git

@@ -11,7 +11,7 @@ function run_backup {
         
         if $is_running
         then
-            #ssh $_C "srvctl backup-db"
+            ssh $_C "srvctl backup-db"
         
             if [ -f $SRV/$_C/rootfs/var/log/dnf.log ]
             then
@@ -37,12 +37,6 @@ function run_backup {
         ntc certificates
             7z u -uq0 $to/cert.7z $SRV/$_C/cert
         
-        ntc /html
-        if [ ! -z "$(ls $SRV/$_C/rootfs/var/www/html 2> /dev/null)" ] 
-        then
-            7z u -uq0 $to/html.7z $SRV/$_C/rootfs/var/www/html
-        fi
-        
         ntc /srv
         if [ ! -z "$(ls $SRV/$_C/rootfs/srv 2> /dev/null)" ]
         then        
@@ -63,11 +57,9 @@ function run_backup {
         ntc /etc    
             7z u -uq0 $to/etc.7z $SRV/$_C/rootfs/etc
             
-        ntc /var/log
-            7z u -uq0 $to/log.7z $SRV/$_C/rootfs/var/log
+        ntc /var
+            7z u -uq0 $to/var.7z $SRV/$_C/rootfs/var
     
-        ntc /var/spool/cron
-            7z u -uq0 $to/cron.7z $SRV/$_C/rootfs/var/spool/cron
             
         ntc /var/lib/mysql
         if [ ! -z "$(ls $SRV/$_C/rootfs/var/lib/mysql 2> /dev/null )" ]
@@ -315,24 +307,22 @@ function srvctl_backup {
     
     server_backup $srvctl_host /etc
     server_backup $srvctl_host /root
-    server_backup $srvctl_host /var/log
-    server_backup $srvctl_host /var/spool
+    server_backup $srvctl_host /var
+    server_backup $srvctl_host /home
 
     for c in $(ssh -n $srvctl_host 'srvctl ls')
     do
         msg $c
         if $BACKUP
         then
-            ssh -n $srvctl_host "ssh -n $c 'sc backup-db'"
+            ssh -n $srvctl_host "ssh -n $c 'srvctl backup-db'"
         fi
         server_backup $srvctl_host $SRV/$c/cert
         server_backup $srvctl_host $SRV/$c/settings
         server_backup $srvctl_host $SRV/$c/rootfs/srv        
         server_backup $srvctl_host $SRV/$c/rootfs/etc
         server_backup $srvctl_host $SRV/$c/rootfs/root
-        server_backup $srvctl_host $SRV/$c/rootfs/var/www
-        server_backup $srvctl_host $SRV/$c/rootfs/var/log
-        server_backup $srvctl_host $SRV/$c/rootfs/var/spool
+        server_backup $srvctl_host $SRV/$c/rootfs/var
         server_backup $srvctl_host $SRV/$c/rootfs/home
     done
 }

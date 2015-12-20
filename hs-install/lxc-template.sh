@@ -18,14 +18,13 @@
         srvctl_template="$lxc_usr_path/share/lxc/templates/lxc-fedora-srv"
 
 
-## @update-install
-if [ ! -f $srvctl_template ] || $all_arg_set
-then
         msg "Create Custom template: $srvctl_template"
 
         set_file $srvctl_template '#!/bin/bash
 
-        ## You may want to add your own sillyables, or faorite characters and customy security measures.
+## root-password generation
+
+        ## You may want to add your own sillyables, or favorite characters and custom security measures.
         declare -a pwarra=("B" "C" "D" "F" "G" "H" "J" "K" "L" "M" "N" "P" "R" "S" "T" "V" "Z")
         pwla=${#pwarra[@]}
 
@@ -40,7 +39,9 @@ then
         p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
         p=$p${pwarra[$(( RANDOM % $pwla ))]}
         p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
-        # p=$p${pwarrc[$(( RANDOM % $pwlc ))]}
+        
+        p=$p${pwarrc[$(( RANDOM % $pwlc ))]}
+        
         p=$p${pwarra[$(( RANDOM % $pwla ))]}
         p=$p${pwarrb[$(( RANDOM % $pwlb ))]}
         p=$p${pwarra[$(( RANDOM % $pwla ))]}
@@ -48,7 +49,14 @@ then
 
         root_password=$p
 
+## An additional package list
+
+
+        SRVCTL_PKG_LIST="fedora-repos mc httpd mod_ssl openssl postfix mailx sendmail unzip clucene-core make rsync nfs-utils"
+
 '
+
+
         chmod 755 $srvctl_template
 
         cat $fedora_template >> $srvctl_template
@@ -61,7 +69,7 @@ then
         sed_file $srvctl_template 'Edit the config file to check/enable networking setup.' 'exit 0'
 
         ## Add additional default packages 
-        sed_file $srvctl_template '    PKG_LIST="dnf initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release"' '    PKG_LIST="dnf initscripts passwd rsyslog vim-minimal openssh-server openssh-clients dhclient chkconfig rootfiles policycoreutils fedora-release fedora-repos mc httpd mod_ssl openssl postfix mailx sendmail unzip clucene-core make  rsync nfs-utils"'
+        sed_file $srvctl_template 'install ${PKG_LIST}' 'install ${PKG_LIST} ${SRVCTL_PKG_LIST}'
 
         ## fedora-repos added for fixing: https://bugzilla.redhat.com/show_bug.cgi?id=1176634
 
@@ -80,7 +88,5 @@ then
         ## paths are different for src or dnf install
         rm -rf /usr/local/var/cache/lxc/fedora
         rm -rf /var/cache/lxc/fedora
-else
-    msg "Template found at $srvctl_template"
-fi ## if fedora_template does not exists.
+
 

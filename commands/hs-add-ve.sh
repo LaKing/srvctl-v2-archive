@@ -20,14 +20,14 @@ then
         then
                 C=${C:4}
                 isDEV=true
-                msg "$C will be a dev site."      
+                msg "$C will be a dev-enabled site."      
         fi
 
         ## if this is a mail server, its something special
         if [ ${C:0:5} == "mail." ]
         then
                 isMX=true
-                msg ""
+                msg "$C will be a mailserver." 
         fi
 
         ## check for human mistake
@@ -56,6 +56,7 @@ then
       
         ## authorize
         sudomize
+        msg "Authorized."
 
         ## increase the counter
         counter=$(($(cat /var/srvctl-host/counter)+1))
@@ -69,7 +70,7 @@ then
         
         if [ "$?" == "0" ] && [ -f $SRV/$C/rootfs/etc/hostname ]
         then
-              log "Container created."
+              log "Container $C created."
         else
               err "Container not created!"
               exit 30
@@ -115,7 +116,8 @@ then
         rm $rootfs/usr/lib/locale/locale-archive
         mkdir -p $rootfs/var/srvctl
         mkdir -p $rootfs/etc/srvctl
-
+        mkdir -p /var/srvctl-ve/$C
+        
         ## srvctl 2.x installation dir
         mkdir -p $rootfs/$install_dir
 
@@ -124,19 +126,15 @@ then
         rm -rf $rootfs/var/cache/dnf/*
 
         ## add symlink to the srvctl application.
-        ln -sf $install_dir/srvctl.sh $rootfs//bin/srvctl
-        ln -sf $install_dir/srvctl.sh $rootfs//bin/sc
-
-        ## As of June 2014, systemd-journald is running amok in the containers. To prevent 100% CPU usage, it has to be disabled.
-        ## To undo, you may run: rm $rootfs/etc/systemd/system/systemd-journald.service
-        ## Or, in the containers mask / unmask journald.service - reboot container to apply.
-        # ln -s '/dev/null' "$rootfs/etc/systemd/system/systemd-journald.service"
-        ## as of November 2015, with Fedora 23 - experimantally unlocked.
+        ln -sf $install_dir/srvctl.sh $rootfs/bin/srvctl
+        ln -sf $install_dir/srvctl.sh $rootfs/bin/sc
 
 ## Sendmail
-
+        msg "Setting up the Postfix mailing system."
         ## set containers sendmail que directory in order to allow apache to use php's mail function. (Didnt find a better way yet.) 
-        chmod 773 $rootfs/var/spool/clientmqueue
+        ## TODO check!
+        ## Seems to be obsolete. No such file or directory
+        # chmod 773 $rootfs/var/spool/clientmqueue
 
 ## Postfix
 
@@ -145,6 +143,7 @@ then
         #rsync -a /etc/aliases.db $rootfs/etc
         make_aliases_db $rootfs
         write_ve_postfix_main $C
+
         
 
         echo "@$C root" > $rootfs/etc/postfix/catchall
@@ -153,11 +152,17 @@ then
         ln -s '/usr/lib/systemd/system/postfix.service' $rootfs'/etc/systemd/system/multi-user.target.wants/postfix.service'
 
         regenerate_opendkim
+        
 ## Apache
 
-        ## enable the webserver
-        ln -s '/usr/lib/systemd/system/httpd.service' $rootfs'/etc/systemd/system/multi-user.target.wants/httpd.service'
-
+        if $isMX
+        then
+            msg "$C will run no webserver by default."
+        else
+            msg "Setting up the Apache webserver"
+            ln -s '/usr/lib/systemd/system/httpd.service' $rootfs'/etc/systemd/system/multi-user.target.wants/httpd.service'
+        fi
+        
         ## use this patch for better logging of IP addresses
         set_file $SRV/$C/rootfs/etc/httpd/conf.d/pound.conf '## srvctl
         <IfModule log_config_module>
@@ -204,11 +209,14 @@ then
         ln -s $rootfs/var/log/httpd/error_log /var/log/httpd/$C-error_log
 
 ## Pound
-        ## create self-signed certificate
-        create_certificate
+        msg "Pound configuration"        
+        
+        ## create letsencrypt certificate
+        get_acme_certificate $C
+        
         ## add to container - for https reverse proxying
-        cat $ssl_key > $rootfs/etc/pki/tls/private/localhost.key
-        cat $ssl_crt > $rootfs/etc/pki/tls/certs/localhost.crt
+        #cat $ssl_key > $rootfs/etc/pki/tls/private/localhost.key
+        #cat $ssl_crt > $rootfs/etc/pki/tls/certs/localhost.crt
 
         if [ "$C" == "default-host.local" ]
         then
@@ -238,7 +246,7 @@ then
         fi
 
         ## add users from argument
-        for U in "${@:3}"
+        for U in $OPAS3
         do
             msg "Add user $U"                
             echo "$U" >> $SRV/$C/settings/users

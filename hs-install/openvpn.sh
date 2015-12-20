@@ -1,3 +1,5 @@
+msg "Installing openvpn"
+
 ## configure openvpn
 pm openvpn
 pm easy-rsa
@@ -11,4 +13,5 @@ then
     firewall-cmd --permanent --add-service=openvpn
 fi
 ## reload daemon in firewall.sh
+
 

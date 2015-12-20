@@ -3,122 +3,103 @@
 if $isROOT
 then ## no identation.
 
+local _hintstr="This will update the current OS for a srvctl-configured containerfarm host installation."
+if $onVE
+then
+    _hintstr="Update the container."
+fi
 
-
-hint "update-install [all]" "This will update the current OS to be a srvctl-configured containerfarm host installation."
+hint "update-install [all]" "$_hintstr"
 if [ "$CMD" == "update-install" ]
 then
-
+        
+        msg "Update system."
         pm_update 
-
-        if [ "$ARG" == "all" ]
-        then
-           all_arg_set=true
-        fi
+        msg "OK"
 
         if $onVE
         then
             msg "Exiting - onVE"
             ok
-            exit
+            exit 0
         fi
-    
-    ## privately for the host
-    mkdir -p /var/srvctl-host
-    ## shared for containers
-    mkdir -p /var/srvctl
-    ## always local
-    mkdir -p /etc/srvctl
-        
-        ## TODO make sure networking is set and okay.
-        # /etc/sysconfig/network-scripts/ifcfg-em1
-        # /etc/sysconfig/network
-        # systemctl stop NetworkManager.service
-        # systemctl remove NetworkManager
-        # systemctl enable network.service
-        # systemctl start network.service
-    
-    ## create files in /var/srvctl/ifcfg
-    import_network_configuration
-    ## geoinfo created, adding timezone info
-    timedatectl | grep 'Time zone' | awk '{print $3}' > /var/srvctl/timezone
-        
-    ## containers wont start with selinux enabled. See https://bugzilla.redhat.com/show_bug.cgi?id=1227071
-    sed_file /etc/selinux/config "SELINUX=enforcing" "SELINUX=disabled"
-    
-    
-    ## make a config file    
-    mkdir -p /etc/srvctl
 
+        if [ "$ARG" == "all" ]
+        then
+           all_arg_set=true
+           ntc "Reinstalling ALL services."
+        fi
+        
+        
+    ## make a config file 
     if [ ! -f /etc/srvctl/config ]
     then
         
+        ## always local
+        mkdir -p /etc/srvctl
+    
         get_password
     
         cat $install_dir/hs-install/config > /etc/srvctl/config
 
-        msg "Created default /etc/srvctl/config for customization. Please edit, .. "
+        msg "Created default /etc/srvctl/config for customization. Please review and make changes according this containerfarm host."
         sleep 3
+        pmc mc
         mcedit /etc/srvctl/config
         msg "The update-install process needs to start over. Exiting."
         exit 0
     else
         msg "Found config file at /etc/srvctl/config"
+        grep "^[^#;]" /etc/srvctl/config
     fi
 
-
+    if [ -z "$CDN" ] || [ "$CDN" == "Unknown" ]
+    then
+        err "Company domain name not set!"
+        exit 44
+    fi
+    
+    if ! $(is_fqdn $CDN)
+    then
+        err "Company domain name invalid!"
+        exit 45
+    fi
+    
+    
+    msg "Creating directories."
+    
+    ## privately for the host
+    mkdir -p /var/srvctl-ve
+    chmod -R 700 /var/srvctl-ve
+    ## privately for the host
+    mkdir -p /var/srvctl-host
+    chmod -R 700 /var/srvctl-host
+    ## shared for containers
+    mkdir -p /var/srvctl
+    
+    ## make sure srvctl enviroment directories exists
+    mkdir -p $SRV
+    mkdir -p $TMP
+     
+    mkdir -p /etc/srvctl/cert
+    chmod 700 /etc/srvctl/cert
+    
+    ## create files in /var/srvctl/ifcfg
+    import_network_configuration
+    
+    local _timezone="$(timedatectl | grep 'Time zone' | awk '{print $3}')"
+    msg "Set timezone $_timezone"
+    ## geoinfo created, adding timezone info
+    echo $_timezone > /var/srvctl/timezone
+        
+    ## containers wont start with selinux enabled. See https://bugzilla.redhat.com/show_bug.cgi?id=1227071
+    sed_file /etc/selinux/config "SELINUX=enforcing" "SELINUX=disabled"
+    
 ## Requirement checks .--
 ## certificate
-                if [ ! -f /root/crt.pem ]
-                then
-                        create_certificate /root
-                fi
 
-                if [ ! -f /root/key.pem ]
-                then
-                        create_certificate /root
-                fi
-                        ca_bundle=/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
-                        
-                        if [ -f /root/ca-bundle.pem ]
-                        then
-                            ca_bundle=/root/ca-bundle.pem
-                        fi
-
-                        cert_status=$(openssl verify -CAfile $ca_bundle /root/crt.pem | tail -n 1 | tail -c 3)
-
-                        if [ "$cert_status" == "OK" ]
-                        then
-                                msg "Cerificate is OK!"
-                        else
-                                err "Requirement-check, error: certificate check for /root/crt.pem"
-                                #exit
-                        fi
-
-## authorized keys. own hosts should have custom values that add into the config when regenerating.
-                
-                if [ ! -f /root/.ssh/own_hosts ] && [ -f /root/.ssh/known_hosts ]
-                then
-                        cat /root/.ssh/known_hosts > /root/.ssh/own_hosts
-                fi
-
-
-        ## srvctl
-
-        ## TODO change counter location to /var/srvctl/counter
-        if [ -f /var/srvctl-host/counter ]
-        then
-         msg "Counter exists, counting at "$(cat /var/srvctl-host/counter)
-        else
-         log "Counter does not exist. Creating."
-         echo '0' > /var/srvctl-host/counter
-        fi
-
-        ## make sure srvctl enviroment directories exists
-        mkdir -p $SRV
-        mkdir -p $TMP
-        
-
+        create_certificate $CDN
+        ## verify against the hostname?
 
         ## this will save a little space. 
 
@@ -132,7 +113,7 @@ then
         bak /etc/hosts
 
         ## create ssh key for root
-        if [ ! -f /root/.ssh/id_rsa.pub ]
+        if [ ! -f /root/.ssh/id_rsa.pub ] || [ ! -f /root/.ssh/id_rsa ]
         then
           ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N ''
           log "Created ssh keypair for root."
@@ -184,7 +165,9 @@ useradd -r -u 103 -g 103 -s /sbin/nologin -d /tmp node 2> /dev/null
 groupadd -r -g 104 codepad 2> /dev/null
 useradd -r -u 104 -g 104 -s /sbin/nologin -d /tmp codepad 2> /dev/null
 
-
+git config --global user.email "root@$CDN"
+git config --global user.name root
+git config --global push.default simple
 
 ## User tools
 source $install_dir/hs-install/usertools.sh
@@ -214,6 +197,8 @@ source $install_dir/hs-install/antivirus.sh
 #source $install_dir/hs-install/openvpn.sh
 source $install_dir/hs-install/firewall.sh
 
+source $install_dir/hs-install/letsencrypt.sh
+
 regenerate_sudo_configs
       
     add_service named  
@@ -229,11 +214,7 @@ regenerate_sudo_configs
     add_service imap4s
     add_service amavisd 
     add_service opendkim
-
-
-
-msg ".. update-install process complete."
-
+    add_service acme-server
 
 msg "update-install done. You may regenerate configs now."
 

@@ -31,6 +31,7 @@ function regenerate_sudo_configs {
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh scan" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh phpscan" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh clamscan" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh backup" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh backup *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh restore *" >> $sudoconf
     

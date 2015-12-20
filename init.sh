@@ -31,8 +31,17 @@ source $install_dir/hs-install/config
 if [ -f "/etc/srvctl/config" ]
 then
     source /etc/srvctl/config 
-fi
 
+    #if [ -z "$HOSTIPv4" ]
+    #then
+    #    HOSTIPv4=$(dig @ns1.google.com -t txt o-o.myaddr.l.google.com +short)
+    #    ntc "HOSTIPv4 is $HOSTIPv4"
+    #    echo "## srvctl-detected $NOW" >> /etc/srvctl/config 
+    #    echo "HOSTIPv4=$HOSTIPv4" >> /etc/srvctl/config
+    #    echo '' >> /etc/srvctl/config
+    #fi
+
+fi
 mkdir -p $LOG
 
 ## variable detection
@@ -75,6 +84,7 @@ ARG=$2
 OPA=$3
 ## all optional arguments
 OPAS="${@:2}"
+OPAS3="${@:3}"
 ## all arguments, including command and argument
 ARGS="$*"
 

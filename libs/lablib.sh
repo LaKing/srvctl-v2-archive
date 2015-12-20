@@ -96,8 +96,8 @@ function dbg {
         if $debug
         then
             echo -e ${yellow}'#'$BASH_LINENO' '${FUNCNAME[1]}': '$@${NC}
-            echo $NOW': '$@ >> $LOG/debug.log
         fi
+        echo $NOW' '${FUNCNAME[1]}' '$@ >> $LOG/debug.log
 }
 
 function err {
@@ -130,12 +130,12 @@ function exif {
 
 ## package manager based install
 function pm {
-        echo dnf -y install $@
+        echo "dnf -y install $@"
         dnf -y install $@
         exif
 }
 
-function pmc {
+function pmc { ## package-name ## binary-name
         p=$1
         b=$1
         if [ ! -z "$2" ]
@@ -145,20 +145,20 @@ function pmc {
         
         if [ ! -f /usr/bin/$b ]
         then  
-            echo @@ dnf -y install $@
+            echo "dnf -y install $@"
             dnf -y install $@
             exif
         fi    
 }
 
 function pm_update {
-        echo dnf -y update
+        echo "dnf -y update"
         dnf -y update
         exif
 }
 
 function pm_groupinstall {
-        echo dnf -y groupinstall $@
+        echo "dnf -y groupinstall $@"
         dnf -y groupinstall $@
         exif
 }

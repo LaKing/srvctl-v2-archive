@@ -9,12 +9,8 @@ then
         if [ "$CMD" == "regenerate-all" ] || [ "$ARG" == "all" ] || [ "$CMD" == "!!" ]
         then
             all_arg_set=true
-            
-            
         fi
-        
             
-        
             ## counter linearly assigns a unique number to containers.
             regenerate_counter
 
@@ -26,6 +22,12 @@ then
         
             ## for each container scan_host_key
             regenerate_known_hosts
+
+            ## query 8.8.8.8 for dns information
+            regenerate_dns_publicinfo
+            
+            ## for each container import certificates
+            regenerate_letsencrypt
         
             ## create pound configuration files
             regenerate_pound_files
@@ -42,9 +44,6 @@ then
             ## for each user generate_user_structure
             regenerate_users_structure
             
-            ## query 8.8.8.8 for dns information
-            regenerate_dns_publicinfo
-            
             ## opendkim for email signing
             regenerate_opendkim
             
@@ -53,6 +52,12 @@ then
             
             ## make logfiles for apache log - kind of cosmetic action
             regenerate_logfiles
+            
+            ## kind of unnecessery, but since the commands are developed actively its here for now.
+            regenerate_sudo_configs
+            
+            ## share of server data with containers
+            regenerate_var_ve
                
 ok
 fi ## regenerate

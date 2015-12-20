@@ -13,13 +13,21 @@ then
         chown -R $u:$u /home/$u
     done
     
+    #echo "chown -R root:root /root"
+    #chown -R root:root /root
+    
     echo "chown -R apache:apache /var/www/html"
     chown -R apache:apache /var/www/html
+    echo "chown -R git:git /var/git"
+    chown -R git:git /var/git
+    
     echo "chown -R srv:srv /srv"
     chown -R srv:srv /srv
-    echo "chown -R root:root /root"
-    chown -R root:root /root
-         
+    if [ -d /srv/node-project ]
+    then
+        echo "chown -R codepad:srv /srv/node-project"
+        chown -R codepad:srv /srv/node-project
+    fi  
 ok
 fi ## regenerate
 

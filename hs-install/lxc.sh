@@ -1,12 +1,12 @@
 ## @update-install
 if [ -z "$(lxc-info --version 2> /dev/null)" ] || $all_arg_set
 then
-        log "Installing LXC!"
+        msg "Installing LXC!"
 
         if [ "$LXC_INSTALL" == "git" ] || [ "$LXC_INSTALL" == "src" ] || [ "$LXC_INSTALL" == "tar" ]
         then
                 ## packages needed for compilation and for running
-                log "Install Development Tools"
+                msg "Install Development Tools"
                 dnf -y groupinstall "Development-Tools"
                 exif
                 pm automake
@@ -21,14 +21,14 @@ then
 
                 if [ "$LXC_INSTALL" == "git" ]
                 then
-                        log "Install LXC via git"
+                        msg "Install LXC via git"
                           git clone git://github.com/lxc/lxc
                           exif
                 fi
 
                 if [ "$LXC_INSTALL" == "src" ]
                 then
-                        log "Installing using existing /root/lxc source."
+                        msg "Installing using existing /root/lxc source."
                 fi
 
                 if [ "$LXC_INSTALL" == "tar" ]
@@ -76,7 +76,7 @@ then
                         exit 11
                 fi
 
-                log "LXC-building: autogen"
+                msg "LXC-building: autogen"
                 ./autogen.sh
                 exif
 
@@ -86,21 +86,21 @@ then
                         exit 12
                 fi
 
-                log "LXC-building: configure"
+                msg "LXC-building: configure"
                 ./configure
                 exif
 
-                log "LXC-building: make"
+                msg "LXC-building: make"
                 make
                 exif
 
-                log "LXC-building: install"
+                msg "LXC-building: install"
                 make install
                 exif
     
         else
                 ## this is the default method
-                log "install lxc $LXC_VERSION"
+                msg "install lxc $LXC_VERSION"
 
                 if [ ! "$LXC_INSTALL" == 'latest-package' ]
                 then
@@ -132,7 +132,7 @@ then
 
         add_conf /root/.bash_profile "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib"
 
-        log "Configure libvirt network"
+        msg "Configure libvirt network"
 ## Networking with libvirt
         
         ## ipcalc is provided by initscripts.
@@ -189,7 +189,7 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
         if [ -z "$(ip addr show srv-net 2> /dev/null | grep UP)" ]
         then
                 err "srv-net not found. It will be active after reboot."
-                log "LXC Installed. Please reboot, and run this command again to continiue. Exiting."
+                msg "LXC Installed. Please reboot, and run this command again to continiue. Exiting."
                 exit
         fi
 else

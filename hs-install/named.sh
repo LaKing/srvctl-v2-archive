@@ -63,6 +63,8 @@ set_file /var/srvctl-host/named.conf.local '## srvctl generated
         mkdir -p /var/named/dynamic
 
         chown -R named:named /var/named
+        chmod 750 /var/named/srvctl
+        add_service named
 else
     msg "Bind - DNS server already configured."
 fi ## install named

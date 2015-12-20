@@ -4,16 +4,12 @@
 if [ ! -f /etc/postfix/main.cf ] || $all_arg_set
 then
 
-        if grep -q  '## srvctl postfix configuration file' /etc/postfix/main.cf; then
-         msg "Skipping Postfix configuration, as it seems to be configured."
-        else
-            log "Installing the Postfix mail subsystem."
-            bak /etc/postfix/main.cf
+msg "Installing postfix."
 
-            pm postfix
+pm postfix
 
-            set_file /etc/postfix/main.cf '
-## srvctl postfix configuration file
+set_file /etc/postfix/main.cf '
+## srvctl-host postfix configuration file 2.6.x
 # Global Postfix configuration file. 
 
 # COMPATIBILITY
@@ -72,8 +68,8 @@ relay_domains = $mydomain, hash:/etc/postfix/relaydomains
 
 ## SENDING
 ## SMTPS
-smtpd_tls_CAfile =    /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
-smtpd_tls_cert_file = /etc/postfix/crt.pem
+#smtpd_tls_CAfile =    /etc/srvctl/ca-bundle.pem
+smtpd_tls_cert_file = /etc/postfix/crt.pem                            
 smtpd_tls_key_file =  /etc/postfix/key.pem
 smtpd_tls_security_level = may
 smtpd_use_tls = yes
@@ -99,11 +95,6 @@ non_smtpd_milters       = $smtpd_milters
 milter_default_action   = accept
 
 '
-
-        fi ## add postfix directives
-
-        echo '# srvctl postfix relaydomains' >> /etc/postfix/relaydomains
-
 
 set_file /etc/postfix/master.cf '
 # Postfix master process configuration file. (minimized) 
@@ -164,14 +155,15 @@ smtp-amavis unix -    -    n    -    2 smtp
 
 '
 
-        cat /root/ca-bundle.pem > /etc/postfix/ca-bundle.pem 2> /dev/null
-        cat /root/crt.pem > /etc/postfix/crt.pem
-        cat /root/key.pem > /etc/postfix/key.pem
+cat $ssl_pem > /etc/postfix/crt.pem
+cat $ssl_key > /etc/postfix/key.pem
 
-        postmap /etc/postfix/relaydomains
-        add_service postfix
+chmod 400 /etc/postfix/crt.pem
+chmod 400 /etc/postfix/key.pem
 
-        make_aliases_db ''
+add_service postfix
+
+make_aliases_db ''
 
 else
     msg "Postfix already installed."

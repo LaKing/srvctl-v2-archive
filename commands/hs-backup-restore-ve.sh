@@ -6,22 +6,19 @@ then ## no identation.
 hint "backup [VE]" "Backup VE data, or all containers locally."
 if [ "$CMD" == "backup" ]
 then
-
-        #argument C
         sudomize
-        authorize
+       
         
         if [ -z "$BACKUP_PATH" ]
         then
             err "Backup path not set in configs. Using $TMP for now."
             BACKUP_PATH=$TMP
-        else
-            msg "Backup to $BACKUP_PATH"
         fi
         
         if [ ! -z "$ARG" ]
         then
             argument C
+            authorize
             run_backup $C
             msg "$C - backup complete."
         else
@@ -39,6 +36,7 @@ fi ## backup
 man '
     Attempt to backup all user-data, but not the container operating system.
     This will create a folder - path specified in config - and create 7zip archives.
+    Archives should be accessible for all authorized users.
 '
 
 
@@ -101,9 +99,9 @@ then
                 fr=$from/packagelist
                 lp=$TMP/$C-packagelist
                 ## create local pacgakelist
-                if [ -f $SRV/$C/rootfs/var/log/dnf.log ]
+                if [ -f $SRV/$C/rootfs/var/log/yum.log ]
                 then
-                    ssh $C "dnf list installed" > $lp
+                    ssh $C "yum list installed" > $lp
                 fi
                 if [ -f $SRV/$C/rootfs/var/log/dnf.log ]
                 then
@@ -225,17 +223,12 @@ then
             ssh $C 'for s in $(ls /etc/srvctl/system); systemctl enable $u && systemctl start $u; done'
         fi
         
-        if [ -f $from/log.7z ]
+        if [ -f $from/var.7z ]
         then
-            msg "/log to /root/log"
-            7z x -o/$SRV/$C/rootfs/root $from/log.7z -aoa 
+            msg "/var to /root/var"
+            7z x -o/$SRV/$C/rootfs/root $from/var.7z -aoa 
         fi
         
-        if [ -f $from/cron.7z ]
-        then
-            msg "/cron to /var/spool/cron"
-            7z x -o/$SRV/$C/rootfs/root $from/log.7z -aoa 
-        fi
        
         creation_date="$(cat $from/creation-date)"
         if [ ! -z "$creation_date" ]

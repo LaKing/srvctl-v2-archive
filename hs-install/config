@@ -9,14 +9,11 @@ LXC_VERSION='1.1.5'
 ## logpath
 LOG=/var/log/srvctl
 
-## temporal backup and work directory
+## temporal backup and work directory for removing containers
 TMP=/temp
 
 ## The main /srv folder mount point - SSD recommended
 SRV=/srv
-
-## Used for certificate generation - do not leave it empty in config file.
-ssl_password=no_pass
 
 ## Company codename - use your own
 CMP=Unknown
@@ -24,20 +21,12 @@ CMP=Unknown
 ## Company domain name - use your own
 CDN=Unknown
 
-## CC as Certificate creation
-CCC=HU
-CCST=Hungary
-CCL=Budapest
-
 ## IPv6 address of the host
 # HOSTIPv6=::1
 
 ## IPv6 address range base
 # RANGEv6=::1
 # PREFIXv6=64
-
-## File to share this system's VE domains to ns servers - http share recommended
-dns_share=/root/dns.tar.gz
 
 ## path to store compressed data archives
 BACKUP_PATH=/temp

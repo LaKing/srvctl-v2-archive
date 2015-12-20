@@ -39,12 +39,6 @@ ListenHTTPS
     Err501 "/var/www/html/501.html"
     Err503 "/var/www/html/503.html"
 
-    ## The certificate from root.
-    Cert "/etc/pound/pound.pem"
-    
-    ## CA certificates - gives error: SSL_CTX_use_PrivateKey_file failed - aborted
-    #Cert "/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt"
-
     Include "/var/pound/https-includes.cfg"
 
 End
