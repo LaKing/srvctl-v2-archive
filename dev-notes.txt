@@ -2,6 +2,15 @@
 Should start using this ...
 http://arachnoid.com/python/beautify_bash_program.html
 
+
+############################ for regenerate this might come handy!
+chmod -R a-x+X directory    remove the execute permission on all files in 
+                            a directory tree, while allowing for directory browsing.
+
+TODO add node, etc..  to srv
+usermod -a -G srv node
+
+
 ####### Server re-installation TODO ############
 
 Backup for server reinstallation in /etc/srvctl

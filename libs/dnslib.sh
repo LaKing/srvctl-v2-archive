@@ -179,7 +179,7 @@ function regenerate_dns_publicinfo {
     else
         echo $today > /var/srvctl-host/dns-pubinfo
         msg "Regenerate DNS - query public information."
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
             rm -rf $SRV/$_C/dns-*
             get_dns_servers $_C
@@ -213,7 +213,7 @@ function regenerate_dns {
         
         #echo '## srvctl named slaves'$(hostname) > $named_slave_conf
 
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
                 ## skip local domains
                 if [ "${_C: -6}" == ".local" ]
@@ -264,11 +264,8 @@ function regenerate_dns {
         cp $named_main_path/*.conf $named_live_path
 
 
-        if [ -f /etc/srvctl/hosts ]
-        then
-            
-            while read host
-            do
+        for host in $srvctl_hosts
+        do
             
               if [ "$(ssh -n -o ConnectTimeout=1 $host hostname 2> /dev/null)" == "$host" ]
               then
@@ -313,9 +310,7 @@ function regenerate_dns {
                 ssh -n -o ConnectTimeout=1 $host hostname
               fi
 
-            done < /etc/srvctl/hosts  
-
-        fi
+        done 
         
         chown root:named $named_includes
         chmod 640 $named_includes
@@ -422,6 +417,7 @@ function get_dns_servers { ## argument domain
         fi
     fi
 }
+
 
 
 

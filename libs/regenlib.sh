@@ -12,7 +12,7 @@ function regenerate_var_ve {
         chmod -R 700 /var/srvctl-ve
         
         
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
             dest=/var/srvctl-ve/$_C
             mkdir -p $dest
@@ -86,7 +86,7 @@ function regenerate_config_files {
         done
         
         ## regenerate recognized containers
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
 
                 if [ ! -f $SRV/$_C/config.counter ]
@@ -107,7 +107,7 @@ function regenerate_config_files {
                 ##_ip=$(cat $SRV/$_C/config.ipv4)        
                 
             ## Enforce disabled password authentication?
-            if [ ! -z $(cat $SRV/$_C/rootfs/etc/ssh/sshd_config | grep "PasswordAuthentication yes") ]
+            if [ ! -z "$(cat $SRV/$_C/rootfs/etc/ssh/sshd_config | grep 'PasswordAuthentication yes')" ]
             then
                  ntc "Password authentication is enabled on $_C"
                         ## make sure password authentication is disabled
@@ -135,7 +135,7 @@ function regenerate_etc_hosts {
         echo '' >> $TMP/hosts
         echo '' > $TMP/relaydomains
 
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
 
                 ip=$(cat $SRV/$_C/config.ipv4)
@@ -217,7 +217,7 @@ function regenerate_known_hosts {
 
         echo '## srvctl generated ..' > /etc/ssh/ssh_known_hosts
          
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
                 if [ ! -f $SRV/$_C/host-key ] || $all_arg_set
                 then
@@ -269,8 +269,9 @@ function regenerate_root_configs {
 function regenerate_users {
         ## First of all, make sure all users we have defined for sites, are all present.
         msg "processing user-list"
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
+                mkdir -p $SRV/$_C/settings
                 touch $SRV/$_C/settings/users
 
                 for _U in $(cat $SRV/$_C/settings/users)
@@ -397,8 +398,12 @@ function regenerate_users_structure {
 
         msg "Updateing user-structure."
         
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
+            if [ ! -d $SRV/$_C/rootfs/root/.ssh ]
+            then
+                continue
+            fi
 
                 
                 cat /root/.ssh/id_rsa.pub > $SRV/$_C/rootfs/root/.ssh/authorized_keys
@@ -451,7 +456,7 @@ function regenerate_logfiles {
         rm -rf /var/log/srvctl/httpd
         mkdir -p /var/log/srvctl/httpd
 
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
                 if [ -f $SRV/$_C/rootfs/var/log/httpd/access_log ]
                 then
@@ -473,15 +478,19 @@ function regenerate_counter {
 
     __c=0
     
-    for _C in $(lxc-ls)
+    for _C in $(lxc_ls)
     do
-        __n=$(cat $SRV/$_C/config.counter)
-
-        if [ "$__n" -gt "$__c" ]
-        then
-            __c=$__n
-        fi
     
+        if [ -f $SRV/$_C/config.counter ]
+        then
+            __n="$(cat $SRV/$_C/config.counter)"
+
+            if [ "$__n" -gt "$__c" ]
+            then
+                __c=$__n
+            fi
+        fi
+        
     done
         
     __c=$(($__c+1))
@@ -666,6 +675,7 @@ function wait_for_ve_connection {
 
 
 fi ## if onHS
+
 
 
 

@@ -31,12 +31,12 @@ then
         if $is_running
         then
                 printf ${yellow}"%-10s"${NC} "SHUTDOWN"
-                get_info
+                say_name $C
                 nfs_unmount $C
                 ssh $C shutdown -P now
         else 
                 get_state
-                get_info
+                say_name $C
         fi
 
         
@@ -44,7 +44,9 @@ then
         then
                 echo $NOW > $SRV/$C/settings/disabled
         fi
-        echo ''                
+        echo ''     
+        
+        regenerate_known_hosts           
 
 ok
 fi ## stop
@@ -67,11 +69,11 @@ then
                 if $is_running
                 then
                         printf ${yellow}"%-10s"${NC} "SHUTDOWN"
-                        get_info
+                        say_name $C
                         ssh $C shutdown -P now &
                 else 
                         get_state
-                        get_info
+                        say_name $C
                 fi
 
                 echo ''        
@@ -98,6 +100,7 @@ then
         
         done        
     msg "... done"
+    regenerate_known_hosts
 ok
 fi ## stop-all
 
@@ -106,5 +109,6 @@ man '
 '
 
 fi
+
 
 

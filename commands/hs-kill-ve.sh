@@ -17,14 +17,15 @@ then
         if $is_running
         then
                 say_info "KILLING"
-                get_info
+                say_name $C
                 nfs_unmount $C
                 lxc-stop -k -n $C    
         else
                 get_state
-                get_info       
+                say_name $C       
         fi
         echo ''
+        regenerate_known_hosts
 ok
 fi
 
@@ -46,15 +47,16 @@ then
                 if $is_running
                 then
                         say_info "KILLING"
-                        get_info
+                        say_name $C
                         nfs_unmount $C
                         lxc-stop -k -n $C                      
                 else
                         get_state
-                        get_info        
+                        say_name $C        
                 fi
         echo ''
         done
+        regenerate_known_hosts
 
 ok
 fi
@@ -65,4 +67,5 @@ man '
 '
 
 fi
+
 

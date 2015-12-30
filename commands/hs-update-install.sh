@@ -97,7 +97,7 @@ then
     
 ## Requirement checks .--
 ## certificate
-
+        cert_path=/etc/srvctl/cert/$CDN
         create_certificate $CDN
         ## verify against the hostname?
 

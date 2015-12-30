@@ -25,9 +25,9 @@ function say_info {
     printf ${yellow}"%-10s"${NC} $1
 }
 
-function get_info {
+function say_name {
         ## container $C name
-        printf ${NC}"%-48s"${NC} $C
+        printf ${NC}"%-48s"${NC} $1
 }
 
 function get_ip {
@@ -215,6 +215,7 @@ function get_dig_MX {
 
 function get_users {
 
+        mkdir -p $SRV/$C/settings
         touch $SRV/$C/settings/users
 
         users=$(cat $SRV/$C/settings/users | sed ':a;N;$!ba;s/\n/|/g')

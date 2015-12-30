@@ -21,16 +21,10 @@ then
         
         if [ ! -f $SRV/$C/settings/disabled ] && ! $is_running
         then
-                lxc-start -o $SRV/$C/lxc.log -n $C -d
-                say_info "STARTED"        
-                get_info
-                wait_for_ve_online $C
-                nfs_share
-                scan_host_key $C
-                regenerate_known_hosts
+                lxc_start $C
         else
                 get_state
-                get_info
+                say_name $C
                 
         fi        
         echo ''
@@ -57,22 +51,15 @@ then
         
                 if [ ! -f $SRV/$C/settings/disabled ] && ! $is_running
                 then
-                        lxc-start -o $SRV/$C/lxc.log -n $C -d
-                        say_info "STARTED"        
-                        get_info
-                        wait_for_ve_online $C
-                        nfs_share
-                        scan_host_key $C
-                        
+                        lxc_start $C
                 else
                           get_state
-                        get_info
+                        say_name $C
                         echo ''
                 fi        
 
                 echo ''
         done
-        regenerate_known_hosts
 ok
 fi
 
@@ -82,5 +69,7 @@ man '
 '
 
 fi
+
+
 
 

@@ -23,7 +23,7 @@ then
             get_ip
             get_pound_state
             get_state
-            get_info
+            say_name $C
             echo ''        
             if $is_running
             then

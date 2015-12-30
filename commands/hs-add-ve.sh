@@ -37,6 +37,19 @@ then
           exit 11
         fi
         
+        for host in $srvctl_hosts
+        do
+            for _c in $(ssh $host srvctl ls)
+            do
+                if [ "$_c" == "$C" ]
+                then
+                    err "$C already on $host"
+                    exit 111
+                fi
+            done
+        done
+        
+        
         if ! $(is_fqdn $C)
         then
             C="$C.$(hostname)"
@@ -129,6 +142,8 @@ then
         ln -sf $install_dir/srvctl.sh $rootfs/bin/srvctl
         ln -sf $install_dir/srvctl.sh $rootfs/bin/sc
 
+
+## Postfix
 ## Sendmail
         msg "Setting up the Postfix mailing system."
         ## set containers sendmail que directory in order to allow apache to use php's mail function. (Didnt find a better way yet.) 
@@ -136,9 +151,8 @@ then
         ## Seems to be obsolete. No such file or directory
         # chmod 773 $rootfs/var/spool/clientmqueue
 
-## Postfix
-
-        ## Container should have the same aliases as the host. (Important here is to disable info@domain) TODO remove, as its outdated
+        ## Container should have the same aliases as the host. (Important here is to disable info@domain) 
+        ## TODO remove, as its outdated
         #rsync -a /etc/aliases $rootfs/etc
         #rsync -a /etc/aliases.db $rootfs/etc
         make_aliases_db $rootfs
@@ -164,6 +178,7 @@ then
         fi
         
         ## use this patch for better logging of IP addresses
+        
         set_file $SRV/$C/rootfs/etc/httpd/conf.d/pound.conf '## srvctl
         <IfModule log_config_module>
 
@@ -211,12 +226,17 @@ then
 ## Pound
         msg "Pound configuration"        
         
+        ## create selfsigned certificate
+        cert_path=/var/srvctl-host/selfsigned-certificates/$C
+        create_certificate $C
+        
+        ## add selfsigned certificate to container - for https reverse proxying
+        cat $ssl_key > $rootfs/etc/pki/tls/private/localhost.key
+        cat $ssl_crt > $rootfs/etc/pki/tls/certs/localhost.crt
+        
         ## create letsencrypt certificate
         get_acme_certificate $C
-        
-        ## add to container - for https reverse proxying
-        #cat $ssl_key > $rootfs/etc/pki/tls/private/localhost.key
-        #cat $ssl_crt > $rootfs/etc/pki/tls/certs/localhost.crt
+        ## TODO - import that o containers for IPv6?
 
         if [ "$C" == "default-host.local" ]
         then
@@ -235,9 +255,11 @@ then
         
 
 ## what user?
-
+        echo '' > $SRV/$C/settings/users
+        
         if $isSUDO
         then
+            msg "Add user $SC_USER" 
             echo "$SC_USER" >> $SRV/$C/settings/users
             U=$SC_USER
             add_user $U
@@ -268,21 +290,11 @@ then
 ##         #### START #### 
 
         log "Starting container $C - $IPv4 $U" 
-                   
-        echo "lxc-start -o $SRV/$C/lxc.log -n $C -d"
-        lxc-start -o $SRV/$C/lxc.log -n $C -d 
+
+        lxc_start $C
         
-        cat $SRV/$C/lxc.log
-
-        ## wait for the container to get up 
-        ## was based on $IPv4
-
-        wait_for_ve_online $C
-
-        scan_host_key $C
-        regenerate_known_hosts
-
-        wait_for_ve_connection $C
+    if $lxc_start_success
+    then
 
         msg "Post installation, ..."
 
@@ -320,9 +332,10 @@ then
         fi
 
 
-        nfs_share
+        
 
         msg "$C ready."
+    fi
 
 ok
 fi ## srvctl add

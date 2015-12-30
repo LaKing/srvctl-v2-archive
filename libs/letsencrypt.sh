@@ -23,7 +23,11 @@ function add_to_domlist {
     if [ -z "$_address" ]
     then
         #dbg "$_domain can't be domain-authicated."
-        echo "$_domain can't be domain-authicated." >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+        if [ -d $SRV/$_c/rootfs/var/log ]
+        then
+            mkdir -p $SRV/$_c/rootfs/var/log/srvctl
+            echo "$_domain can't be domain-authicated." >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+        fi
         return
     fi
 
@@ -148,7 +152,8 @@ function get_acme_certificate { ## for container
     msg "letsencrypt create certificate for $_dom"
     echo "letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist"
     echo @$_domlist >> $LOG/letsencrypt.log
-    letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist >> $LOG/rootfs/var/log/srvctl/letsencrypt.log 2>> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+    echo "$NOW attempt to create letsencrypt certificate" >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+    letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist >> $LOG/letsencrypt.log 2> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
     
     if [ "$?" == 0 ]
     then
@@ -157,7 +162,7 @@ function get_acme_certificate { ## for container
     else
         err "Letsencrypt certonly failed"
         cat $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
-        echo "letsencrypt certonly failed" >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+        echo "letsencrypt certonly failed for $_dom" >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
         return
     fi
     
@@ -200,18 +205,23 @@ function get_acme_certificate { ## for container
 
 function regenerate_letsencrypt {
         
-    if [ -f /var/srvctl-host/letsencrypt ] && [ "$(cat /var/srvctl-host/letsencrypt)" == "$today" ]
+    if [ -f /var/srvctl-host/letsencrypt ] && [ "$(cat /var/srvctl-host/letsencrypt)" == "$today" ] && ! $all_arg_set
     then
         return
-    else
+    fi
+    
+    
         echo $today > /var/srvctl-host/letsencrypt
         msg "Regenerate letsencrypt certificates"
-        for _C in $(lxc-ls)
+        for _C in $(lxc_ls)
         do
             rm -rf $SRV/$_C/rootfs/var/log/srvctl/letsencrypt.log
-            get_acme_certificate $_C
+            if [ ! -f $SRV/$_C/cert/pound.pem ]
+            then
+                get_acme_certificate $_C
+            fi
         done
-    fi
+
 }
 
 

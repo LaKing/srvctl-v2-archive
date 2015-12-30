@@ -242,9 +242,9 @@ then
         #    ## START the container
         #    set_file_limits
         #    
-        #    lxc-start -o $SRV/$C/lxc.log -n $C -d
+        #    lxc_start $C
         #    say_info "STARTED"        
-        #    get_info
+        #    say_name $C
         #    wait_for_ve_online $C
         #                
         #fi
@@ -256,6 +256,7 @@ man '
 '
 
 fi
+
 
 
 

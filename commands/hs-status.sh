@@ -19,7 +19,7 @@ then
     for C in $(lxc_ls)
     do
         get_state
-        get_info
+        say_name $C
 
         echo ''
     done
@@ -62,7 +62,7 @@ then
         get_dns_servers $C
         
         get_state
-        get_info
+        say_name $C
         get_ip
         get_dig_A
         get_pound_state
@@ -136,7 +136,7 @@ then
         do       
             if ! [ -z "$(head -n 1 $SRV/$C/settings/users | grep $SC_USER)" ]
             then
-                get_info
+                say_name $C
                 get_disk_usage
                 get_logs_usage
                 echo ''
@@ -152,7 +152,7 @@ then
         do      
             if [ "$(cat $SRV/$C/settings/users | grep $SC_USER)" == "$SC_USER" ] && [ -z "$(head -n 1 $SRV/$C/settings/users | grep $SC_USER)" ]
             then
-                get_info
+                say_name $C
                 get_disk_usage
                 get_logs_usage
                 echo ''
@@ -171,7 +171,7 @@ then
             do       
                 if [ "$(head -n 1 $SRV/$C/settings/users)" == "$U" ]
                 then
-                    get_info
+                    say_name $C
                     get_disk_usage
                     get_logs_usage
                     echo ''
@@ -201,7 +201,7 @@ then
         
         for C in $(lxc_ls)
         do 
-            get_info
+            say_name $C
             get_ip
             echo ''
         done

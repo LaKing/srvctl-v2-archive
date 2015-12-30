@@ -17,12 +17,20 @@ function check_pound_pem {
 function create_certificate { ## for domain
                 
         domain=$1
-        cert_path=/etc/srvctl/cert/$domain
+        #cert_path=/etc/srvctl/cert/$domain
         
         if [ -z "$domain" ]
         then
             err "No domain specified to create certificate"
+            return
         fi
+        
+        if [ -z "$cert_path" ]
+        then
+            err "No cert_path specified"
+            return
+        fi
+        
 
         ssl_days=365
         
@@ -132,13 +140,6 @@ function create_certificate { ## for domain
         [alt_names]
         DNS.1 = $domain
         DNS.2 = *.$domain
-        DNS.3 = *.www.$domain
-        DNS.4 = *.lab.$domain
-        DNS.5 = *.sys.$domain
-        DNS.6 = *.dev.$domain
-        DNS.7 = *.log.$domain
-        DNS.8 = *.net.$domain
-        DNS.9 = *.srv.$domain
 "
         
 

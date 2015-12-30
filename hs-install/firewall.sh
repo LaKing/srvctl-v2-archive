@@ -64,6 +64,10 @@ then
   <port protocol="tcp" port="465"/>
 </service>
 '
+    ## make firewall aware of the service
+    echo firewall-cmd --reload
+    firewall-cmd --reload
+
     echo firewall-cmd --zone=$zone --permanent --add-service=smtps
     firewall-cmd --zone=$zone --permanent --add-service=smtps
 

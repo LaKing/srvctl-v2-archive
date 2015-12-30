@@ -22,8 +22,10 @@ then
                 secure_mariadb
 
                 ## install packages
-                pm nodejs
-                pm npm
+                #pm nodejs
+                #pm npm
+                install_nodejs_latest
+                
                 pm gzip git-core curl python openssl-devel
                 pm postgresql-devel
                 pm wget                
@@ -200,7 +202,7 @@ done
                 ## proper way is to create a service to run codepad
                 source $install_dir/ve-install/unitfiles.sh
 
-                add_service codepad
+                
 
 
                 if [ "$project_type" == "node" ]
@@ -347,11 +349,13 @@ source $install_dir/ve-install/unitfiles.sh
                                 ## this is needed for nodemon
                                 chmod 777 /srv
                                 ## // TODO nodemon needs to write to /srv 
-
-                                add_service node_project
+                                
+                                
+                                add_service node-project
 
                         fi ## if node-project
 
+        add_service codepad
         
         ntc "Project path is: $project_path"
 

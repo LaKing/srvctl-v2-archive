@@ -11,6 +11,96 @@ function pound_add_pound_pem {
   
 }
 
+## under construction
+
+function pound_add_service__redirect {
+    
+    echo $_service_comment >> $_service__cfg
+    echo 'Service' >> $_service__cfg
+    echo $_service_head >> $_service__cfg
+    echo 'Redirect "https://dev.'$_C'"' >> $_service__cfg
+    echo 'End' >> $_service__cfg
+}
+
+function pound_add_service__config {
+    
+    echo $_service_comment >> $_service__cfg
+    echo 'Service' >> $_service__cfg
+    echo $_service_head >> $_service__cfg
+    
+    echo 'BackEnd' >> $_service__cfg
+    ## backend parameters
+    echo 'Address '$_C >> $_service__cfg
+    echo 'Port '$_service_port >> $_service__cfg
+        
+    if [ $_service_name == dev ] || [ $_service_name == codepad ]
+    then
+        echo 'TimeOut 300' >> $_service__cfg
+    fi
+        
+        
+    if [ -f $_service_path/pound-$_service_name-http-service-directives ]
+    then
+        cat -s $_service_path/pound-$_service_name-http-service-directives >> $_service__cfg
+    fi
+    echo 'End' >> $_service__cfg
+    ## backend ended
+    echo 'End' >> $_service__cfg
+}
+
+function pound_add_service {
+
+    _service_name=$1
+    _service_port=443
+    _service_path=$SRV/$_C/settings/
+    _service_domain=$_C
+    _service_doname=$(echo $_C | tr '.' '-')
+    
+    _service_http_cfg=$cfg_dir/$_service-http-service
+    _service_https_cfg=$cfg_dir/$_service-https-service
+    _service_http_only=false
+    _service_https_only=false
+    
+    if [[ $_service_domain == *".$DDN" ]]
+    then
+        ## remove DDN at the end
+        _service_doname=$(echo $_C | tr '.' '-')
+    fi
+    
+    #if [ -f $SRV/$_C/settings/pound-enable-dev ]
+    
+    _service_comment='## srvctl '$_service' '$_C' ('$_ip')'
+    _service_head='HeadRequire "Host: dev.'$_C'"'
+
+    ## work on the http block
+    _service__cfg=$_service_http_cfg
+    if $_service_http_only
+    then
+        pound_add_service__redirect
+    else
+        pound_add_service__config
+    fi
+
+    ## work on the https block
+    _service__cfg=$_service_https_cfg
+    if $_service_https_only
+    then
+        pound_add_service__redirect
+    else
+        pound_add_service__config
+    fi
+    
+    
+    ## put the config files to the includes
+    echo 'Include "'$_service_http_cfg'"' >> /var/pound/http-domains.cfg
+    echo 'Include "'$_service_https_cfg'"' >> /var/pound/https-domains.cfg
+
+    
+}
+
+## under construction block end
+
+
 function regenerate_pound_files {
   
   msg "regenerate pound files"
@@ -18,7 +108,7 @@ function regenerate_pound_files {
   rm -rf /var/pound
   mkdir -p /var/pound
   
-  MSG="## srvctl generated $NOW"
+  local MSG="## srvctl generated $NOW"
   
   ## We will use a sort of layering, with up to 8 layers.
   
@@ -89,30 +179,27 @@ function regenerate_pound_files {
         End
   '
   
+
+  
   ## import host certificates
   for _d in $(ls /etc/srvctl/cert)
   do
     pound_pem=/etc/srvctl/cert/$_d/pound.pem
     pound_add_pound_pem
+    
   done
  
   ## import container certificates
-  for _C in $(lxc-ls)
+  for _C in $(lxc_ls)
   do
-    
-    if [ ${_C:0:5} == "mail." ]
-    then
-      continue
-    fi
-    
+  
     pound_pem=$SRV/$_C/cert/pound.pem
     pound_add_pound_pem
   
   done
   
-  
   ## $_C is the local version of $C
-  for _C in $(lxc-ls)
+  for _C in $(lxc_ls)
   do
     
     if [ ${_C:0:5} == "mail." ]
@@ -158,14 +245,12 @@ function regenerate_pound_files {
     then
       
       ## Direct Developer DomainName - useful if your domain is not registered / dns has problems
-      ## Note: always enabled.
-      #if $ENABLE_DDDN
-      #then
-      
+      ## syntax ve-domain-name.hostname
+      ## always enabled
       
       set_file $cfg_dir/dddn-http-service '## srvctl dddn-http-service '$_C' '$_ip'
       Service
-      HeadRequire "Host: '$_DC'.'$DDN'"
+      HeadRequire "Host: '$_DC'.'$HOSTNAME'"
       BackEnd
       Address '$_C'
       Port    '$_http_port'
@@ -175,7 +260,7 @@ function regenerate_pound_files {
       
       set_file $cfg_dir/dddn-https-service '## srvctl dddn-https-service '$_C' '$_ip'
       Service
-      HeadRequire "Host: '$_DC'.'$DDN'"
+      HeadRequire "Host: '$_DC'.'$HOSTNAME'"
       BackEnd
       Address '$_C'
       Port    '$_https_port'
@@ -186,13 +271,13 @@ function regenerate_pound_files {
       
       echo 'Include "'$cfg_dir/dddn-http-service'"' >> /var/pound/http-dddn-domains.cfg
       echo 'Include "'$cfg_dir/dddn-https-service'"' >> /var/pound/https-dddn-domains.cfg
-      #fi
+
       
       
       ## Directly addressed alternative pound domain on custom port
       if [ -f $SRV/$_C/settings/pound-enable-altdomain ]
       then
-        altdomain_hostname=$_C'.'$DDN
+        altdomain_hostname=$_C'.alt.'$HOSTNAME
         if [ ! -z $(cat $SRV/$_C/settings/pound-enable-altdomain) ]
         then
           altdomain_hostname=$(cat $SRV/$_C/settings/pound-enable-altdomain)
@@ -235,6 +320,13 @@ function regenerate_pound_files {
         echo 'Include "'$cfg_dir/altdomain-https-service'"' >> /var/pound/https-domains.cfg
       fi
       
+      ## disabled - under construction
+      #if [ -f $SRV/$_C/settings/pound-enable-dev ]
+      #then
+      #    pound_add_service dev
+      #fi
+      
+
       if [ -f $SRV/$_C/settings/pound-enable-dev ]
       then
         set_file $cfg_dir/dev-http-service '## srvctl dev-http-service '$_C' '$_ip'
@@ -256,6 +348,8 @@ function regenerate_pound_files {
         echo 'Include "'$cfg_dir/dev-http-service'"' >> /var/pound/http-domains.cfg
         echo 'Include "'$cfg_dir/dev-https-service'"' >> /var/pound/https-domains.cfg
       fi
+      
+      
       
       if [ -f $SRV/$_C/settings/pound-enable-log ] || [ -f $SRV/$_C/settings/pound-enable-dev ]
       then

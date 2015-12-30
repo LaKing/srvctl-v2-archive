@@ -31,10 +31,8 @@ then
         local_backup /root
         local_backup /var
         
-        if [ -f /etc/srvctl/hosts ]
-        then
-            while read host
-            do
+        for host in $srvctl_hosts
+        do
                 if [ "$(ssh -n -o ConnectTimeout=1 $host hostname 2> /dev/null)" == "$host" ]
                 then
                     msg "Update backup for $host"
@@ -42,10 +40,8 @@ then
                 else
                     err "Could not connect to $host"
                 fi
-            done < /etc/srvctl/hosts
-        else
-             ntc "No hosts file. Missing /etc/srvctl/hosts from configs."
-        fi
+        
+        done
         
         msg "Done."
 ok

@@ -18,46 +18,49 @@ fi
 if [ ! -z "$SERVICE" ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/$SERVICE.service" ] 
 then
   
-  if $isROOT   
-  then
-
-    if [ "$OP" == "add" ] || [ "$OP" == "+" ] 
+  
+    if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
     then
-        add_service $SERVICE
-    fi ## start
-
-
-    if [ "$OP" == "start" ] || [ "$OP" == "restart" ] || [ "$OP" == "!" ] 
-    then
-        systemctl enable  $SERVICE.service
-        systemctl restart $SERVICE.service
         systemctl status $SERVICE.service
-    fi ## restart
+    else
+    
+        if $isROOT   
+        then
+
+            if [ "$OP" == "add" ] || [ "$OP" == "+" ] 
+            then
+                add_service $SERVICE
+            fi
 
 
-    if [ "$OP" == "stop" ] 
-    then
-        systemctl disable $SERVICE.service
-        systemctl stop $SERVICE.service
-        systemctl status $SERVICE.service
-    fi ## disable
+            if [ "$OP" == "start" ] || [ "$OP" == "restart" ] || [ "$OP" == "!" ] 
+            then
+                systemctl enable  $SERVICE.service
+                systemctl restart $SERVICE.service
+                systemctl status $SERVICE.service
+            fi
+
+
+            if [ "$OP" == "stop" ] 
+            then
+                systemctl disable $SERVICE.service
+                systemctl stop $SERVICE.service
+                systemctl status $SERVICE.service
+            fi
     
     
-    if [ "$OP" == "remove" ]  || [ "$OP" == "-" ] 
-    then
-        rm_service $SERVICE
-    fi ## disable
+            if [ "$OP" == "remove" ]  || [ "$OP" == "-" ] 
+            then
+                rm_service $SERVICE
+            fi 
+    
+        else
+            err "These service operations need root privileges."  
+        fi
   
-  else
-
-   systemctl status $SERVICE.service
-   
-  fi
+    fi
   
-
-  
-  ok
-
+ok
 fi
 
 man '

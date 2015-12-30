@@ -15,7 +15,7 @@ function regenerate_opendkim {
      chmod -R 640 $_var
      chmod 750 $_var
      
-     for _c in $(lxc-ls)
+     for _c in $(lxc_ls)
      do
          if [ ! -d $SRV/$_c/opendkim ]
          then

@@ -201,32 +201,6 @@ function msg_dnf_version_installed {
 
 }
 
-function lxc_ls {
-    ## special lxc-ls that honors the call via sudo
-    for _lsi in $(lxc-ls)
-    do
-            if $isSUDO
-            then
-                _skp=true
-                for _uti in $(cat $SRV/$_lsi/settings/users)
-                do
-                    if [ "$_uti" == "$SC_USER" ]
-                    then
-                        _skp=false
-                        break
-                    fi
-                done
-                
-                if $_skp
-                then
-                    continue
-                fi
-            fi
-            
-            echo $_lsi
-            
-      done
-}
 
 function sudomize {
     ## switch to root
@@ -397,7 +371,7 @@ function add_service {
         systemctl restart $1.service
         systemctl status $1.service 
     else
-        err "No such service - $1"
+        err "No such service - $1 (add)"
     fi
     
    
@@ -414,7 +388,7 @@ function rm_service {
         systemctl stop $1.service
     
     else
-        err "No such service - $1"
+        err "No such service - $1 (rm)"
     fi
 }
 
@@ -480,7 +454,8 @@ then
     then
         err "Configuration error. binary not found: $lxc_bin_path/lxc-start"
     fi
+    
+        
 fi
-
 
 

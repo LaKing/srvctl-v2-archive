@@ -1,8 +1,8 @@
 if $onHS && $isROOT
 then 
 ## no identation.
-        hint "mkcert DOMAIN" "Create an SSL certificate."
-        if  [ "$CMD" == "mkcert" ]
+        hint "create-certificate DOMAIN" "Create an SSL certificate."
+        if  [ "$CMD" == "create-certificate" ]
         then
             argument D
             
@@ -11,7 +11,7 @@ then
           err "$D failed the domain regexp check. Exiting."
           exit 10
         fi
-              
+                cert_path=/etc/srvctl/cert/$D
                 create_certificate $D
             
         ok
@@ -32,7 +32,6 @@ Certificates will reside in /etc/srvctl/cert/DOMAIN
         log    logio
         ssh    shell
         sys    cockpit
-        net    ipv6
         dns    zone
         git    repo
         src    source
@@ -42,23 +41,29 @@ Certificates will reside in /etc/srvctl/cert/DOMAIN
         dyn    dyndns
         ftp    files
         adm    admin
+        pma    phpmyadmin
         alt    port
         opt    custom
-        org    info
         vnc    container
         vpn    network
         gui    devel
+        wss    websocket
         
     Additional labels:
                 webmail
                 shop
                 forum
                 demo
-                chat        
-                
+                chat
+                game        
+                support
         .. feel free to submit suggestions on github.
 '
 fi
 
-#eof
+## server names might be two letter codes for quick access.
+## but they should not interfer with top level domains
+## easy r2 bp c4 f6
+## hard pm sc gb db
+
 

@@ -1,7 +1,7 @@
 Fedora srvctl
 ==============
 
-My implementation of a virtual serverfarm manager, controlling the host and some VE's.
+My implementation of a virtual serverfarm manager, controlling the host(s) and some VE's.
 
 srvctl can manage LXC containers on Fedora
 - Webserver-farm configuration
@@ -78,6 +78,7 @@ list of currently active commands:
   help                                  see more detailed descriptions about commands.  
 
 ```
+Hosts can work together to form a cloud-like hosting enviroment.
 
 All bash scripts are made for, and tested on Fedora based systems. Some scripts might eventually work on other distros, with slight modifications, however there are a lot of fodora-specific workarounds and bugfixes in these scripts.
 

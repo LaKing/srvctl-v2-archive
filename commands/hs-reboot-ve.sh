@@ -17,15 +17,15 @@ then
         if $is_running
         then
                 say_info "REBOOT!"
-                get_info
+                say_name $C
 
                 nfs_unmount $C
                   ssh $C reboot 2> /dev/null              
                 wait_for_ve_online $C
-                  nfs_share
+                  nfs_share $C
         else 
                 get_state
-                get_info        
+                say_name $C        
                 echo ''
         fi
         
@@ -53,15 +53,15 @@ then
                 if $is_running
                 then
                         say_info "REBOOT!"
-                        get_info
+                        say_name $C
 
                         nfs_unmount $C
                         ssh $C reboot 2> /dev/null      
                         wait_for_ve_connection $C
-                        nfs_share
+                        nfs_share $C
                 else 
                 get_state
-                get_info
+                say_name $C
                 
                 fi
 
@@ -78,4 +78,5 @@ man '
 '
 
 fi
+
 

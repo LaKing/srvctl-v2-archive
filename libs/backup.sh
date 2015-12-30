@@ -3,7 +3,7 @@ function run_backup {
         
         _C=$1
 
-        to=$BACKUP_PATH/$_C
+        to=$BACKUP_PATH/$HOSTNAME/$_C
         
         mkdir -p $to
         
@@ -82,7 +82,7 @@ function backup_mount { # user container
     _C=$2
     
      ## there is a backup?
-     if [ ! -z "$(ls $BACKUP_PATH/$_C 2> /dev/null)" ] && [ -d "/home/$_U/$_C" ]
+     if [ ! -z "$(ls $BACKUP_PATH/$HOSTNAME/$_C 2> /dev/null)" ] && [ -d "/home/$_U/$_C" ]
      then 
         ## share here
         mkdir -p /home/$_U/$_C/backup
@@ -92,8 +92,8 @@ function backup_mount { # user container
          then
              ntc "Mount backup at /home/$_U/$_C/backup"
              
-             echo "mount --bind $BACKUP_PATH/$_C /home/$_U/$_C/backup"
-             mount --bind $BACKUP_PATH/$_C /home/$_U/$_C/backup
+             echo "mount --bind $BACKUP_PATH/$HOSTNAME/$_C /home/$_U/$_C/backup"
+             mount --bind $BACKUP_PATH/$HOSTNAME/$_C /home/$_U/$_C/backup
              echo "mount -o remount,ro,bind /home/$_U/$_C/backup"
              mount -o remount,ro,bind /home/$_U/$_C/backup
          fi
@@ -124,7 +124,7 @@ du_args=" -hs --apparent-size "
 function local_backup {
 
     backup_dirs="${@:1}"
-    backup_target=$BACKUP_PATH/$(hostname)
+    backup_target=$BACKUP_PATH/$HOSTNAME
 
     for i in $backup_dirs
     do

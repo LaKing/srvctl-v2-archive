@@ -6,10 +6,10 @@
 ## some formatted date 
 NOW=$(date +%Y.%m.%d-%H:%M:%S)
 MSG="## srvctl modification. $NOW"
-DDN=$(dnsdomainname)
 
-## if enabled, containers should be accessible on container.yourdomain.net
-ENABLE_CDDN=true
+## Servers can have a direct domain name - what we can override
+## useful in multi-server setups
+DDN=$(dnsdomainname)
 
 
 ## MYSQL / MARIADB conf file that stores the mysql root password - in containers
@@ -18,7 +18,40 @@ MDF=/etc/mysqldump.conf
 ## global variables with default values
 all_arg_set=false
 
+## get $VERSION_ID
+source /etc/os-release
+ARCH=$(uname -m)
 
+
+srvctl_hosts=''
+
+if [ -f /etc/srvctl/hosts ]
+then
+
+    while read _h
+    do
+
+        if [ "$_h" == "$HOSTNAME" ] || [ "$_h" == localhost ] || [ "$HOSTNAME" == localhost ]
+        then
+            continue
+        fi
+              
+        srvctl_hosts="$_h $srvctl_hosts"
+
+    done < /etc/srvctl/hosts
+fi
+
+
+
+
+## set FEDORA to the corresponding fedora version on this computer
+
+if ! [ "$NAME" == "Fedora" ]
+then
+    ## Something is wrong. This is not even fedora. We just run the client then, ...
+    ## TODO check how this should be with CentOS and other distros.
+    source $install_dir/srvctl-client.sh $1
+fi
 
 ####################################################
 

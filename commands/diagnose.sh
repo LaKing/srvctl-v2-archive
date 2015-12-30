@@ -48,14 +48,13 @@ man '
 hint "diagnose" "Run a set of diagnostic commands."
 if [ "$CMD" == "diagnose" ]
 then        
-
-        #echo "Postfix: "$(systemctl is-active postfix.service)        
-        #echo "Dovecot: "$(systemctl is-active dovecot.service)
+        uname -a
 
         ## maintain these list of variables for debugging!
         msg "srvctl variables and settings."
-        echo "FEDORA: $FEDORA"
-        echo "FEDORA_RELEASE: $FEDORA_RELEASE"
+        echo "NAME: $NAME"
+        echo "ARCH: $ARCH"
+        echo "VERSION_ID: $VERSION_ID"
         echo "install_bin: $install_bin"
         echo "install_dir: $install_dir"
         echo "install_ver: $install_ver"
