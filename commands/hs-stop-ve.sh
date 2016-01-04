@@ -33,7 +33,8 @@ then
                 printf ${yellow}"%-10s"${NC} "SHUTDOWN"
                 say_name $C
                 nfs_unmount $C
-                ssh $C shutdown -P now
+                #ssh $C shutdown -P now
+                lxc-attach -n $C poweroff
         else 
                 get_state
                 say_name $C
@@ -70,7 +71,8 @@ then
                 then
                         printf ${yellow}"%-10s"${NC} "SHUTDOWN"
                         say_name $C
-                        ssh $C shutdown -P now &
+                        #ssh $C shutdown -P now &
+                        lxc-attach -n $C poweroff
                 else 
                         get_state
                         say_name $C

@@ -141,7 +141,7 @@ function regenerate_etc_hosts {
                 ip=$(cat $SRV/$_C/config.ipv4)
                 
 
-                if [ -z $ip ] 
+                if [ -z "$ip" ] 
                 then
                         counter=$(cat $SRV/$_C/config.counter)
                         if [ -z $counter ] 
@@ -153,7 +153,7 @@ function regenerate_etc_hosts {
                         fi        
                 fi
 
-                if [ ! -z $ip ]
+                if [ ! -z "$ip" ]
                 then
  
                         echo $ip'                '$_C >>  $TMP/hosts
@@ -216,6 +216,14 @@ function regenerate_known_hosts {
         msg "regenerate known hosts"
 
         echo '## srvctl generated ..' > /etc/ssh/ssh_known_hosts
+        
+        for _S in $srvctl_hosts
+        do
+            ssh-keyscan -t rsa -H $(dig $_S +short) >> /etc/ssh/ssh_known_hosts 2>/dev/null
+            ssh-keyscan -t rsa -H $_S >> /etc/ssh/ssh_known_hosts 2>/dev/null
+            #2>/dev/null
+            echo '' >> /etc/ssh/ssh_known_hosts
+        done
          
         for _C in $(lxc_ls)
         do
@@ -241,7 +249,7 @@ function regenerate_known_hosts {
                 fi
 
         done ## regenerated  containers hosts
-        msg "Set known_hosts done."
+        #msg "Set ssh_known_hosts done."
 }
 
 

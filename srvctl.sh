@@ -42,8 +42,8 @@ SUCC=" "
  
  
 ## if onVE C - the container name - should be the hostname
-C=$(hostname)
- 
+C=$HOSTNAME
+       
 #load the commands - and execute them 
 load_commands
  

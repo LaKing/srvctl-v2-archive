@@ -35,7 +35,7 @@ function get_ip {
         ipv4=''
         ip=$(cat $SRV/$C/config.ipv4)
 
-        if [ -z $ip ] 
+        if [ -z "$ip" ] 
         then
                 ipv4=$(grep "lxc.network.ipv4" $SRV/$C/config)
                 ip=${ipv4:19:-2}

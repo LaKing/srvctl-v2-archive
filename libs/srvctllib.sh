@@ -220,7 +220,7 @@ function authorize { ## sudo access to container $C for current user
         exit 34
     fi
     
-    if [ ! -d $SRV/$C/rootfs ]
+    if [ ! -f $SRV/$C/config ]
     then
         err "No such container."
         exit 35

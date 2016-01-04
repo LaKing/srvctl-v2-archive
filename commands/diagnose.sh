@@ -75,6 +75,7 @@ then
         echo "OPA: $OPA"
         echo "ARGS: $ARGS"
         echo "OPAS: $OPAS"
+        echo "OPAS3: $OPAS3"
         echo "LXC_INSTALL: $LXC_INSTALL"
         echo "LXC_VERSION: $LXC_VERSION"
         echo "LOG: $LOG"

@@ -1,11 +1,10 @@
 #!/bin/bash
-
 if $onHS
-then ## no identation.
+then
 
 ## exec-all 'something' (or with "")ssh  
-hint "exec-all 'CMD [..]'" "Execute a command on all running containers."
-if [ "$CMD" == "exec-all" ]
+hint "ssh-all 'CMD [..]'" "Execute a command on all running containers via shell."
+if [ "$CMD" == "ssh-all" ]
 then
 
     if [ -z "$ARG" ]
@@ -13,13 +12,11 @@ then
         err "No command specified to execute on containers."
         exit
     fi
-
     sudomize 
     
         for C in $(lxc_ls)
         do                 
             set_is_running
-    
             get_ip
             get_pound_state
             get_state
@@ -28,18 +25,15 @@ then
             if $is_running
             then
                 ## execute everything after the "exec-all" part of the argument
-                ssh root@$C "$OPAS"
+                ssh root@$C "$OPAS"                   
                 if [ ! "$?" == "0" ]
                 then
                     err "Command returned an error."
                 fi
             fi
             echo ''
-    
         done
-        
     ok
-    
 fi
 
 man '
@@ -68,7 +62,9 @@ then
         then
             msg "Connecting to $C for a query."
             msg "--- $C ---" >> $tmp_file
-            ssh -t $C "top -b -n 1" >> $tmp_file
+            
+            #ssh -t $C "top -b -n 1" >> $tmp_file
+            lxc-attach -n $C -- top -b -n 1
         fi
                
     done
@@ -84,5 +80,6 @@ man '
 
 
 fi
+
 
 

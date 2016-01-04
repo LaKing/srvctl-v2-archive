@@ -68,7 +68,7 @@ function create_certificate { ## for domain
                 openssl verify -CAfile $ssl_pem $ssl_pem > /dev/null
                 if [ "$?" == "2" ]
                 then
-                    ntc "$domain has a Self signed certificate!" 
+                    #ntc "$domain already has a Self signed certificate!" 
                     return
                 else
                     if openssl verify -CAfile $ssl_pem -verify_hostname $domain $ssl_pem > /dev/null

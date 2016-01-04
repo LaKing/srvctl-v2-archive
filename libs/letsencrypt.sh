@@ -44,6 +44,14 @@ function get_acme_certificate { ## for container
     _c=$1 
     _dom=$_c
     
+    le_log=$SRV/$_c/letsencrypt.log
+    if [ -d $SRV/$_c/rootfs/var/log ]
+    then
+        mkdir -p $SRV/$_c/rootfs/var/log/srvctl
+        le_log=$SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+    fi
+    
+    
     if [ ${_c:0:5} == "mail." ]
     then
         return
@@ -126,7 +134,7 @@ function get_acme_certificate { ## for container
     if [ -z "$_domlist" ]
     then
         #dbg "$_dom has no domains for letsencrypt authentication."
-        echo "$_dom has no domains for letsencrypt authentication." >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+        echo "$_dom has no domains for letsencrypt authentication." >> $le_log
         return
     fi
     
@@ -150,10 +158,10 @@ function get_acme_certificate { ## for container
 
     ## ACTION!
     msg "letsencrypt create certificate for $_dom"
-    echo "letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist"
+    #echo "letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist"
     echo @$_domlist >> $LOG/letsencrypt.log
-    echo "$NOW attempt to create letsencrypt certificate" >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
-    letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist >> $LOG/letsencrypt.log 2> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+    echo "$NOW attempt to create letsencrypt certificate" >> $le_log
+    letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist >> $LOG/letsencrypt.log 2> $le_log
     
     if [ "$?" == 0 ]
     then
@@ -161,8 +169,8 @@ function get_acme_certificate { ## for container
         return
     else
         err "Letsencrypt certonly failed"
-        cat $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
-        echo "letsencrypt certonly failed for $_dom" >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+        cat $le_log
+        echo "letsencrypt certonly failed for $_dom" >> $le_log
         return
     fi
     
@@ -223,5 +231,6 @@ function regenerate_letsencrypt {
         done
 
 }
+
 
 

@@ -124,6 +124,8 @@ then
 source $install_dir/hs-install/lxc.sh
 source $install_dir/hs-install/lxc-template.sh
 
+source $install_dir/hs-install/lxc-apps.sh
+
 source $install_dir/hs-install/pound.sh
 
 #source $install_dir/hs-install/fail2ban.sh

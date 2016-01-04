@@ -36,7 +36,7 @@ function lxc_start { ## container
 
     local _c=$1
     echo "srvctl lxc_start $NOW" > $SRV/$_c/lxc.log
-    echo "lxc-start -o $SRV/$_c/lxc.log -n $_c -d"
+    #echo "lxc-start -o $SRV/$_c/lxc.log -n $_c -d"
     if lxc-start -o $SRV/$_c/lxc.log -n $_c -d
     then    
         lxc_start_success=true

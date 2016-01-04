@@ -17,11 +17,19 @@ if [ -z "$SUCC" ]
 then
 
  ## check for arguments
- if [ -z "$1" ]
+ if [ -z "$CMD" ]
   then
         printf ${red}"No Command."${NC} 
         echo ''
   else
+        
+        ## check for the default command       
+        if [ "$CMD" == "$(/bin/srvctl ls | grep $CMD)" ]
+        then
+            /bin/srvctl exec $ARGS
+            exit 76
+        fi
+  
         printf ${red}"Invalid Command."${NC} 
         echo ''
  fi

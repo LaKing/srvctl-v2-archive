@@ -53,6 +53,7 @@ then
         if ! $(is_fqdn $C)
         then
             C="$C.$(hostname)"
+            msg "$C will be set as hostname"
         fi
         
         if ! $(is_fqdn $C)
@@ -90,6 +91,7 @@ then
         fi
 
         mkdir -p $SRV/$C/settings
+        mkdir -p $SRV/$C/rootfs/var/log/srvctl
             
         echo $NOW > $SRV/$C/creation-date
 
@@ -107,14 +109,7 @@ then
         IPv4="10.10."$(to_ip $counter)
         rootfs=$SRV/$C/rootfs
 
-        ## make root's key access
-        mkdir -m 600 $rootfs/root/.ssh
-        cat /root/.ssh/id_rsa.pub > $rootfs/root/.ssh/authorized_keys
-        cat /root/.ssh/authorized_keys >> $rootfs/root/.ssh/authorized_keys
-        chmod 600 $rootfs/root/.ssh/authorized_keys
-        
-        ## disable password authentication on ssh
-        sed_file $rootfs/etc/ssh/sshd_config "PasswordAuthentication yes" "PasswordAuthentication no"
+        setup_rootfs_ssh
         
         ## Add IP to hosts file
         regenerate_etc_hosts
@@ -127,20 +122,13 @@ then
 
         ## make the installation smaller        
         rm $rootfs/usr/lib/locale/locale-archive
-        mkdir -p $rootfs/var/srvctl
-        mkdir -p $rootfs/etc/srvctl
-        mkdir -p /var/srvctl-ve/$C
-        
-        ## srvctl 2.x installation dir
-        mkdir -p $rootfs/$install_dir
-
         ln -s /var/srvctl/locale-archive $rootfs/usr/lib/locale/locale-archive 
         
-        rm -rf $rootfs/var/cache/dnf/*
+        ## srvctl 2.x installation dir
+        mkdir -p /var/srvctl-ve/$C
+        
+        setup_srvctl_ve_dirs
 
-        ## add symlink to the srvctl application.
-        ln -sf $install_dir/srvctl.sh $rootfs/bin/srvctl
-        ln -sf $install_dir/srvctl.sh $rootfs/bin/sc
 
 
 ## Postfix
@@ -194,34 +182,15 @@ then
         Listen 8443 
 '
 
-        ## set default index page 
-        index=$rootfs/var/www/html/index.html
-        echo '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;">
-        <img src="logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div>
-        <p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">' > $index
+        setup_index_html
         
         if [ "$C" == "default-host.local" ]
         then            
-            hostname >> $index
+            setup_index_html $HOSTNAME
         else        
-            echo '<b>'$C'</b> @ '$(hostname) >> $index
+            setup_index_html $C
         fi 
         
-        echo '</font><p></body>' >> $index
-        
-        cp /var/www/html/logo.png $rootfs/var/www/html
-        cp /var/www/html/favicon.ico $rootfs/var/www/html
-
-        ## system users ## TODO double check if this is really happens
-        chown -R apache:apache  $rootfs/var/www/html
-        chown -R srv:srv  $rootfs/srv
-
-        ## we regenerate re-link all log files. like in regenerate_logfiles
-        mkdir -p /var/log/httpd
-        rm -rf /var/log/httpd/$C-access_log
-        rm -rf /var/log/httpd/$C-error_log
-        ln -s $rootfs/var/log/httpd/access_log /var/log/httpd/$C-access_log
-        ln -s $rootfs/var/log/httpd/error_log /var/log/httpd/$C-error_log
 
 ## Pound
         msg "Pound configuration"        

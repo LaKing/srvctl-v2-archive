@@ -1,8 +1,6 @@
         ## We do some customisations in our template
         ## template path is different depending on installation, dnf or some src
         
-        
-        
         ## TODO this is redundant. missing on first update-install only.
         lxc_usr_path="/usr"
         lxc_bin_path="/usr/bin"
@@ -88,5 +86,8 @@
         ## paths are different for src or dnf install
         rm -rf /usr/local/var/cache/lxc/fedora
         rm -rf /var/cache/lxc/fedora
+
+## for apps ...
+#SRVCTL_PKG_LIST="fedora-repos mc openssl unzip rsync nfs-utils"
 
 
