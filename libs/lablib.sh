@@ -145,8 +145,8 @@ function pmc { ## package-name ## binary-name
         
         if [ ! -f /usr/bin/$b ]
         then  
-            echo "dnf -y install $@"
-            dnf -y install $@
+            echo "dnf -y install $p"
+            dnf -y install $p
             exif
         fi    
 }

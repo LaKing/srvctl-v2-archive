@@ -14,10 +14,10 @@ then
     dnf -y install git
 fi
 
-if [ -z "$install_dir" ]
-then
-    install_dir=/usr/share/srvctl
-fi
+#if [ -z "$install_dir" ]
+#then
+#    install_dir=/usr/share/srvctl
+#fi
 
 if [ ! -d "$install_dir" ]
 then
