@@ -30,6 +30,7 @@ then
            ntc "Reinstalling ALL services."
         fi
         
+    source $install_dir/hs-install/srvctl.sh
         
     ## make a config file 
     if [ ! -f /etc/srvctl/config ]
@@ -124,7 +125,7 @@ then
 source $install_dir/hs-install/lxc.sh
 source $install_dir/hs-install/lxc-template.sh
 
-source $install_dir/hs-install/lxc-apps.sh
+#source $install_dir/hs-install/lxc-apps.sh
 
 source $install_dir/hs-install/pound.sh
 

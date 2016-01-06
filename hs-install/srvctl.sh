@@ -24,6 +24,7 @@ then
     ## srvctl is not installed, or this function was called outside of srvctl
     echo "Installing to /usr/share/srvctl"
     mkdir -p /usr/share
+    cd /usr/share
     git clone git clone https://github.com/LaKing/srvctl.git
     
 else

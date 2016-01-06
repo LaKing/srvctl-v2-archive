@@ -664,8 +664,9 @@ function wait_for_ve_connection {
         while [  $__n -lt $__llimit ] 
         do
                 sleep 1
-                res=$(ssh $1 exit 2> /dev/null)
-
+                #res=$(ssh $1 exit 2> /dev/null)
+                res=$(lxc-attach -n $1 -- echo CONNECTED 2> /dev/null)
+                
                 if [ ! "$?" -gt 0 ]
                 then
                         __n=$__llimit
