@@ -25,7 +25,7 @@ then
     echo "Installing to /usr/share/srvctl"
     mkdir -p /usr/share
     cd /usr/share
-    git clone git clone https://github.com/LaKing/srvctl.git
+    git clone https://github.com/LaKing/srvctl.git
     
 else
     ## we are called from srvctl
@@ -44,6 +44,26 @@ else
         echo "Update over git"
         cd $install_dir
         git pull
+        if [ "$?" != "0" ]
+        then
+            echo "git pull failed. Attemt to set to https config."
+            bak $install_dir/.git/config
+            set_file $install_dir/.git/config '
+            [core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+[remote "origin"]
+        url = https://github.com/LaKing/srvctl.git
+        fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+        remote = origin
+        merge = refs/heads/master
+'
+        git pull
+        
+        fi
     else
         echo "Can not update over git. Update must be performed manually." 
     fi
