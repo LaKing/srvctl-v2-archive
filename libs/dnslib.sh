@@ -78,7 +78,8 @@ function create_named_zone {
 
 
         
-    serial_file=/var/srvctl-host/named-$today
+    serial_file=/var/srvctl-host/named-serial/$today
+    mkdir -p /var/srvctl-host/named-serial
     serial=0
                 
     if [ ! -f $serial_file ]
@@ -213,7 +214,7 @@ function regenerate_dns {
         
         #echo '## srvctl named slaves'$(hostname) > $named_slave_conf
 
-        for _C in $(lxc_ls)
+        for _C in $(lxc-ls)
         do
                 ## skip local domains
                 if [ "${_C: -6}" == ".local" ]

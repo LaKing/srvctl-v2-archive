@@ -85,43 +85,6 @@ function regenerate_config_files {
             
         done
         
-        ## regenerate recognized containers
-        for _C in $(lxc_ls)
-        do
-
-                if [ ! -f $SRV/$_C/config.counter ]
-                then
-                        err "No config.counter for $_C!"
-                fi
-
-                if [ ! -f $SRV/$_C/config.ipv4 ] || [ ! -f $SRV/$_C/config ] || $all_arg_set
-                then
-                        generate_lxc_config $_C
-                fi
-
-                #if [ ! -f "$SRV/$_C/settings/users" ]
-                #then
-                #        echo '' > $SRV/$_C/settings/users 
-                #fi
-
-                ##_ip=$(cat $SRV/$_C/config.ipv4)        
-                
-            ## Enforce disabled password authentication?
-            if [ ! -z "$(cat $SRV/$_C/rootfs/etc/ssh/sshd_config | grep 'PasswordAuthentication yes')" ]
-            then
-                 ntc "Password authentication is enabled on $_C"
-                        ## make sure password authentication is disabled
-                        #sed_file $SRV/$_C/rootfs/etc/ssh/sshd_config "PasswordAuthentication yes" "PasswordAuthentication no"
-                        #ssh $_C "systemctl restart sshd.service"
-
-            fi
-            
-            ## temporary - regenerate MTA structure
-            
-            #write_ve_postfix_main $_C
-            #ssh $_C 'systemctl restart postfix.service' &
-            
-        done
 }
 
 
@@ -135,7 +98,7 @@ function regenerate_etc_hosts {
         echo '' >> $TMP/hosts
         echo '' > $TMP/relaydomains
 
-        for _C in $(lxc_ls)
+        for _C in $(lxc-ls)
         do
 
                 ip=$(cat $SRV/$_C/config.ipv4)
@@ -150,6 +113,7 @@ function regenerate_etc_hosts {
                                 exit
                         else
                                 ip="10.10."$(to_ip $counter)
+                                echo $ip > $SRV/$_C/config.ipv4
                         fi        
                 fi
 
@@ -171,7 +135,7 @@ function regenerate_etc_hosts {
                                                 then
                                                         err "$_C alias: $A - is the host itself!"
                                                 else
-                                                        dbg "$A is an alias of $_C"
+                                                        #dbg "$A is an alias of $_C"
                                                         echo $ip'                '$A >>  $TMP/hosts
                                                         
                                                         if [ ! -d $SRV/mail.$A ] && [ ! -d $SRV/mail.$_C ] && [ "${A:0:5}" != "mail." ] && [ "${_C:0:5}" != "mail." ]
@@ -189,10 +153,10 @@ function regenerate_etc_hosts {
                 fi
         done ## regenerated etc_hosts
 
-        bak /etc/hosts
+        #bak /etc/hosts
         cat $TMP/hosts > /etc/hosts
 
-        bak /etc/postfix/relaydomains
+        #bak /etc/postfix/relaydomains
         cat $TMP/relaydomains > /etc/postfix/relaydomains
         postmap /etc/postfix/relaydomains
 
@@ -219,32 +183,34 @@ function regenerate_known_hosts {
         
         for _S in $srvctl_hosts
         do
+            echo "## $_S" >> /etc/ssh/ssh_known_hosts
             ssh-keyscan -t rsa -H $(dig $_S +short) >> /etc/ssh/ssh_known_hosts 2>/dev/null
             ssh-keyscan -t rsa -H $_S >> /etc/ssh/ssh_known_hosts 2>/dev/null
             #2>/dev/null
             echo '' >> /etc/ssh/ssh_known_hosts
         done
-         
-        for _C in $(lxc_ls)
+        
+        for _C in $(lxc-ls)
         do
+        
                 if [ ! -f $SRV/$_C/host-key ] || $all_arg_set
                 then
 
                         set_is_running $_C
+
                         if $is_running
                         then
-
                                 scan_host_key $_C
-                        else
-                                 ntc "VE is stopped, could not scan host-key for: "$_C
+                        #else
+                                # ntc "VE is stopped, could not scan host-key for: "$_C
                                 ## host        key is needed for .ssh/known-hosts
                         fi
-                        
-                                        
+                       
                 fi
 
                 if [ -f $SRV/$_C/host-key ]
                 then
+                        echo "## $_C" >> /etc/ssh/ssh_known_hosts
                         cat $SRV/$_C/host-key >> /etc/ssh/ssh_known_hosts
                 fi
 
@@ -308,10 +274,12 @@ function regenerate_users {
         done
 }
 
-function generate_user_configs {
+function generate_user_configs { ## for user
 
-        _u=$1        
-        # msg "Generating user configs for $_u"        
+        ## for each user
+
+        local _u=$1        
+        # msg "Generating user configs for user $_u"        
 
         ## create keypair
         if [ ! -f /home/$_u/.ssh/id_rsa.pub ]
@@ -321,27 +289,31 @@ function generate_user_configs {
         fi
 
         mkdir -p /root/srvctl-users/authorized_keys
-        ## create user submitted authorised_keys
-        if [ ! -f /home/$_u/.ssh/authorized_keys ] || $all_arg_set
+        
+        cat /root/.ssh/authorized_keys > /home/$_u/.ssh/authorized_keys
+        echo '' >> /home/$_u/.ssh/authorized_keys
+        
+        if [ -f  /root/srvctl-users/authorized_keys/$_u ]
         then
-                ntc "Creating authorized_keys for $_u"  
-                cat /root/.ssh/authorized_keys > /home/$_u/.ssh/authorized_keys
-                echo '' >> /home/$_u/.ssh/authorized_keys
-                if [ -f  /root/srvctl-users/authorized_keys/$_u ]
-                then
-                        cat /root/srvctl-users/authorized_keys/$_u >> /home/$_u/.ssh/authorized_keys
-                else
-                        ntc "No authorized ssh-rsa key in /root/srvctl-users/authorized_keys/$_u"
-                fi                
-                chown $_u:$_u /home/$_u/.ssh/authorized_keys
-        fi
+            cat /root/srvctl-users/authorized_keys/$_u >> /home/$_u/.ssh/authorized_keys
+
+        fi                
+        chown $_u:$_u /home/$_u/.ssh/authorized_keys
+
+        
+        ## so we use bind mounts now, and want allow users to access files in their bind-mounted container dirs....
+        usermod -a -G srv $_u
+        usermod -a -G apache $_u
+        usermod -a -G node $_u
+        usermod -a -G git $_u
+        usermod -a -G codepad $_u
 }
 
 
 function regenerate_users_configs {
 
         msg "regenrateing user configs"
-
+        ## for simplicity, we assume all users have a home
         for _U in $(ls /home)
         do
                 generate_user_configs $_U
@@ -367,9 +339,6 @@ function generate_user_structure ## for user, container
                 if [ -f /root/srvctl-users/authorized_keys/$_u ]
                 then
                         cat /root/srvctl-users/authorized_keys/$_u >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
-     #dbg  "Add key for $_u in $_c"
-                        ## else
-                        ## ntc "No public key for user "$_u
                 fi
 
                 ## Share via mount
@@ -404,6 +373,8 @@ function generate_user_structure ## for user, container
 
 function regenerate_users_structure {
 
+        ## for each container
+
         msg "Updateing user-structure."
         
         for _C in $(lxc_ls)
@@ -423,39 +394,32 @@ function regenerate_users_structure {
                 do        
                         generate_user_structure $_U $_C
                 done
-
+        
+        done
+        
+        msg "Generate user access." 
+        for _C in $(lxc_ls)
+        do
+            bind_mount $_C
+            
                 if $all_arg_set
                 then
 
                         nfs_unmount $_C
-                        generate_exports $_C
-                fi                
+                        generate_exports $SRV/$_C/rootfs
+                        nfs_mount $_C
+                        #backup_mount $_U $_C
+                else            
 
-                for _U in $(cat $SRV/$_C/settings/users)
-                do
-
-                        nfs_mount $_U $_C
+                    nfs_mount $_C
+                    bind_mount $_C
+                    
+                    for _U in $(cat $SRV/$_C/settings/users)
+                    do
                         backup_mount $_U $_C
-
-                done
-         done
-
-        msg "generate access keysets." 
-        for U in $(ls /home)
-        do
-                ## users should be accessible by root with ssh
-                cat /root/.ssh/authorized_keys > /home/$_U/.ssh/authorized_keys 2> /dev/null
-
-                ## if the user submitted a public key, add it as well.
-                if [ -f /root/srvctl-users/authorized_keys/$_U ]
-                then
-                        cat /root/srvctl-users/authorized_keys/$_U >> /home/$_U/.ssh/authorized_keys
+                    done
                 fi
-        done
-
-        ## TODO check why ...
-        #systemctl restart firewalld.service
-
+         done
 }
 
 
@@ -516,101 +480,6 @@ function regenerate_counter {
 }
 
 
-## constants for generate_lxc_config
-## we do some expansion on the IP address, and extract the network prefix.
-if [ "$RANGEv6" != "::1" ] 
-then
-    IPv6_RANGE=$(sipcalc -6 $RANGEv6 2>/dev/null | fgrep Expanded | cut -d '-' -f 2 | xargs)
-    IPv6_RANGE_NETBLOCK=$(echo $IPv6_RANGE | cut -d : -f 1):$(echo $IPv6_RANGE | cut -d : -f 2):$(echo $IPv6_RANGE | cut -d : -f 3):$(echo $IPv6_RANGE | cut -d : -f 4)
-fi
-
-function generate_lxc_config {
-
-    ## argument container name.
-    _c=$1
-
-    ntc "Generating lxc configarion files for $_c"
-
-    _counter=$(cat $SRV/$_c/config.counter)
-
-    _mac=$(to_mac $_counter)
-    _ip4=$(to_ip $_counter)        
-
-    ## four digit hex part only
-    _ip6=$(to_ipv6 $_counter)
-
-    if [ "$RANGEv6" != "::1" ] 
-    then
-
-        __IPv6_1='lxc.network.ipv6.gateway=auto'
-        __IPv6_2='lxc.network.ipv6='$IPv6_RANGE_NETBLOCK':0:1010:'$_ip6':1'
-    fi
-
-    ## note currently working only with range 64 ip addresses.
-
-    #lxc.network.type = veth
-    #lxc.network.flags = up
-    #lxc.network.link = inet-br
-    #lxc.network.hwaddr = 00:00:00:aa:'$_mac'
-    #lxc.network.ipv4 = 192.168.'$_ip4'/8
-    #lxc.network.name = inet-'$_counter'
-
-set_file $SRV/$_c/config '## Template for srvctl created fedora container #'$_counter' '$_c' '$NOW'
-
-## system
-lxc.rootfs = '$SRV'/'$_c'/rootfs
-lxc.include = '$lxc_usr_path'/share/lxc/config/fedora.common.conf
-lxc.utsname = '$_c'
-lxc.autodev = 1
-
-## extra mountpoints
-lxc.mount = '$SRV'/'$_c'/fstab
-
-## networking IPv4
-lxc.network.type = veth
-lxc.network.flags = up
-lxc.network.link = srv-net
-lxc.network.hwaddr = 00:00:10:10:'$_mac'
-lxc.network.ipv4 = 10.10.'$_ip4'/8
-lxc.network.name = srv-'$_counter'
-lxc.network.ipv4.gateway = auto
-'
-
-    ## IPv6
-    ## four digit hex part only
-    #_ip6=$(to_ipv6 $_counter)
-
-    #if [ "$RANGEv6" != "::1" ] 
-    #then
-    #    echo '## networking IPv6' >> $SRV/$_c/config
-    #    echo 'lxc.network.ipv6.gateway = auto' >> $SRV/$_c/config
-    #    echo 'lxc.network.ipv6='$IPv6_RANGE_NETBLOCK':0:1010:'$_ip6':1' >> $SRV/$_c/config
-    #fi
-
-
-
-    ## this is there since srvctl 1.x
-    echo "/var/srvctl $SRV/$_c/rootfs/var/srvctl none ro,bind 0 0" > $SRV/$_c/fstab
-    ## in srvctl 2.x we add the folowwing
-    echo "$install_dir $SRV/$_c/rootfs/$install_dir none ro,bind 0 0" >> $SRV/$_c/fstab
-    
-    
-    if [ -f $SRV/$_c/fstab.local ]
-    then
-        cat $SRV/$_c/fstab.local >> $SRV/$_c/fstab
-    fi
-
-
-set_file $SRV/$_c/rootfs/etc/resolv.conf "# Generated by srvctl
-search local
-nameserver 10.10.0.1
-"
-
-    ## err $_C? .. $_c !
-    echo "10.10."$_ip4 > $SRV/$_c/config.ipv4
-
-}
-
 function set_file_limits {
 
     ## You can increase the amount of open files and thus the amount of client connections by using "ulimit -n ". 
@@ -653,19 +522,26 @@ function wait_for_ve_online {
 }
 
 
-function wait_for_ve_connection {
-
+function wait_for_ve_connection { #on container
+        msg "Connection-check"
         ## wait for the container to get up check via ssh connect
-        __llimit=100
-        __n=0
+        local __llimit=100
+        local __n=0
 
         echo -n '..'
+        local res=''
 
         while [  $__n -lt $__llimit ] 
         do
+                set_is_running
+                
+                if ! $is_running
+                then
+                    return
+                fi
+
                 sleep 1
-                #res=$(ssh $1 exit 2> /dev/null)
-                res=$(lxc-attach -n $1 -- echo CONNECTED 2> /dev/null)
+                res=$(lxc-attach -n $1 -- /bin/echo OK 2> /dev/null)
                 
                 if [ ! "$?" -gt 0 ]
                 then
@@ -679,7 +555,8 @@ function wait_for_ve_connection {
         done
 
 
-        echo -n " connected "
+        echo -n " $res "
+        echo ''
 }
 
 

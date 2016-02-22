@@ -148,6 +148,10 @@ function update_password_hash {
                 password=$(cat /home/$_u/.password)
                 ## create password hashes
                 echo -n $password | openssl dgst -sha512 | cut -d ' ' -f 2 > /home/$_u/.password.sha512
+                
+                
+        chown $_u:$_u /home/$_u/.password.sha512
+        chmod 400 /home/$_u/.password.sha512
         #else
         #        err "/home/$_u/.password - not found"
         fi
@@ -176,6 +180,8 @@ function update_password {
         ## save
         echo $password > /home/$_u/.password
 
+        chown $_u:$_u /home/$_u/.password
+        chmod 400 /home/$_u/.password
         update_password_hash $_u
 
 }
@@ -187,7 +193,6 @@ function add_user {
     adduser $U 2> /dev/null
     update_password $U
     create_keypair $U
-    chown -R $U:$U /home/$U 2> /dev/null
 }
 
 function  get_randomstr {

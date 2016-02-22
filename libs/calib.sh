@@ -31,6 +31,7 @@ function create_certificate { ## for domain
             return
         fi
         
+        mkdir -p $cert_path
 
         ssl_days=365
         
@@ -148,17 +149,17 @@ function create_certificate { ## for domain
         #### create certificate      
 
         ## Generate a Private Key
-        openssl genrsa -des3 -passout pass:$ssl_password -out $ssl_key 2048
+        openssl genrsa -des3 -passout pass:$ssl_password -out $ssl_key 2048 2> /dev/null
 
         ## Generate a CSR (Certificate Signing Request)
-        openssl req -new -passin pass:$ssl_password -passout pass:$ssl_password -key $ssl_key -out $ssl_csr -days $ssl_days -config $ssl_config
+        openssl req -new -passin pass:$ssl_password -passout pass:$ssl_password -key $ssl_key -out $ssl_csr -days $ssl_days -config $ssl_config 2> /dev/null
         
         ## Remove Passphrase from Key
         cp $ssl_key $ssl_org
-        openssl rsa -passin pass:$ssl_password -in $ssl_org -out $ssl_key        
+        openssl rsa -passin pass:$ssl_password -in $ssl_org -out $ssl_key 2> /dev/null       
         
         ## Self-Sign Certificate
-        openssl x509 -req -days $ssl_days -passin pass:$ssl_password -extensions v3_req -extfile $ssl_extfile -in $ssl_csr -signkey $ssl_key -out $ssl_crt
+        openssl x509 -req -days $ssl_days -passin pass:$ssl_password -extensions v3_req -extfile $ssl_extfile -in $ssl_csr -signkey $ssl_key -out $ssl_crt 2> /dev/null
 
         ## create a certificate chainfile in pem format
         cat $ssl_key >  $ssl_pem

@@ -1,13 +1,18 @@
 function setup_rootfs_ssh { ## needs rootfs
 
+    if [ -z "$rootfs" ]
+    then
+        err "No rootfs for setup_rootfs_ssh "
+    else
         ## make root's key access
-        mkdir -m 600 $rootfs/root/.ssh
+        mkdir -p -m 600 $rootfs/root/.ssh
         cat /root/.ssh/id_rsa.pub > $rootfs/root/.ssh/authorized_keys
         cat /root/.ssh/authorized_keys >> $rootfs/root/.ssh/authorized_keys
         chmod 600 $rootfs/root/.ssh/authorized_keys
         
         ## disable password authentication on ssh
         sed_file $rootfs/etc/ssh/sshd_config "PasswordAuthentication yes" "PasswordAuthentication no"
+    fi
 }
 
 function setup_srvctl_ve_dirs { ## needs rootfs
@@ -17,10 +22,6 @@ function setup_srvctl_ve_dirs { ## needs rootfs
         mkdir -p $rootfs/etc/srvctl
         mkdir -p $rootfs/$install_dir
         rm -rf $rootfs/var/cache/dnf/*
-
-        ## add symlink to the srvctl application.
-        ln -sf $install_dir/srvctl.sh $rootfs/bin/srvctl
-        ln -sf $install_dir/srvctl.sh $rootfs/bin/sc
 
 }
 

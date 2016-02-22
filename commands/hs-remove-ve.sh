@@ -12,9 +12,9 @@ then
         argument C
         sudomize
         authorize
-
-        nfs_unmount $C
         
+        bind_unmount $C
+        nfs_unmount $C
         backup_unmount $C
 
         lxc-stop -k -n $ARG
@@ -42,6 +42,16 @@ then
                                 if [ -z "$(ls /home/$_U/$C/mnt 2> /dev/null)" ]
                                 then
                                         rm -rf /home/$_U/$C/mnt
+                                fi
+                                
+                                if [ -z "$(ls /home/$_U/$C/nfs 2> /dev/null)" ]
+                                then
+                                        rm -rf /home/$_U/$C/nfs
+                                fi
+                                
+                                if [ -z "$(ls /home/$_U/$C/bind 2> /dev/null)" ]
+                                then
+                                        rm -rf /home/$_U/$C/bind
                                 fi
 
                                 ## remove user container folder

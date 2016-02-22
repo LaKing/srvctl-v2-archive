@@ -4,15 +4,15 @@
 
 function set_is_running {
         ## argument container
-        _c=$C
+        local _c=$C
 
         if [ ! -z "$1" ]
         then
-                _c=$1
+              local _c=$1
         fi        
 
-        info=$(lxc-info -s -n $_c)
-        state=${info:16}
+        local info=$(lxc-info -s -n $_c)
+        local state=${info:16}
         if [ "$state" == "RUNNING" ]
         then
           is_running=true

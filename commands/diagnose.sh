@@ -150,6 +150,10 @@ then
         
   if $onHS && $isROOT
     then    
+        msg "Containers"
+        lxc-ls --fancy
+    
+    
         zone=$(firewall-cmd --get-default-zone)
         services=" $(firewall-cmd --zone=$zone --list-services) "
 

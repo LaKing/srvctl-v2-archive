@@ -34,7 +34,7 @@ then
                 say_name $C
                 nfs_unmount $C
                 #ssh $C shutdown -P now
-                lxc-attach -n $C poweroff
+                lxc-attach -n $C -- /sbin/shutdown -P now
         else 
                 get_state
                 say_name $C
@@ -45,9 +45,7 @@ then
         then
                 echo $NOW > $SRV/$C/settings/disabled
         fi
-        echo ''     
-        
-        regenerate_known_hosts           
+        echo ''             
 
 ok
 fi ## stop
@@ -72,7 +70,7 @@ then
                         printf ${yellow}"%-10s"${NC} "SHUTDOWN"
                         say_name $C
                         #ssh $C shutdown -P now &
-                        lxc-attach -n $C poweroff
+                        lxc-attach -n $C -- /sbin/shutdown -P now
                 else 
                         get_state
                         say_name $C
@@ -102,7 +100,7 @@ then
         
         done        
     msg "... done"
-    regenerate_known_hosts
+
 ok
 fi ## stop-all
 

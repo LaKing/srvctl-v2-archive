@@ -45,8 +45,6 @@ then
                                 rm -rf lxc
                         fi
 
-                        dbg "LXC_VERSION: $LXC_VERSION"
-
                         ## use a version-release
                         if [ ! -f "/root/lxc-$LXC_VERSION.tar.gz" ] 
                         then 

@@ -1,18 +1,35 @@
-#!/bin/bash
-
 if $onHS
 then ## no identation.
 
-
 ## add new host
-hint "add VE [USERNAME(s)]" "Add new LXC container. use the dev. subdomain prefix to create a developer container. "
-if [ "$CMD" == "add" ] && $onHS
+hint "add-fedora VE [USERNAME(s)]" "Add new LXC OS-container."
+hint "add-ubuntu VE [USERNAME(s)]" "Add new LXC ubuntu-cloud OS container."
+hint "add-apache VE [USERNAME(s)]" "Add new LXC application container running apache with a readonly filesystem."
+
+if [ "$CMD" == "add" ] || [ "$CMD" == "add-fedora" ] || [ "$CMD" == "add-apache" ] || [ "$CMD" == "add-ubuntu" ]
 then
 
-        argument C 
-        isDEV=false
-        isMX=false
+    ##  TODO add srvctl services
 
+        ## authorize
+        sudomize
+
+        argument C 
+        local isDEV=false
+        local isMX=false
+        
+        local ctype="fedora"
+        
+        if [ "$CMD" == "add-apache" ]
+        then
+            ctype="apache"
+        fi
+        
+        if [ "$CMD" == "add-ubuntu" ]
+        then
+            ctype="ubuntu"
+        fi
+        
         ## TODO verify if a domain alias already exists
 
         ## if thi sis a dev site, use the domain without the dev. prefix
@@ -64,36 +81,71 @@ then
 
         if [ -z "$(ip addr show srv-net 2> /dev/null | grep UP)" ]
         then
-            err "srv-net is not present. ... run update-install then reboot?"
+            err "srv-net is not present. ... run 'srvctl update-install' then reboot?"
             exit 12
         fi
       
-        ## authorize
-        sudomize
-        msg "Authorized."
+        if ! [ -d /var/srvctl-rootfs/$ctype/root ]
+        then
+            err "$ctype has no rootfs directory."
+            exit 13
+        fi
+      
+
 
         ## increase the counter
         counter=$(($(cat /var/srvctl-host/counter)+1))
         echo $counter >  /var/srvctl-host/counter
 
-        log "Create container $C #$counter"
-        ## templates are usually in /usr/local/share/lxc/templates, lxc-fedora-srv has to be installed!
+        log "Create $ctype container #$counter as $C"
         
-        echo "lxc-create -n $C -t fedora-srv"
-        lxc-create -n $C -t fedora-srv
-        
-        if [ "$?" == "0" ] && [ -f $SRV/$C/rootfs/etc/hostname ]
-        then
-              log "Container $C created."
-        else
-              err "Container not created!"
-              exit 30
-        fi
-
+        ## instead of using the lxc-templates, we brew our own beer 
+     
         mkdir -p $SRV/$C/settings
-        mkdir -p $SRV/$C/rootfs/var/log/srvctl
-            
+        echo '' > $SRV/$C/settings/users
+        echo $ctype > $SRV/$C/ctype
         echo $NOW > $SRV/$C/creation-date
+        
+        rootfs=$SRV/$C/rootfs
+        
+        ## Create rootfs
+        if [ $ctype == fedora ] || [ $ctype == ubuntu ]
+        then
+            cp -R /var/srvctl-rootfs/$ctype $rootfs
+         
+            if [ "$?" == "0" ] #&& [ -f $SRV/$C/rootfs/etc/hostname ]
+            then
+              log "Container $C rootfs created."
+            else
+              err "Container rootfs not created!"
+              exit 31
+            fi
+            
+            mkdir -p $SRV/$C/rootfs/var/log/srvctl
+
+            ## set hostname
+            echo $C > $rootfs/etc/hostname
+
+            setup_rootfs_ssh        
+        fi
+        
+        if [ $ctype == apache ]
+        then
+            mnt_rorootfs
+            
+            mkdir -p $SRV/$C/rootfs/var/www/html
+            chown -R apache:apache $SRV/$C/rootfs/var/www/html
+            
+            mkdir -p $SRV/$C/rootfs/var/log/httpd
+            mkdir -p $SRV/$C/rootfs/etc
+            
+            #cp -R /var/srvctl-rorootfs/apache/etc $SRV/$C/rootfs
+            cp -R /var/srvctl-rorootfs/apache/root $SRV/$C/rootfs
+            cp -R /var/srvctl-rorootfs/apache/run $SRV/$C/rootfs
+        fi
+        
+        
+
 
         ## mark as dev site
         if $isDEV
@@ -101,36 +153,49 @@ then
                 echo "true" > $SRV/$C/settings/pound-enable-dev
         fi
 
-        #mkdir -p $SRV/$C 
         echo $counter > $SRV/$C/config.counter
 
         generate_lxc_config $C
 
         IPv4="10.10."$(to_ip $counter)
-        rootfs=$SRV/$C/rootfs
-
-        setup_rootfs_ssh
         
+   
         ## Add IP to hosts file
         regenerate_etc_hosts
 
-        ## set (fix) hostname
-        echo $C > $rootfs/etc/hostname
+## USERs
+        
+        if $isSUDO
+        then
+            msg "Add user $SC_USER" 
+            echo "$SC_USER" >> $SRV/$C/settings/users
+            U=$SC_USER
+            
+            add_user $U
+            generate_user_configs $U
+            generate_user_structure $U $C
+        fi
 
-        ## Container should be in the same timezone as the host.
-        rsync -a /etc/localtime $rootfs/etc
-
-        ## make the installation smaller        
-        rm $rootfs/usr/lib/locale/locale-archive
-        ln -s /var/srvctl/locale-archive $rootfs/usr/lib/locale/locale-archive 
+        ## add users from argument
+        for U in $OPAS3
+        do
+            msg "Add users $U"                
+            echo "$U" >> $SRV/$C/settings/users
+            add_user $U
+            generate_user_configs $U
+            generate_user_structure $U $C
+        done        
+        
+        mkdir -p $BACKUP_PATH/$C
         
         ## srvctl 2.x installation dir
         mkdir -p /var/srvctl-ve/$C
-        
         setup_srvctl_ve_dirs
-
-
-
+     
+    if [ $ctype == fedora ]
+    then
+   
+        
 ## Postfix
 ## Sendmail
         msg "Setting up the Postfix mailing system."
@@ -154,35 +219,14 @@ then
         ln -s '/usr/lib/systemd/system/postfix.service' $rootfs'/etc/systemd/system/multi-user.target.wants/postfix.service'
 
         regenerate_opendkim
+    
+    fi
         
-## Apache
-
-        if $isMX
-        then
-            msg "$C will run no webserver by default."
-        else
-            msg "Setting up the Apache webserver"
-            ln -s '/usr/lib/systemd/system/httpd.service' $rootfs'/etc/systemd/system/multi-user.target.wants/httpd.service'
-        fi
+        ## Apache
         
         ## use this patch for better logging of IP addresses
-        
-        set_file $SRV/$C/rootfs/etc/httpd/conf.d/pound.conf '## srvctl
-        <IfModule log_config_module>
 
-            ### Custom log redefinition
-            ## - with extra host header
-            # LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %h %D \"%{Host}i\"" combined
-            ## - As close as possible
-            LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
-
-        </IfModule>
-
-        Listen 8080
-        Listen 8443 
-'
-
-        setup_index_html
+        setup_index_html $C
         
         if [ "$C" == "default-host.local" ]
         then            
@@ -199,9 +243,12 @@ then
         cert_path=/var/srvctl-host/selfsigned-certificates/$C
         create_certificate $C
         
-        ## add selfsigned certificate to container - for https reverse proxying
-        cat $ssl_key > $rootfs/etc/pki/tls/private/localhost.key
-        cat $ssl_crt > $rootfs/etc/pki/tls/certs/localhost.crt
+        if [ $ctype == fedora ]
+        then
+            ## add a new, unique selfsigned certificate to container - for https reverse proxying
+            cat $ssl_key > $rootfs/etc/pki/tls/private/localhost.key
+            cat $ssl_crt > $rootfs/etc/pki/tls/certs/localhost.crt
+        fi
         
         ## create letsencrypt certificate
         get_acme_certificate $C
@@ -220,91 +267,45 @@ then
 
 ## Node / npm
         ## npm root -g => /usr/lib/node_modules
-        echo 'export NODE_PATH="/usr/lib/node_modules"' > /etc/profile.d/npm.sh
-        
+        #echo 'export NODE_PATH="/usr/lib/node_modules"' > /etc/profile.d/npm.sh
 
-## what user?
-        echo '' > $SRV/$C/settings/users
-        
-        if $isSUDO
-        then
-            msg "Add user $SC_USER" 
-            echo "$SC_USER" >> $SRV/$C/settings/users
-            U=$SC_USER
-            add_user $U
-            generate_user_configs $U
-            generate_user_structure $U $C
-        fi
-
-        ## add users from argument
-        for U in $OPAS3
-        do
-            msg "Add user $U"                
-            echo "$U" >> $SRV/$C/settings/users
-            add_user $U
-            generate_user_configs $U
-            generate_user_structure $U $C
-        done        
-        
-        mkdir -p $BACKUP_PATH/$C
+        bind_mount $C
 
 
-## NFS
-        generate_exports $C        
-
-        ## enable nfs
-        ln -s '/usr/lib/systemd/system/nfs.service' $rootfs'/etc/systemd/system/multi-user.target.wants/nfs.service'
-
-
-##         #### START #### 
+#### START #### 
+   
+    if [ $ctype == fedora ] || [ $ctype == ubuntu ]
+    then
+ 
 
         log "Starting container $C - $IPv4 $U" 
 
         lxc_start $C
+        echo ''
         
-    if $lxc_start_success
-    then
-
-        msg "Post installation, ..."
-
-## add system users 
-
-        ssh $C "groupadd -r -g 101 srv"
-        ssh $C "useradd -r -u 101 -g 101 -s /sbin/nologin -d /srv srv"
-
-        ssh $C "groupadd -r -g 102 git"
-        ssh $C "useradd -r -u 102 -g 102 -s /sbin/nologin -d /var/git git"
-
-        ssh $C "groupadd -r -g 103 node"
-        ssh $C "useradd -r -u 103 -g 103 -s /sbin/nologin -d /srv node"
-
-        ssh $C "groupadd -r -g 104 codepad"
-        ssh $C "useradd -r -u 104 -g 104 -s /sbin/nologin -d /srv/etherpad-lite codepad"
-
-## Dovecot - due to an error in dnf, it has to be installed in the container after it has started.
-## Fedora 20 and fedora 21 as well.
-## TODO bugcheck - does dovecot hang on postinit script?
- 
-        ssh $C "postalias /etc/aliases"
-        ssh $C "dnf -y install dovecot"
-        
-        ## TODO add dovecot, apache, stc ,...
-        ssh $C "srvctl add dovecot"
-
-
-        
-        ## if this is a dev. site install codepad
-        if $isDEV
+        if $lxc_start_success
         then
+        
+            ## if this is a dev. site install codepad
+            if $isDEV
+            then
                 msg "Setup codepad"
                 ssh $C "srvctl setup-codepad"
-        fi
-
-
+            fi
         
-
-        msg "$C ready."
+            msg "$C ready."
+        fi
     fi
+    
+    
+    if [ $ctype == apache ]
+    then
+        ln -s $SRV/$C/$ctype.service /etc/systemd/system/multi-user.target.wants/$C.$ctype.service
+        systemctl daemon-reload
+        systemctl start $C.$ctype.service
+        msg "apache application-container ready."
+    fi
+
 
 ok
 fi ## srvctl add
@@ -312,19 +313,16 @@ fi ## srvctl add
 fi
 
 man '
-    This will add a new LXC container, also called virtual enviroment or VE - to a srvctl host. Each container is unique, and runs a complete OS.
+    This will add a new LXC OS container, also called virtual enviroment or VE - to a srvctl host. Each container is unique, and runs a complete OS.
     The name of the VE has to be a domain name, and might be a .local domain or a subdomain. Developer domains can be prefixed with dev. 
     An optional username can be given to define the owner of the VE. Multiple users can have access to the VE, defined in the containers users file.
     Each container will be configured with SSH keypairs, all authorized users can have root-access to a VE from the user account of the srvctl host.
     Logged in users can access files of the containers with ssh - usually in a two step hop, or directly with NFS folders mounted to their home/VE directories.
     The srvctl-client script can be used to sync, backup, upload files. Proper SSH port forwarding allows SFTP access directly from remote user computers.
-    Containers will be configured as web and mail servers. The srvctl command will be available on every VE, and can be used to configure further.
+    OS Containers will be configured as web and mail servers. The srvctl command will be available on every VE, and can be used to configure further.
     Prefixes make sense, mail. or dev. will create MX or development servers.
     
 '
-
-
-
 
 
 

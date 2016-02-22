@@ -1,3 +1,5 @@
+## this file is deprecated. Kept only for reference.
+
         ## We do some customisations in our template
         ## template path is different depending on installation, dnf or some src
         

@@ -25,7 +25,7 @@ then
                 say_name $C       
         fi
         echo ''
-        regenerate_known_hosts
+
 ok
 fi
 
@@ -56,7 +56,6 @@ then
                 fi
         echo ''
         done
-        regenerate_known_hosts
 
 ok
 fi

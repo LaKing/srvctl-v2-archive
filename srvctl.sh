@@ -7,11 +7,18 @@
 # LaKing@D250.hu
 # 
 ## Source URL
-## URL="https://raw.githubusercontent.com/LaKing/Fedora-scripts/master/srvctl"
+## URL="https://raw.githubusercontent.com/LaKing/Fedora-scripts/master/srvctl"                
 
-install_bin=$(realpath "$BASH_SOURCE")
-install_dir=${install_bin:0:-10}
-install_ver=$(cat $install_dir/version)
+if [ ! -d /usr/share/srvctl ]
+then
+    install_bin=$(realpath "$BASH_SOURCE")
+    install_dir=${install_bin:0:-10}
+else
+    install_bin=/usr/share/srvctl/srvctl.sh
+    install_dir=/usr/share/srvctl
+fi
+
+    install_ver=$(cat $install_dir/version)
 
 source $install_dir/init.sh
 source $install_dir/authorize.sh

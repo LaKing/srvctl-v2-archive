@@ -22,7 +22,7 @@ then
                 nfs_unmount $C
                   ssh $C reboot 2> /dev/null              
                 wait_for_ve_online $C
-                  nfs_share $C
+                  nfs_mount $C
         else 
                 get_state
                 say_name $C        
@@ -58,7 +58,7 @@ then
                         nfs_unmount $C
                         ssh $C reboot 2> /dev/null      
                         wait_for_ve_connection $C
-                        nfs_share $C
+                        nfs_mount $C
                 else 
                 get_state
                 say_name $C

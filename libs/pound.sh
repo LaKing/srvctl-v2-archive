@@ -199,7 +199,7 @@ function regenerate_pound_files {
   done
   
   ## $_C is the local version of $C
-  for _C in $(lxc_ls)
+  for _C in $(lxc-ls)
   do
     
     if [ ${_C:0:5} == "mail." ]
@@ -621,6 +621,7 @@ function regenerate_pound_files {
   fi
   
 }
+
 
 
 

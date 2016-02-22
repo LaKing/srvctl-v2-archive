@@ -4,6 +4,9 @@ function regenerate_sudo_configs {
     echo "## srvctl-regenerated sudo file" > $sudoconf
     echo '' >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-fedora *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-ubuntu *" >> $sudoconf
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-apache *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh exec *" >> $sudoconf   
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh exec-all *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh ssh-all *" >> $sudoconf
