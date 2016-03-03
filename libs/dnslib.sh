@@ -217,7 +217,7 @@ function regenerate_dns {
         for _C in $(lxc-ls)
         do
                 ## skip local domains
-                if [ "${_C: -6}" == ".local" ]
+                if [ "${_C: -6}" == "-devel" ] || [ "${_C: -6}" == ".devel" ] || [ "${_C: -6}" == "-local" ] || [ "${_C: -6}" == ".local" ]
                 then
                     continue
                 fi
@@ -404,8 +404,10 @@ function get_dns_servers { ## argument domain
     dns_provider=''
     
     ## dont apply for local containers, aliases, and mailservers
-    if [[ $_c != *.local ]] && [ -d $SRV/$_c ] && [ "${_c:0:5}" != mail ] 
+    if [ "${_c: -6}" == "-devel" ] || [ "${_c: -6}" == ".devel" ] || [ "${_c: -6}" == "-local" ] || [ "${_c: -6}" == ".local" ] || [ ! -d $SRV/$_c ] || [ "${_c:0:5}" == mail ] 
     then
+        echo 0 > /dev/null
+    else
         get_dns_authority
         
         if [[ "$dns_authority" != *.* ]]

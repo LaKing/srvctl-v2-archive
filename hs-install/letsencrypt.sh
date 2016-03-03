@@ -11,9 +11,6 @@ authenticator = webroot
 webroot-path = /var/acme
 '
 
-## make a server for authentication
-install_nodejs_latest
-
 mkdir -p /var/acme
 
 set_file /lib/systemd/system/acme-server.service '## srvctl generated

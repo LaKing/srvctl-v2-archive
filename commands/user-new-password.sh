@@ -26,15 +26,18 @@ then
                 if $onVE
                 then 
                         ## TODO check this
-                        echo "This is the mailing system at "$HOSTNAME", your password has been updated." | mail -s "Notice" $U
+                        echo "This is the mailing system at "$(hostname)", your password has been updated." | mail -s "Notice" $U
                 fi
         fi
 ok
 fi
 
 man '
-    Set a new user password, and regenerate user password hashes.
+    Set a new user password, and regenerate user password hashes - if the user has no ~/.password.sha512 given.
+    Pasword hashes are exposed to the containers so applications can authenticate against them.
 '
 ## TODO, regenerate/update container configs
 
 fi
+
+

@@ -139,7 +139,7 @@ function get_logs_usage {
 
 function get_dig_A {
     
-        if [ ${C: -6} == ".local" ]
+        if [ "${C: -6}" == "-devel" ] || [ "${C: -6}" == ".devel" ] || [ "${C: -6}" == ".local" ] || [ "${C: -6}" == ".local" ]
         then
             printf ${green}"%-3s"${NC} "--"
             return
@@ -173,7 +173,7 @@ function get_dig_A {
 
 function get_dig_MX {
         
-        if [ ${C: -6} == ".local" ]
+        if [ "${C: -6}" == "-devel" ] || [ "${C: -6}" == ".devel" ] || [ "${C: -6}" == ".local" ] || [ "${C: -6}" == ".local" ]
         then
             printf ${green}"%-3s"${NC} "--"
             return
@@ -248,6 +248,7 @@ function get_http_response {
         
         printf ${resp_color}"%-4s"${NC} "$resp"
 }
+
 
 
 

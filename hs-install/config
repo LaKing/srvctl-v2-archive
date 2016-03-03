@@ -16,10 +16,13 @@ TMP=/temp
 SRV=/srv
 
 ## Company codename - use your own
-CMP=Unknown
+#CMP=Unknown
 
 ## Company domain name - use your own
-CDN=Unknown
+#CDN=Unknown
+
+## Server domain name - Access servers under a dmain with his own certificates.
+#SDN=Unknown
 
 ## IPv6 address of the host
 # HOSTIPv6=::1

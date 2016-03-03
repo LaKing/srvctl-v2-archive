@@ -9,8 +9,6 @@ function regenerate_var_ve {
         msg "Regenerate VE shares"
         
         mkdir -p /var/srvctl-ve
-        chmod -R 700 /var/srvctl-ve
-        
         
         for _C in $(lxc_ls)
         do
@@ -25,20 +23,35 @@ function regenerate_var_ve {
             cp -ru $SRV/$_C/settings $dest
             
             rm -rf $dest/users/*
+            
+            local _root_username="root@$HOSTNAME"
+            
+            if [ -f /root/.username ] 
+            then
+                _root_username="$(cat /root/.username)"  
+            fi           
+            
+            if [ -f /root/.password.sha512 ] 
+            then
+                mkdir -p $dest/users/$_root_username
+                cat /root/.password.sha512 > $dest/users/$_root_username/.hash
+            fi
+            
             for _U in $(cat $SRV/$_C/settings/users)
             do
                 mkdir -p $dest/users/$_U
-                mkdir -p /var/srvctl-host/users/$_U
-                chmod -R 700 /var/srvctl-host/users/$_U
                 
-                if [ ! -f /var/srvctl-host/users/$_U/password-auto ]
+                if [ ! -f /var/srvctl-host/users/$_U/.password.sha512 ]
                 then
-                    get_password
-                    echo $password > /var/srvctl-host/users/$_U/password-auto
+                    update_password
                 fi
+                
+                cat /var/srvctl-host/users/$_U/.password.sha512 > $dest/users/$_U/.hash
                 
             done 
         done
+        
+        chmod -R 555 /var/srvctl-ve
 }
 
 
@@ -51,11 +64,6 @@ function regenerate_config_files {
             then
               continue
             fi
-            
-            #if ! $(is_fqdn $_C)
-            #then
-            #  continue
-            #fi
             
             if [ -f "$SRV/$_C" ]
             then

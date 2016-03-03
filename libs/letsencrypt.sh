@@ -57,7 +57,8 @@ function get_acme_certificate { ## for container
         return
     fi
     
-    if [[ $_c == *.local ]] 
+    ## skip local domains
+    if [ "${_c: -6}" == "-devel" ] || [ "${_c: -6}" == ".devel" ] || [ "${_c: -6}" == "-local" ] || [ "${_c: -6}" == ".local" ]
     then 
         return
     fi

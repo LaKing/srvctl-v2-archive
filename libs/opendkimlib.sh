@@ -29,7 +29,7 @@ function regenerate_opendkim {
          fi
 
          
-         if [[ $_c != *.local ]]
+         if [ "${_c: -6}" == "-devel" ] || [ "${_c: -6}" == ".devel" ] || [ "${_c: -6}" == "-local" ] || [ "${_c: -6}" == ".local" ]
          then 
              echo $_c >> $_var/TrustedHosts
              
@@ -66,4 +66,5 @@ function regenerate_opendkim {
         systemctl status opendkim.service
     fi
 }
+
 

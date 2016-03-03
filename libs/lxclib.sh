@@ -59,7 +59,7 @@ function generate_lxc_config {
     #fi
 
 
-    if [ $_ctype == fedora ] || [ $_ctype == ubuntu ]
+    if [ $_ctype == fedora ] || [ $_ctype == ubuntu ] || [ $_ctype == codepad ]
     then
     
     _rootfs_path=$SRV/$_c/rootfs
@@ -90,6 +90,9 @@ lxc.network.ipv4.gateway = auto
     ## share srvctl
     echo "$install_dir $_rootfs_path/$install_dir none ro,bind 0 0" >> $SRV/$_c/fstab
     
+    mkdir -p $_rootfs_path/var/srvctl-ve/$_c
+    echo "/var/srvctl-ve/$_c $_rootfs_path/var/srvctl-ve/$_c none ro,bind 0 0" >> $SRV/$_c/fstab
+        
         if [ -f $SRV/$_c/fstab.local ]
         then
             ## for custom mounts

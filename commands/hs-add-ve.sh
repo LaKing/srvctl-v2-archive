@@ -6,7 +6,7 @@ hint "add-fedora VE [USERNAME(s)]" "Add new LXC OS-container."
 hint "add-ubuntu VE [USERNAME(s)]" "Add new LXC ubuntu-cloud OS container."
 hint "add-apache VE [USERNAME(s)]" "Add new LXC application container running apache with a readonly filesystem."
 
-if [ "$CMD" == "add" ] || [ "$CMD" == "add-fedora" ] || [ "$CMD" == "add-apache" ] || [ "$CMD" == "add-ubuntu" ]
+if [ "$CMD" == "add" ] || [ "$CMD" == "add-fedora" ] || [ "$CMD" == "add-apache" ] || [ "$CMD" == "add-codepad" ] || [ "$CMD" == "add-ubuntu" ]
 then
 
     ##  TODO add srvctl services
@@ -28,6 +28,11 @@ then
         if [ "$CMD" == "add-ubuntu" ]
         then
             ctype="ubuntu"
+        fi
+        
+        if [ "$CMD" == "add-codepad" ]
+        then
+            ctype="codepad"
         fi
         
         ## TODO verify if a domain alias already exists
@@ -67,9 +72,14 @@ then
         done
         
         
+    if [ "${C: -6}" == ".devel" ] || [ "${C: -6}" == "-devel" ] || [ "${C: -6}" == "-local" ] || [ "${C: -6}" == ".local" ]
+    then
+        msg "Local container."
+    else
+        
         if ! $(is_fqdn $C)
         then
-            C="$C.$(hostname)"
+            C="$C.$SDN"
             msg "$C will be set as hostname"
         fi
         
@@ -78,6 +88,9 @@ then
           err "$C failed the domain regexp check. Exiting."
           exit 10
         fi
+        
+    fi
+        
 
         if [ -z "$(ip addr show srv-net 2> /dev/null | grep UP)" ]
         then
@@ -109,9 +122,9 @@ then
         rootfs=$SRV/$C/rootfs
         
         ## Create rootfs
-        if [ $ctype == fedora ] || [ $ctype == ubuntu ]
+        if [ $ctype == fedora ] || [ $ctype == ubuntu ] || [ $ctype == codepad ]
         then
-            cp -R /var/srvctl-rootfs/$ctype $rootfs
+            cp -R -p /var/srvctl-rootfs/$ctype $rootfs
          
             if [ "$?" == "0" ] #&& [ -f $SRV/$C/rootfs/etc/hostname ]
             then
@@ -144,8 +157,12 @@ then
             cp -R /var/srvctl-rorootfs/apache/run $SRV/$C/rootfs
         fi
         
-        
-
+        if [ $ctype == codepad ]
+        then
+            date +%s | sha256sum | base64 | head -c 64 > $SRV/$C/rootfs/etc/codepad/SESSIONKEY.txt
+            date +%s | sha256sum | base64 | head -c 64 > $SRV/$C/rootfs/etc/codepad/APIKEY.txt
+            ln -s /var/srvctl-ve/$C/users $SRV/$C/rootfs/var/codepad/users
+        fi
 
         ## mark as dev site
         if $isDEV
@@ -191,6 +208,9 @@ then
         ## srvctl 2.x installation dir
         mkdir -p /var/srvctl-ve/$C
         setup_srvctl_ve_dirs
+        
+        ## shares
+        regenerate_var_ve
      
     if [ $ctype == fedora ]
     then
@@ -274,7 +294,7 @@ then
 
 #### START #### 
    
-    if [ $ctype == fedora ] || [ $ctype == ubuntu ]
+    if [ $ctype == fedora ] || [ $ctype == ubuntu ] || [ $ctype == codepad ]
     then
  
 
@@ -320,9 +340,11 @@ man '
     Logged in users can access files of the containers with ssh - usually in a two step hop, or directly with NFS folders mounted to their home/VE directories.
     The srvctl-client script can be used to sync, backup, upload files. Proper SSH port forwarding allows SFTP access directly from remote user computers.
     OS Containers will be configured as web and mail servers. The srvctl command will be available on every VE, and can be used to configure further.
+    Local containers might be called *.local *-local or *.devel *-devel.
     Prefixes make sense, mail. or dev. will create MX or development servers.
     
 '
+
 
 
 

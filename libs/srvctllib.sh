@@ -141,26 +141,30 @@ function get_password {
 
 function update_password_hash {
 
-        _u=$1
+        local _u=$1
 
         if [ -f "/home/$_u/.password" ]
         then
                 password=$(cat /home/$_u/.password)
                 ## create password hashes
                 echo -n $password | openssl dgst -sha512 | cut -d ' ' -f 2 > /home/$_u/.password.sha512
+                mkdir -p /var/srvctl-host/users/$_u
                 
-                
-        chown $_u:$_u /home/$_u/.password.sha512
-        chmod 400 /home/$_u/.password.sha512
-        #else
-        #        err "/home/$_u/.password - not found"
+                cat /home/$_u/.password.sha512 > /var/srvctl-host/users/$_u/.password.sha512
+                chown $_u:$_u /home/$_u/.password.sha512
+                chmod 400 /home/$_u/.password.sha512
         fi
 
 }
 
 function update_password {
         ## for local user
-        _u=$1
+       local _u=$1
+       local password=''
+
+    if ! [ -f "/home/$_u/.password.sha512" ]
+    then
+        ## there will be an auto-generated password or user entered a password
 
         ## check if .password file exists and not empty
         if ! [ -f "/home/$_u/.password" ] || [ -z "$(cat /home/$_u/.password 2> /dev/null)" ]
@@ -179,10 +183,15 @@ function update_password {
 
         ## save
         echo $password > /home/$_u/.password
+        echo $password > /var/srvctl-host/users/$_u/.password
 
         chown $_u:$_u /home/$_u/.password
         chmod 400 /home/$_u/.password
         update_password_hash $_u
+    
+    else
+        cat /home/$_u/.password.sha512 > /var/srvctl-host/users/$_u/.password.sha512
+    fi
 
 }
 

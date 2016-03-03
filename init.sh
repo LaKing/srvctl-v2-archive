@@ -10,7 +10,7 @@ MSG="## srvctl modification. $NOW"
 ## Servers can have a direct domain name - what we can override
 ## useful in multi-server setups
 DDN=$(dnsdomainname)
-
+SDN=$(dnsdomainname)
 
 ## MYSQL / MARIADB conf file that stores the mysql root password - in containers
 MDF=/etc/mysqldump.conf
@@ -75,6 +75,9 @@ then
     #fi
 
 fi
+
+
+
 mkdir -p $LOG
 
 ## variable detection

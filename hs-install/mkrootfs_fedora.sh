@@ -109,6 +109,14 @@ function mkrootfs_fedora { ## N name
     rpm --root ${INSTALL_ROOT} -ivh ${INSTALL_ROOT}/${REPOS_RPM}
     dnf --installroot ${INSTALL_ROOT} -y --nogpgcheck install ${BASE_PKG_LIST} ${SRVCTL_PKG_LIST}
     
+    ## srvctl addition
+    ## nodjs has to be installed seperatley
+    if [ ! -z "$nodejs_rpm_url" ]
+    then
+        msg "Install nodejs"
+        dnf --installroot ${INSTALL_ROOT} -y --nogpgcheck install $nodejs_rpm_url
+    fi
+    
     if [ $? == 0 ] 
     then
         msg "$N rootfs created."

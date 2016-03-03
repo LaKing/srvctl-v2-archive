@@ -85,6 +85,8 @@ then
         echo "MDF: $MDF"
         echo "CMP: $CMP"
         echo "CDN: $CDN"
+        echo "SDN: $SDN"
+        echo "HOSTNAME: $HOSTNAME"
 
         #echo "HOSTIPv6: $HOSTIPv6"
         #echo "RANGEv6: $RANGEv6"

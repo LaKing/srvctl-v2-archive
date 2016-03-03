@@ -204,9 +204,10 @@ function regenerate_pound_files {
     
     if [ ${_C:0:5} == "mail." ]
     then
+      ## mail servers have no domains
+      ## TODO - web client? 
       continue
     fi
-   
     
     cfg_dir=/var/pound/$_C
     mkdir -p $cfg_dir 
@@ -250,7 +251,7 @@ function regenerate_pound_files {
       
       set_file $cfg_dir/dddn-http-service '## srvctl dddn-http-service '$_C' '$_ip'
       Service
-      HeadRequire "Host: '$_DC'.'$HOSTNAME'"
+      HeadRequire "Host: '$_DC'.'$SDN'"
       BackEnd
       Address '$_C'
       Port    '$_http_port'
@@ -260,7 +261,7 @@ function regenerate_pound_files {
       
       set_file $cfg_dir/dddn-https-service '## srvctl dddn-https-service '$_C' '$_ip'
       Service
-      HeadRequire "Host: '$_DC'.'$HOSTNAME'"
+      HeadRequire "Host: '$_DC'.'$SDN'"
       BackEnd
       Address '$_C'
       Port    '$_https_port'
@@ -277,8 +278,8 @@ function regenerate_pound_files {
       ## Directly addressed alternative pound domain on custom port
       if [ -f $SRV/$_C/settings/pound-enable-altdomain ]
       then
-        altdomain_hostname=$_C'.alt.'$HOSTNAME
-        if [ ! -z $(cat $SRV/$_C/settings/pound-enable-altdomain) ]
+        altdomain_hostname=$_DC'.alt.'$SDN
+        if [ ! -z $(cat $SRV/$_C/settings/pound-enable-altdomain | grep '.') ]
         then
           altdomain_hostname=$(cat $SRV/$_C/settings/pound-enable-altdomain)
         fi
@@ -325,7 +326,32 @@ function regenerate_pound_files {
       #then
       #    pound_add_service dev
       #fi
+
+      ## SDN based codepad
+      if [ -f $SRV/$_C/rootfs/etc/codepad/settings.json ]
+      then
+        set_file $cfg_dir/codepad-http-service '## srvctl codepad-http-service '$_C' '$_ip'
+        Service
+        HeadRequire "Host: '$_DC'.codepad.'$SDN'"
+        Redirect "https://'$_DC'.codepad.'$SDN'"
+        End'
+        
+        set_file $cfg_dir/codepad-https-service '## srvctl codepad-https-service '$_C' '$_ip'
+        Service
+        HeadRequire "Host: '$_DC'.codepad.'$SDN'"
+        BackEnd
+        Address '$_C'
+        Port    9001
+        TimeOut 300
+        End
+        End'
+        
+        echo 'Include "'$cfg_dir/codepad-http-service'"' >> /var/pound/http-domains.cfg
+        echo 'Include "'$cfg_dir/codepad-https-service'"' >> /var/pound/https-domains.cfg
+      fi
       
+
+      ## LEGACY dev.
 
       if [ -f $SRV/$_C/settings/pound-enable-dev ]
       then
@@ -350,6 +376,8 @@ function regenerate_pound_files {
       fi
       
       
+      
+      ## LEGACY log.
       
       if [ -f $SRV/$_C/settings/pound-enable-log ] || [ -f $SRV/$_C/settings/pound-enable-dev ]
       then
@@ -377,6 +405,13 @@ function regenerate_pound_files {
         echo 'Include "'$cfg_dir/log-http-service'"' >> /var/pound/http-domains.cfg
         echo 'Include "'$cfg_dir/log-https-service'"' >> /var/pound/https-domains.cfg
       fi
+      
+      
+    if [ "${_C: -6}" == ".devel" ] || [ "${_C: -6}" == "-devel" ] || [ "${_C: -6}" == "-local" ] || [ "${_C: -6}" == ".local" ]
+    then
+          echo 0 > /dev/null
+    else
+      
       ### TODO ### Add posibility for custom arguments for pound
       if [ -f $SRV/$_C/settings/pound-no-http ]
       then
@@ -427,7 +462,7 @@ function regenerate_pound_files {
         
         set_file $cfg_dir/redirect-service '## srvctl redirect-service '$_C' '$_ip'
         Service
-        HeadRequire "Host: '$_name'"
+        HeadRequire "Host: '$_C'"
         Redirect "'$(cat $SRV/$_C/settings/pound-redirect)'"
         End'
         
@@ -440,6 +475,8 @@ function regenerate_pound_files {
         echo 'Include "'$cfg_dir/https-service'"' >> /var/pound/https-domains.cfg
         
       fi
+    
+    fi
       
       ## pound aliases redirect other domains here
       if [ -f $SRV/$_C/settings/pound-aliases ]

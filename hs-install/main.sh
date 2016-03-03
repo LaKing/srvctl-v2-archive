@@ -136,6 +136,9 @@ useradd -r -u 103 -g 103 -s /sbin/nologin -d /tmp node 2> /dev/null
 groupadd -r -g 104 codepad 2> /dev/null
 useradd -r -u 104 -g 104 -s /sbin/nologin -d /tmp codepad 2> /dev/null
 
+groupadd -r -g 27 mysql 2> /dev/null
+useradd -r -u 27 -g 27 -s /sbin/nologin -d /var/lib/mysql mysql 2> /dev/null
+
 git config --global user.email "root@$CDN"
 git config --global user.name root
 git config --global push.default simple
@@ -167,6 +170,9 @@ fi
 source $install_dir/hs-install/antivirus.sh
 #source $install_dir/hs-install/openvpn.sh
 source $install_dir/hs-install/firewall.sh
+
+## make a server for authentication
+install_nodejs_latest
 
 source $install_dir/hs-install/letsencrypt.sh
 
