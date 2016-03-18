@@ -2,7 +2,7 @@
 
 function add_to_domlist {
     
-    _domain=$1
+    local _domain=$1
     
     ## verify if we dont already have a srvctl cert for this domain (verified wildcard cert)
     #for _d in $(ls /etc/srvctl/cert)
@@ -22,7 +22,7 @@ function add_to_domlist {
 
     if [ -z "$_address" ]
     then
-        #dbg "$_domain can't be domain-authicated."
+        #msg "$_domain can't be domain-authicated."
         if [ -d $SRV/$_c/rootfs/var/log ]
         then
             mkdir -p $SRV/$_c/rootfs/var/log/srvctl
@@ -38,6 +38,27 @@ function add_to_domlist {
     else
         ntc "$_domain is on $_address"
     fi
+}
+
+function get_le_dir {
+    
+    le_dom=$_c
+    
+    ## for some reason letsencrypt creates -0001 ... files in the live folder. great.
+    le_dir="$(ls /etc/letsencrypt/live | grep $le_dom | tail -1)"
+    
+    ## letsencrypt will set le_dir to www if it cant authenticate the bare domain
+    if [ -z "$le_dir" ] 
+    then
+        le_dom=www.$_c
+        le_dir="$(ls /etc/letsencrypt/live | grep $le_dom | tail -1)"
+    fi
+     
+    ## make these variables   
+    cert_pem=/etc/letsencrypt/live/$le_dir/cert.pem
+    fullchain_pem=/etc/letsencrypt/live/$le_dir/fullchain.pem
+    privkey_pem=/etc/letsencrypt/live/$le_dir/privkey.pem   
+
 }
 
 function get_acme_certificate { ## for container
@@ -77,34 +98,25 @@ function get_acme_certificate { ## for container
     cert_dir=$SRV/$_c/cert
     mkdir -p $cert_dir
     ve_pem=$cert_dir/pound.pem
- 
-    le_dir=/etc/letsencrypt/live/$_c
-    
-    ## letsencrypt will set le_dir to www if it cant authenticate the bare domain
-    if [ ! -d $le_dir ] && [ -d /etc/letsencrypt/live/www.$_c ]
-    then
-        le_dir=/etc/letsencrypt/live/www.$_c
-    fi
-    
-    cert_pem=$le_dir/cert.pem
-    fullchain_pem=$le_dir/fullchain.pem
-    privkey_pem=$le_dir/privkey.pem
-    
+
     if [ -f $ve_pem ]
     then
     
-        if openssl x509 -checkend 604800 -noout -in $cert_pem
+        if openssl x509 -checkend 604800 -noout -in $ve_pem
         then
-            #ntc "Certificate is OK. $cert_pem"
+            #ntc "Certificate is OK. $ve_pem"
             return
         fi
     fi
+
+    ## we need to create or renew a certificate
+    get_le_dir
     
-    if [ -f $cert_pem ] && [ ! -f $ve_pem ]
+    if [ -f $cert_pem ]
     then
         if openssl x509 -checkend 604800 -noout -in $cert_pem
         then
-            ntc "Letsencrypt certificate is ok! Deploying."
+            ntc "Letsencrypt certificate is ok! Deploying. $cert_pem"
 
             cat $cert_pem > $cert_dir/crt.pem
             cat $privkey_pem > $cert_dir/key.pem
@@ -116,11 +128,11 @@ function get_acme_certificate { ## for container
             cat /etc/letsencrypt/ca.pem >> $ve_pem
             return
         else
-            msg "Letsencrypt certificate has expired or will do so within a week!"
+            msg "Letsencrypt: $_c certificate has expired or will do so within a week!"
             ## renewal?
         fi
     fi
-    
+
     ## a-b-c.domain.org notation
     _sc=$(echo $_dom | tr '.' '-')
     
@@ -131,14 +143,14 @@ function get_acme_certificate { ## for container
     ## TODO read from settings
     #add_to_domlist en.$_dom 
     #add_to_domlist hu.$_dom
-    
+
     if [ -z "$_domlist" ]
     then
-        #dbg "$_dom has no domains for letsencrypt authentication."
+        msg "$_dom has no active domains for letsencrypt authentication."
         echo "$_dom has no domains for letsencrypt authentication." >> $le_log
         return
     fi
-    
+
     
     if [ "$(systemctl is-active pound.service)" != "active" ]
     then
@@ -155,7 +167,6 @@ function get_acme_certificate { ## for container
         
         exit 98
     fi
-    
 
     ## ACTION!
     msg "letsencrypt create certificate for $_dom"
@@ -163,18 +174,20 @@ function get_acme_certificate { ## for container
     echo @$_domlist >> $LOG/letsencrypt.log
     echo "$NOW attempt to create letsencrypt certificate" >> $le_log
     letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist >> $LOG/letsencrypt.log 2> $le_log
+    ## Well, this may hang like that, ... in case, simply comment out that >> ... ^ above here  
     
     if [ "$?" == 0 ]
     then
         msg "Letsencrypt certonly success"
-        return
     else
+        echo "letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist"
         err "Letsencrypt certonly failed"
         cat $le_log
         echo "letsencrypt certonly failed for $_dom" >> $le_log
         return
     fi
     
+    get_le_dir
     
     if [ ! -f $cert_pem ]
     then
@@ -218,17 +231,13 @@ function regenerate_letsencrypt {
     then
         return
     fi
-    
-    
+
         echo $today > /var/srvctl-host/letsencrypt
         msg "Regenerate letsencrypt certificates"
         for _C in $(lxc_ls)
         do
             rm -rf $SRV/$_C/rootfs/var/log/srvctl/letsencrypt.log
-            if [ ! -f $SRV/$_C/cert/pound.pem ]
-            then
-                get_acme_certificate $_C
-            fi
+            get_acme_certificate $_C
         done
 
 }

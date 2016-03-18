@@ -6,16 +6,17 @@ then ## no identation.
         hint "add-cms [CMS]" "Install a content managment system."
         if [ "$CMD" == "add-cms" ]
         then        
+                argument CMS
             
-            argument cms
+                if [ -f $install_dir/ve-cms/$CMS.sh ]
+                then
+                    source $install_dir/ve-cms/$CMS.sh
+                else
+                    err "$CMS not found." 
+                fi
             
-            if [ -f $install_dir/ve-cms/$cms.sh ]
-            then
-                source $install_dir/ve-cms/$cms.sh
-            fi
-
         ok
-        fi ## install-joomla
+        fi ## add-cms
 fi
 
 man '

@@ -25,4 +25,6 @@ pmc ratpoison
 ## firefox
 pmc firefox
 
+pmc ShellCheck
+
 

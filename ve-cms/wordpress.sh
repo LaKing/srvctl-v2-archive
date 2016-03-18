@@ -4,12 +4,12 @@ if $onVE  && $isROOT
 then ## no identation.
 
         hint "wordpress [path]" "Install Wordpress. Optionally to a folder (URI)."
-        if [ "$CMD" == "add-cms" ] && [ "$OPA" == "wordpress" ]
+        if [ "$CMD" == "add-cms" ] && [ "$CMS" == "wordpress" ]
         then
 
-                URI=$ARG
+                URI="$OPA"
 
-                if [ -z $URI ]
+                if [ -z "$URI" ]
                 then
                         dir=/var/www/html
                         dbd=$(cat /etc/hostname | cut -f1 -d"." )'_wp'
@@ -31,6 +31,7 @@ then ## no identation.
 
                 ## for dependencies.
                 pm wordpress
+                rm /etc/httpd/conf.d/wordpress.conf
 
                 wd=/root
                 curl https://wordpress.org/latest.zip > $wd/latest.zip
@@ -41,9 +42,10 @@ then ## no identation.
                 rm -rf $wd/wordpress
                 rm -rf $wd/unzip.log
                 chown -R apache:apache $dir
-
+                
+                setup_mariadb
                 add_mariadb_db        
-                secure_mariadb
+                #secure_mariadb
 
                 ## save these params to the wp folder
                 f=$dir/wp-config.php

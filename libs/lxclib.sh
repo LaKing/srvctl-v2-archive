@@ -215,12 +215,12 @@ function lxc_start { ## container
         set_is_running $_c
         if $is_running
         then
+             msg "Mounting shares"
+             nfs_mount $_c
+             
                 for _u in $(cat $SRV/$_c/settings/users)
-                do
-                        msg "Mounting shares"
-                        nfs_mount $_c
+                do               
                         backup_mount $_u $_c
-
                 done
         else
             err "$_c is stopped."

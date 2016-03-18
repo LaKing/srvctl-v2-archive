@@ -62,6 +62,12 @@ function argument {
         then
             db_name=$arg
         fi
+        
+        if [ "$1" == "CMS" ]
+        then
+            CMS=$arg
+        fi
+
 
 }
 
@@ -139,60 +145,79 @@ function get_password {
 
 }
 
-function update_password_hash {
-
-        local _u=$1
-
-        if [ -f "/home/$_u/.password" ]
-        then
-                password=$(cat /home/$_u/.password)
-                ## create password hashes
-                echo -n $password | openssl dgst -sha512 | cut -d ' ' -f 2 > /home/$_u/.password.sha512
-                mkdir -p /var/srvctl-host/users/$_u
-                
-                cat /home/$_u/.password.sha512 > /var/srvctl-host/users/$_u/.password.sha512
-                chown $_u:$_u /home/$_u/.password.sha512
-                chmod 400 /home/$_u/.password.sha512
-        fi
-
-}
 
 function update_password {
         ## for local user
        local _u=$1
        local password=''
-
-    if ! [ -f "/home/$_u/.password.sha512" ]
+       local passtor=/var/srvctl-host/users/$_u
+    
+       
+    mkdir -p $passtor
+   
+    if [ -f /home/$_u/.password ] && [ -f $passtor/.password ] && [ -z "$(diff /home/$_u/.password $passtor/.password)" ] && [ -f /home/$_u/.password.sha512 ] && [ -f $passtor/.password.sha512 ] && [ -z "$(diff /home/$_u/.password.sha512 $passtor/.password.sha512)" ]
     then
-        ## there will be an auto-generated password or user entered a password
+        ## nothing to do
+        return
+    fi
+    
+    ## copy from home to store
+    if [ -f /home/$_u/.password.sha512 ]
+    then
+        echo -n $(cat /home/$_u/.password.sha512) > $passtor/.password.sha512
+    fi
+   
+    ## copy from store to home
+    if [ -f $passtor/.password.sha512 ] && [ ! -f /home/$_u/.password.sha512 ]
+    then
+        echo -n $(cat $passtor/.password.sha512) > /home/$_u/.password.sha512
+    fi
+    
+    #TODO check on other servers
 
-        ## check if .password file exists and not empty
-        if ! [ -f "/home/$_u/.password" ] || [ -z "$(cat /home/$_u/.password 2> /dev/null)" ]
-        then
+    if [ -f /home/$_u/.password ]
+    then
+        echo -n $(cat /home/$_u/.password)  > $passtor/.password
+    fi
+   
+    if [ -f $passtor/.password ] && [ ! -f /home/$_u/.password ]
+    then
+        echo -n $(cat $passtor/.password) > /home/$_u/.password
+    fi   
+
+    if [ -z "$(cat $passtor/.password 2> /dev/null)" ]
+    then
+        rm -rf $passtor/.password
+        rm -rf /home/$_u/.password
+    fi
+    
+    ## load / generate password
+    if ! [ -f "$passtor/.password" ]
+    then
+                ## there will be an auto-generated password
                 ## generate new password
                 get_password
-                echo $password > /home/$_u/.password
-                log "Password is $password for $_u@"$(hostname)
-        else
-                ## use existing password
-                password=$(cat /home/$_u/.password)
-        fi
-
-        ## set password on the system
-        echo $password | passwd $_u --stdin 2> /dev/null 1> /dev/null
-
-        ## save
-        echo $password > /home/$_u/.password
-        echo $password > /var/srvctl-host/users/$_u/.password
-
-        chown $_u:$_u /home/$_u/.password
-        chmod 400 /home/$_u/.password
-        update_password_hash $_u
-    
+                echo -n $password > $passtor/.password
     else
-        cat /home/$_u/.password.sha512 > /var/srvctl-host/users/$_u/.password.sha512
+                ## use existing password
+                password=$(cat $passtor/.password )
     fi
 
+    ## set password on the system
+    echo $password | passwd $_u --stdin 2> /dev/null 1> /dev/null
+    
+    log "Password is $password for $_u@$HOSTNAME"    
+    ## save
+    echo -n $(echo -n $password | openssl dgst -sha512 | cut -d ' ' -f 2) > $passtor/.password.sha512
+    echo -n $(cat $passtor/.password.sha512) > /home/$_u/.password.sha512
+    
+    echo -n $password > /home/$_u/.password
+    echo -n $password > $passtor/.password
+   
+    chown $_u:$_u /home/$_u/.password
+    chmod 400 /home/$_u/.password  
+    chown $_u:$_u /home/$_u/.password.sha512
+    chmod 400 /home/$_u/.password.sha512
 }
 
 function add_user {

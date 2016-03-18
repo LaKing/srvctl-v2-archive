@@ -36,22 +36,20 @@ function regenerate_var_ve {
                 mkdir -p $dest/users/$_root_username
                 cat /root/.password.sha512 > $dest/users/$_root_username/.hash
             fi
-            
+
             for _U in $(cat $SRV/$_C/settings/users)
             do
-                mkdir -p $dest/users/$_U
-                
-                if [ ! -f /var/srvctl-host/users/$_U/.password.sha512 ]
+                mkdir -p $dest/users/$_U 
+         
+                if [ -f /var/srvctl-host/users/$_U/.password.sha512 ]
                 then
-                    update_password
-                fi
-                
-                cat /var/srvctl-host/users/$_U/.password.sha512 > $dest/users/$_U/.hash
-                
+                    cat /var/srvctl-host/users/$_U/.password.sha512 > $dest/users/$_U/.hash
+                fi                               
             done 
         done
         
         chmod -R 555 /var/srvctl-ve
+        chmod 444 /var/srvctl-ve/*/users/*/.hash
 }
 
 
@@ -320,11 +318,18 @@ function generate_user_configs { ## for user
 
 function regenerate_users_configs {
 
-        msg "regenrateing user configs"
-        ## for simplicity, we assume all users have a home
+## for simplicity, we assume all users have a home
+
+        msg "regenrate user configs"
         for _U in $(ls /home)
         do
                 generate_user_configs $_U
+        done 
+        
+        msg "regenrate user hashes"
+        for _U in $(ls /home)
+        do
+                update_password $_U
         done 
 }
 
@@ -355,20 +360,6 @@ function generate_user_structure ## for user, container
                 chown $_u:$_u /home/$_u/$_c
                 chown $_u:$_u /home/$_u/$_c/mnt
 
-                ## make sure all the hashes are up to date
-                # update_password $_u
-
-                ## take care of password hashes
-                if ! [ -f "/home/$_u/$_c/.password.sha512" ]
-                then
-                        update_password_hash $_u
-
-                        if [ ! -f /home/$_u/$_c/mnt/.password.sha512 ] && [ -f /home/$_u/.password ]
-                        then
-                                ln /home/$_u/.password.sha512 /home/$_u/$_c/mnt/.password.sha512
-                        fi
-                fi
-
                 ## create directory we will bind to
                 mkdir -p $SRV/$_c/rootfs/mnt/$_u
 
@@ -383,7 +374,7 @@ function regenerate_users_structure {
 
         ## for each container
 
-        msg "Updateing user-structure."
+        msg "regenerate users structure"
         
         for _C in $(lxc_ls)
         do
@@ -404,10 +395,15 @@ function regenerate_users_structure {
                 done
         
         done
-        
+   
+    ## temporary only on all arg
+    if $all_arg_set
+    then
+                   
         msg "Generate user access." 
-        for _C in $(lxc_ls)
+        for _C in $(lxc-ls)
         do
+            dbg "bind_mount $_C"
             bind_mount $_C
             
                 if $all_arg_set
@@ -418,16 +414,19 @@ function regenerate_users_structure {
                         nfs_mount $_C
                         #backup_mount $_U $_C
                 else            
-
+                    dbg "nfs_mount $_C"
                     nfs_mount $_C
-                    bind_mount $_C
                     
                     for _U in $(cat $SRV/$_C/settings/users)
                     do
+                        dbg "backup_mount $_C"
                         backup_mount $_U $_C
                     done
                 fi
          done
+    
+    
+    fi
 }
 
 

@@ -16,23 +16,24 @@ function hint {
 if [ -z "$SUCC" ]
 then
 
- ## check for arguments
- if [ -z "$CMD" ]
+     ## check for arguments
+  if [ -z "$CMD" ]
   then
         printf ${red}"No Command."${NC} 
         echo ''
-  else
-        
+    else 
+        ##COMMENTED OUT - i think this should be deprecated
         ## check for the default command       
-        if [ "$CMD" == "$(/bin/srvctl ls | grep $CMD)" ]
-        then
-            /bin/srvctl exec $ARGS
-            exit 76
-        fi
+        #if [ "$CMD" == "$(/bin/srvctl ls | grep $CMD)" ]
+        #then
+        #    /bin/srvctl exec $ARGS
+        #    exit 76
+        #fi
   
         printf ${red}"Invalid Command."${NC} 
         echo ''
  fi
+ 
   msg "Usage: srvctl command [argument]"
   msg "list of currently active commands:" 
 
@@ -58,4 +59,5 @@ fi
 
 ## return to the directory we started from.
 cd $CWD >> /dev/null 2> /dev/null
+
 

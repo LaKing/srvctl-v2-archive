@@ -332,22 +332,79 @@ function regenerate_pound_files {
       then
         set_file $cfg_dir/codepad-http-service '## srvctl codepad-http-service '$_C' '$_ip'
         Service
-        HeadRequire "Host: '$_DC'.codepad.'$SDN'"
-        Redirect "https://'$_DC'.codepad.'$SDN'"
-        End'
+            HeadRequire "Host: '$_DC'.codepad.'$SDN'"
+            Redirect "https://'$_DC'.codepad.'$SDN'"
+        End
+        
+        Service
+            HeadRequire "Host: '$_DC'.dev.'$SDN'"
+            Redirect "https://'$_DC'.dev.'$SDN'"
+        End        
+        '
         
         set_file $cfg_dir/codepad-https-service '## srvctl codepad-https-service '$_C' '$_ip'
         Service
-        HeadRequire "Host: '$_DC'.codepad.'$SDN'"
-        BackEnd
-        Address '$_C'
-        Port    9001
-        TimeOut 300
+            HeadRequire "Host: '$_DC'.dev.'$SDN'"
+            BackEnd
+                Address '$_C'
+                Port    9001
+                TimeOut 300
+            End
         End
-        End'
+        Service
+            HeadRequire "Host: '$_DC'.dev.'$SDN'"
+            BackEnd
+                Address '$_C'
+                Port    9001
+                TimeOut 300
+            End
+        End      
+        '
         
         echo 'Include "'$cfg_dir/codepad-http-service'"' >> /var/pound/http-domains.cfg
         echo 'Include "'$cfg_dir/codepad-https-service'"' >> /var/pound/https-domains.cfg
+        
+        set_file $cfg_dir/play-https-service '## srvctl play-https-service '$_C' '$_ip'
+        Service
+            HeadRequire "Host: '$_DC'.play.'$SDN'"
+            BackEnd
+                Address '$_C'
+                Port    8443
+                TimeOut 300
+            End
+        End
+        Service
+            HeadRequire "Host: '$_DC'.run.'$SDN'"
+            BackEnd
+                Address '$_C'
+                Port    8443
+                TimeOut 300
+            End
+        End        
+        '
+        
+        set_file $cfg_dir/play-http-service '## srvctl play-http-service '$_C' '$_ip'
+        Service
+            HeadRequire "Host: '$_DC'.play.'$SDN'"
+            BackEnd
+                Address '$_C'
+                Port    8080
+                TimeOut 300
+            End
+        End
+        Service
+            HeadRequire "Host: '$_DC'.run.'$SDN'"
+            BackEnd
+                Address '$_C'
+                Port    8080
+                TimeOut 300
+            End
+        End       
+        '
+        
+        echo 'Include "'$cfg_dir/play-http-service'"' >> /var/pound/http-domains.cfg
+        echo 'Include "'$cfg_dir/play-https-service'"' >> /var/pound/https-domains.cfg
+        
       fi
       
 

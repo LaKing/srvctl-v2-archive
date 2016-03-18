@@ -32,6 +32,7 @@ fi
 ## init libs
 source $install_dir/libs/commonlib.sh
 load_libs
+#echo "Libs loaded"
  
 logs "[$(whoami)@$(hostname) $(pwd)]# $0 $*"
 #msg "$(head $0 -n 3 | grep version)"
@@ -53,8 +54,8 @@ C=$HOSTNAME
        
 #load the commands - and execute them 
 load_commands
+#echo "Commands loaded"
  
 source $install_dir/finish.sh
-
 
 

@@ -25,7 +25,7 @@
     if [ ! -d /var/srvctl-rootfs/codepad ] || $all_arg_set
     then
         install_nodejs_getver
-        SRVCTL_PKG_LIST="mc httpd mod_ssl openssl postfix mailx sendmail unzip rsync nfs-utils dovecot lxc gzip git-core curl python openssl-devel postgresql-devel wget mariadb-server"  
+        SRVCTL_PKG_LIST="mc httpd mod_ssl openssl postfix mailx sendmail unzip rsync nfs-utils dovecot lxc gzip git-core curl python openssl-devel postgresql-devel wget mariadb-server ShellCheck"  
         mkrootfs_fedora codepad "$SRVCTL_PKG_LIST"
         make_rootfs_config fedora codepad
         

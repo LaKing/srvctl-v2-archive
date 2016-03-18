@@ -162,6 +162,21 @@ then
             date +%s | sha256sum | base64 | head -c 64 > $SRV/$C/rootfs/etc/codepad/SESSIONKEY.txt
             date +%s | sha256sum | base64 | head -c 64 > $SRV/$C/rootfs/etc/codepad/APIKEY.txt
             ln -s /var/srvctl-ve/$C/users $SRV/$C/rootfs/var/codepad/users
+            
+            set_file  $SRV/$C/rootfs/etc/codepad/push.sh '#!/bin/bash
+
+echo codepad-push
+exit
+git config --global user.email "root@'$C'"
+git config --global user.name "root"
+git config --global push.default simple
+
+cd /srv/codepad-project 
+git add -A .
+git commit -m codepad-auto
+git push
+'
+
         fi
 
         ## mark as dev site

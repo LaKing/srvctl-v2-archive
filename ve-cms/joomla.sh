@@ -4,14 +4,14 @@ if $onVE && $isROOT
 then ## no identation.
 
         hint "joomla [path]" "Install the latest Joomla! Optionally to a folder (URI)."
-        if [ "$CMD" == "add-cms" ] && [ "$OPA" == "joomla" ]
+        if [ "$CMD" == "add-cms" ] && [ "$CMS" == "joomla" ]
         then        
 
                 secure_mariadb
 
-                URI=$2
+                URI="$OPA"
 
-                if [ -z $URI ]
+                if [ -z "$URI" ]
                 then
                         dir=/var/www/html
                         dbd=$(cat /etc/hostname | cut -f1 -d"." )'_ja'

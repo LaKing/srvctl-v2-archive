@@ -44,11 +44,16 @@ then
             ## for each user generate_user_structure
             regenerate_users_structure
             
+            ## share of server data with containers
+            regenerate_var_ve
+            
             ## opendkim for email signing
             regenerate_opendkim
             
             ## bind / named configs
             regenerate_dns
+            
+            
             
             ## make logfiles for apache log - kind of cosmetic action
             regenerate_logfiles
@@ -56,8 +61,7 @@ then
             ## kind of unnecessery, but since the commands are developed actively its here for now.
             regenerate_sudo_configs
             
-            ## share of server data with containers
-            regenerate_var_ve
+
                
 ok
 fi ## regenerate

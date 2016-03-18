@@ -6,7 +6,7 @@ if $onVE && $isROOT
 then ## no identation.
 
     hint "nodebb" "Install NodeBB"
-    if [ "$CMD" == "add-cms" ] && [ "$OPA" == "nodebb" ]
+    if [ "$CMD" == "add-cms" ] && [ "$CMS" == "nodebb" ]
     then       
     
      
