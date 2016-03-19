@@ -371,6 +371,7 @@ function regenerate_pound_files {
                 Address '$_C'
                 Port    8443
                 TimeOut 300
+                HTTPS
             End
         End
         Service
@@ -379,6 +380,7 @@ function regenerate_pound_files {
                 Address '$_C'
                 Port    8443
                 TimeOut 300
+                HTTPS
             End
         End        
         '

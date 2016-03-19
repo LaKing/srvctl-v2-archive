@@ -45,7 +45,7 @@ function get_le_dir {
     le_dom=$_c
     
     ## for some reason letsencrypt creates -0001 ... files in the live folder. great.
-    le_dir="$(ls /etc/letsencrypt/live | grep $le_dom | tail -1)"
+    le_dir="$(ls /etc/letsencrypt/live | grep ^$le_dom | tail -1)"
     
     ## letsencrypt will set le_dir to www if it cant authenticate the bare domain
     if [ -z "$le_dir" ] 

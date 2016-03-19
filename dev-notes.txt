@@ -27,7 +27,7 @@ networking-scripts
 
                 ## NOTE on port forwarding and ssh usage. This will allow direct ssh on a custom local port! 
                 ## Create the tunnel
-                ## ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -L 2222:nameof.container.ve:22 -N -f user@host
+
                 ## ssh -L 2222:nameof.container.ve:22 -N -f user@host
                 ## connect to the tunnel
                 ## ssh -p 2222 user@localhost
@@ -146,4 +146,39 @@ ratpoison &
 .. and then an application here.
 
 #########################################x
+    
+       Label  Service     Port(s)
+        www    test
+        web    stage
+        dev    codepad    9001 
+        run    play       8080 8443
+        log    logio
+        ssh    shell
+        sys    cockpit
+        dns    zone
+        git    repo
+        src    source
+        srv    service
+        lab    label
+        doc    docs
+        dyn    dyndns
+        ftp    files
+        adm    admin
+        pma    phpmyadmin
+        alt    port
+        opt    custom
+        vnc    container
+        vpn    network
+        gui    devel
+        wss    websocket
+        
+    Additional labels:
+                webmail
+                shop
+                forum
+                demo
+                chat
+                game        
+                support
+        .. feel free to submit suggestions on github.
 
