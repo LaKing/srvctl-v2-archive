@@ -27,7 +27,7 @@ then
         if [ -z "$OPA" ]
         then
             #ntc "Switching to $C .."
-            lxc-attach -n $C
+            lxc-attach -n $C 
             #ntc "Exiting $C .."
         else
             #ntc "[root@$C ~]# $OPAS3"
@@ -43,6 +43,38 @@ then
     fi
 ok
 fi
+ 
+if [ -d "$SRV/$CMD/rootfs" ]
+then
+
+    C=$CMD
+    
+    sudomize
+    authorize
+
+    set_is_running
+    if $is_running
+    then
+        if [ -z "$OPAS" ]
+        then
+            #ntc "Switching to $C .."
+            lxc-attach -n $C 
+            #ntc "Exiting $C .."
+        else
+            #ntc "[root@$C ~]# $OPAS3"
+            lxc-attach -n $C -- $OPAS
+            if [ "$?" != "0" ]
+            then
+                err "Command returned an error. $?"
+            fi
+            
+        fi
+    else 
+        err "$C is STOPPED"
+    fi
+ok
+fi
+ 
  
 man '
     Users can access local containers directly. Syntax is similar to that of ssh.

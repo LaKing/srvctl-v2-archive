@@ -344,7 +344,7 @@ function regenerate_pound_files {
         
         set_file $cfg_dir/codepad-https-service '## srvctl codepad-https-service '$_C' '$_ip'
         Service
-            HeadRequire "Host: '$_DC'.dev.'$SDN'"
+            HeadRequire "Host: '$_DC'.codepad.'$SDN'"
             BackEnd
                 Address '$_C'
                 Port    9001

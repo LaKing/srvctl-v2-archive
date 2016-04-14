@@ -3,7 +3,8 @@ then ## no identation.
 
 ## add new host
 hint "add-fedora VE [USERNAME(s)]" "Add new LXC OS-container."
-hint "add-ubuntu VE [USERNAME(s)]" "Add new LXC ubuntu-cloud OS container."
+hint "add-codepad VE [USERNAME(s)]" "Add new LXC OS-container running codepad."
+hint "add-ubuntu VE [USERNAME(s)]" "Add new LXC ubuntu based OS container."
 hint "add-apache VE [USERNAME(s)]" "Add new LXC application container running apache with a readonly filesystem."
 
 if [ "$CMD" == "add" ] || [ "$CMD" == "add-fedora" ] || [ "$CMD" == "add-apache" ] || [ "$CMD" == "add-codepad" ] || [ "$CMD" == "add-ubuntu" ]
