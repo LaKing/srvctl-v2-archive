@@ -4,7 +4,7 @@
 ## use the latst version, options are 'latest-package' 'package' 'git' 'tar' 'src' 
 LXC_INSTALL='latest-package'
 ## eventually specify the version - mandatory for tar, optional for dnf
-LXC_VERSION='1.1.5'
+LXC_VERSION='2.0.0'
 
 ## logpath
 LOG=/var/log/srvctl
