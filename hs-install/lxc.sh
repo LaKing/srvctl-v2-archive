@@ -128,7 +128,8 @@ then
                 set_file "/etc/lxc/lxc.conf" "lxc.lxcpath=$SRV" 
         fi
 
-        add_conf /root/.bash_profile "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib"
+        ### disabled for lxc 2.0 and up. 
+        ##  add_conf /root/.bash_profile "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib"
 
         msg "Configure libvirt network"
 ## Networking with libvirt

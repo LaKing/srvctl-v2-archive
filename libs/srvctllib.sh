@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 ## srvctl functions
 
 function argument {
@@ -70,7 +69,7 @@ function argument {
 
 
 }
-
+        
 function to_ip {
 
         local __counter=$1
@@ -144,7 +143,6 @@ function get_password {
         password="$p"
 
 }
-
 
 function update_password {
         ## for local user
@@ -398,7 +396,6 @@ postalias $1/etc/aliases
 fi ## set aliases
 }
 
-
 function add_service {
     
     if [ -f /usr/lib/systemd/system/$1.service ]
@@ -446,12 +443,13 @@ then
         then
                 lxc_usr_path="/usr/local"
                 lxc_bin_path="/usr/local/bin"
-                
-                if [ -z $(echo $LD_LIBRARY_PATH | grep '/usr/local/lib') ]
-                then
-                        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-                fi
-        fi
+
+                ## disabled for lxc 2.0 and up
+                #if [ -z $(echo $LD_LIBRARY_PATH | grep '/usr/local/lib') ]
+                #then
+                #        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+                #fi
+        fi 
         
     if [ -z $(echo $PATH | grep $lxc_bin_path) ]
     then
@@ -496,5 +494,4 @@ then
     
         
 fi
-
 

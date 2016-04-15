@@ -16,7 +16,7 @@ isROOT=true
 isSUDO=true
 
 ## silent log entry
-echo "$NOW : [$SUDO_USER@$HOSTNAME $(pwd)]# $0 $@" >> $LOG/sudo.log
+echo "$NOW : [$SUDO_USER@$(hostname) $(pwd)]# $0 $@" >> $LOG/sudo.log
 
 ## some extra checks
 if ! $LXC_SERVER
@@ -45,7 +45,6 @@ SC_SUDO_USER=$SUDO_USER
 #the real thing
 SC_USER=$SUDO_USER
 
-
 ## init libs
 source $install_dir/libs/commonlib.sh
 load_libs
@@ -69,4 +68,5 @@ load_commands
 
 ## return to the directory we started from.
 cd $CWD >> /dev/null 2> /dev/null
+
 

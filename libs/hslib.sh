@@ -54,9 +54,10 @@ function get_state {
         msc=${red}        
 
         ip=$(cat $SRV/$C/config.ipv4)
+    
+        info="$(lxc-info -s -n $C | grep State)"
 
-        info=$(lxc-info -s -n $C)
-        state=${info:16}
+        state="${info:16}"
         is_running=false
 
         if [ "$state" == "RUNNING" ] && [ ! -z "$ip" ]
@@ -76,7 +77,6 @@ function get_state {
         fi 
         
         printf ${msc}"%-10s"${NC} $ms
-
 
 }
 
@@ -222,6 +222,30 @@ function get_users {
 
         printf ${yellow}"%-32s"${NC} ${users:0:32}
 }
+
+
+function get_ctype {
+        
+        local _ctype="fedora"
+        if [ -f $SRV/$C/ctype ]
+        then
+            _ctype=$(cat $SRV/$C/ctype | xargs)
+        fi
+
+        printf ${yellow}"%-10s"${NC} ${_ctype}
+}
+
+function get_details {
+        
+        if [ -f $SRV/$C/rootfs/etc/os-release ]
+        then
+            source $SRV/$C/rootfs/etc/os-release
+            printf ${yellow}"%-32s"${NC} "$NAME $VERSION"
+        else
+            printf ${red}"%-32s"${NC} "ERROR no os-release"
+        fi
+}
+
 
 function get_http_response {
     

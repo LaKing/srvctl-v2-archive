@@ -3,6 +3,8 @@ function regenerate_sudo_configs {
     sudoconf=/etc/sudoers.d/srvctl
     echo "## srvctl-regenerated sudo file" > $sudoconf
     echo '' >> $sudoconf
+    if false
+    then
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-fedora *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh add-ubuntu *" >> $sudoconf
@@ -39,6 +41,10 @@ function regenerate_sudo_configs {
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh backup" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh backup *" >> $sudoconf
     echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh restore *" >> $sudoconf
+    fi
+    ## this will allow users to run: sc container command
+    echo "ALL ALL=(ALL) NOPASSWD: $install_dir/srvctl-sudo.sh *" >> $sudoconf
+    ## makes all other sudo entries above unnecessery
     
     
 }

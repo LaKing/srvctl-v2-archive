@@ -199,10 +199,19 @@ if [ "$CMD" == "list" ]
 then
         sudomize
         
+        echo ''
+        printf ${yellow}"%-10s"${NC} "TYPE"
+        printf ${yellow}"%-48s"${NC} "HOSTNAME"
+        printf ${yellow}"%-14s"${NC} "IP-LOCAL"
+        printf ${yellow}"%-3s"${NC} "DETAILS"
+        echo ''
+        
         for C in $(lxc_ls)
         do 
+            get_ctype
             say_name $C
             get_ip
+            get_details
             echo ''
         done
 echo ''
@@ -227,6 +236,7 @@ man '
     A Quick list of acessible container names to be processed further in other scripts..
 '
 fi ## of onHS
+
 
 
 
