@@ -107,8 +107,9 @@ function err {
     SUCC=$SUCC" "$@
 }
 
-function is_fqdn() {
+function is_fqdn {
     ## check if argument is a FQDN - fully qualified domain name
+    ## this method doesent work actually
     local fqdn_test=$(echo $1 | grep -P '(?=^.{6,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
     # '
             if [ -z "$fqdn_test" ]

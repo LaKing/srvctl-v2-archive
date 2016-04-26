@@ -16,6 +16,7 @@ function mkrootfs_ubuntu { ## N name
     ##mkdir -p $INSTALL_ROOT
     
     export DEBIAN_FRONTEND=noninteractive
+    echo "lxc-create --dir=$INSTALL_ROOT -P $TMP  -n ubuntu -t ubuntu -- -r xenial --packages $(echo $SRVCTL_PKG_LIST | tr ' ' ',')"
     lxc-create --dir=$INSTALL_ROOT -P $TMP  -n ubuntu -t ubuntu -- -r xenial --packages "$(echo $SRVCTL_PKG_LIST | tr ' ' ',')"
     echo 'LANG="en_US.UTF-8"' >> $INSTALL_ROOT/root/.bashrc
     echo 'LC_ALL="en_US.UTF-8"' >> $INSTALL_ROOT/root/.bashrc

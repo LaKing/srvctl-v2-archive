@@ -15,9 +15,19 @@ then
                 exif
                 pm libcap-devel
                 exif
-
+                
+                if $all_arg_set
+                then
+                    ## remove packages
+                    dnf -y remove lxc*
+                    ## configs might containe /usr/share we might need /user/local/share
+                    ## regenerate will make new configs
+                    rm -rf $SRV/*/config
+                fi
 
                 cd /root
+                
+                add_conf /root/.bash_profile 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib'
 
                 if [ "$LXC_INSTALL" == "git" ]
                 then
@@ -128,8 +138,6 @@ then
                 set_file "/etc/lxc/lxc.conf" "lxc.lxcpath=$SRV" 
         fi
 
-        ### disabled for lxc 2.0 and up. 
-        ##  add_conf /root/.bash_profile "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib"
 
         msg "Configure libvirt network"
 ## Networking with libvirt

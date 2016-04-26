@@ -444,11 +444,11 @@ then
                 lxc_usr_path="/usr/local"
                 lxc_bin_path="/usr/local/bin"
 
-                ## disabled for lxc 2.0 and up
-                #if [ -z $(echo $LD_LIBRARY_PATH | grep '/usr/local/lib') ]
-                #then
-                #        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-                #fi
+                ## err? ... has to be disabled for lxc 2.0 and up? or no?
+                if [ -z $(echo $LD_LIBRARY_PATH | grep '/usr/local/lib') ]
+                then
+                        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+                fi
         fi 
         
     if [ -z $(echo $PATH | grep $lxc_bin_path) ]

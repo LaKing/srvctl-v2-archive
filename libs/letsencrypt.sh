@@ -22,11 +22,11 @@ function add_to_domlist {
 
     if [ -z "$_address" ]
     then
-        #msg "$_domain can't be domain-authicated."
+        #msg "$_domain can't be domain-authenticated."
         if [ -d $SRV/$_c/rootfs/var/log ]
         then
             mkdir -p $SRV/$_c/rootfs/var/log/srvctl
-            echo "$_domain can't be domain-authicated." >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
+            echo "$_domain can't be domain-authenticated." >> $SRV/$_c/rootfs/var/log/srvctl/letsencrypt.log
         fi
         return
     fi

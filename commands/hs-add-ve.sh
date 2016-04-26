@@ -285,7 +285,15 @@ git push
             cat $ssl_key > $rootfs/etc/pki/tls/private/localhost.key
             cat $ssl_crt > $rootfs/etc/pki/tls/certs/localhost.crt
         fi
-        
+
+
+        if [ $ctype == ubuntu ]
+        then
+            ## add a new, unique selfsigned certificate to container - for https reverse proxying ... snakeoil????
+            cat $ssl_key > $rootfs/etc/ssl/private/localhost.key
+            cat $ssl_crt > $rootfs/etc/ssl/certs/localhost.pem
+        fi
+
         ## create letsencrypt certificate
         get_acme_certificate $C
         ## TODO - import that o containers for IPv6?

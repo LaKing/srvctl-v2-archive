@@ -121,6 +121,7 @@ OPA=$3
 ## all optional arguments
 OPAS="${@:2}"
 OPAS3="${@:3}"
+OPAS4="${@:4}"
 ## all arguments, including command and argument
 ARGS="$*"
 

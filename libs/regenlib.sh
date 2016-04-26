@@ -48,8 +48,10 @@ function regenerate_var_ve {
             done 
         done
         
-        chmod -R 555 /var/srvctl-ve
-        chmod 444 /var/srvctl-ve/*/users/*/.hash
+
+        chmod -R 655 /var/srvctl-ve
+        chmod 644 /var/srvctl-ve/*/settings/*
+        chmod 644 /var/srvctl-ve/*/users/*/.hash
 }
 
 
