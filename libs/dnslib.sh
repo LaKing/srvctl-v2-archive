@@ -336,8 +336,11 @@ function regenerate_dns {
         for dd in /var/dyndns/*.auth
         do   
             DD=${dd:12: -5}
-            dyndns_create_named_zone $DD
-            echo 'include "/var/named/srvctl/'$DD'.conf";' >> $named_local
+            if [ -f /var/dyndns/$DD.auth ]
+            then
+                dyndns_create_named_zone $DD
+                echo 'include "/var/named/srvctl/'$DD'.conf";' >> $named_local
+            fi
         done
         
         msg "Creating DNS share."
