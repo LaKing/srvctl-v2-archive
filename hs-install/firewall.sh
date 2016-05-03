@@ -73,6 +73,24 @@ then
 
 fi
 
+if [ -z "$(echo $services | grep ' dyndns ')" ]
+then
+
+    set_file /etc/firewalld/services/dyndns.xml '<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Dyndns-server</short>
+  <description>This option allows logging of IP addresses for dyndns use. (added by srvctl) </description>
+  <port protocol="tcp" port="855"/>
+</service>
+'
+    ## make firewall aware of the service
+    echo firewall-cmd --reload
+    firewall-cmd --reload
+
+    echo firewall-cmd --zone=$zone --permanent --add-service=dyndns
+    firewall-cmd --zone=$zone --permanent --add-service=dyndns
+fi
+
 
 echo firewall-cmd --reload
 firewall-cmd --reload

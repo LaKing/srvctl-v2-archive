@@ -172,6 +172,82 @@ set_file $named_zone '$TTL 1D
 
 }
 
+function dyndns_create_named_zone {
+
+    ## argument dyndns-hostname ip
+    D=$1
+    get_primary_ip
+    IP=$ip
+    
+    if [ -f /var/dyndns/$D.ip ]
+    then
+        IP=$(cat /var/dyndns/$D.ip)
+    fi
+    
+    if [ ${IP:0:7} == '::ffff:' ]
+    then
+        ip=${IP:7}
+    fi
+
+    named_conf=$named_main_path/$D.conf
+    named_zone=$named_main_path/$D.zone
+    named_slave=$named_slave_path/$D.slave
+        
+    named_live_zone=$named_live_path/$D.zone
+    named_slave_zone=$named_live_path/$D.slave.zone
+                        
+    echo '## srvctl named main conf '$D > $named_conf
+    echo 'zone "'$D'" {' >> $named_conf
+    echo '        type master;'  >> $named_conf
+    echo '        file "'$named_live_zone'";' >> $named_conf
+    echo '        allow-update { key "srvctl."; };' >> $named_conf
+    echo '};' >> $named_conf
+
+    echo '## srvctl named slave conf '$D > $named_slave
+    echo 'zone "'$D'" {' >> $named_slave
+    echo '        type slave;'  >> $named_slave
+    echo '        masters {'$ip';};'  >> $named_slave
+    echo '        file "'$named_slave_zone'";' >> $named_slave
+    echo '};' >> $named_slave
+
+echo "dyndns: $D $ip"
+        
+    serial_file=/var/srvctl-host/named-serial/$today
+    mkdir -p /var/srvctl-host/named-serial
+    serial=0
+                
+    if [ ! -f $serial_file ]
+    then      
+        serial=$today'0000'
+        echo $serial > $serial_file
+    else        
+        serial=$(($(cat $serial_file)+1))
+        echo $serial > $serial_file
+    fi
+
+    ## TODO add IPv6 support
+    ## Create Basic Zonefile
+
+set_file $named_zone '$TTL 1D
+@        IN SOA        @ hostmaster.'$CDN'. (
+                                        '$serial'        ; serial
+                                        1H        ; refresh
+                                        1H        ; retry
+                                        3H        ; expire
+                                        3H )        ; minimum
+        IN         NS        ns1.'$CDN'.
+        IN         NS        ns2.'$CDN'.
+        IN         NS        ns3.'$CDN'.
+$TTL 60
+*        IN         A        '$ip'
+@        IN         A        '$ip'
+@        IN        MX        10        mail
+'
+## dyndns named zone written.                    
+
+}
+
+
 function regenerate_dns_publicinfo {
         
     if [ -f /var/srvctl-host/dns-pubinfo ] && [ "$(cat /var/srvctl-host/dns-pubinfo)" == "$today" ]
@@ -210,6 +286,11 @@ function regenerate_dns {
         #named_slave_conf=$named_slave_path/srvctl-$(hostname).conf
         
         echo '## srvctl named includes' > $named_includes
+        if [ -f /var/named/srvctl-include-key.conf ]
+        then        
+            echo 'include "/var/named/srvctl-include-key.conf";' >> $named_includes
+        fi
+        
         echo '## srvctl named primary local' > $named_local
         
         #echo '## srvctl named slaves'$(hostname) > $named_slave_conf
@@ -249,6 +330,14 @@ function regenerate_dns {
                                 #echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf
                         done
                 fi
+        done
+        
+        msg "Setting dynds hosts."
+        for dd in /var/dyndns/*.auth
+        do   
+            DD=${dd:12: -5}
+            dyndns_create_named_zone $DD
+            echo 'include "/var/named/srvctl/'$DD'.conf";' >> $named_local
         done
         
         msg "Creating DNS share."
@@ -292,7 +381,7 @@ function regenerate_dns {
                 tar -xf /var/srvctl-host/$host.dns.tar.gz -C $named_expath
                 exif
                 
-                ## expath alapján include file éas azt beincludolni
+                ## expath based include file included
                 named_exconf=/var/named/srvctl-$host.conf
                 echo 'include "'$named_exconf'";' >> $named_includes
                 echo '## srvctl named external slave conf includes' > $named_exconf 

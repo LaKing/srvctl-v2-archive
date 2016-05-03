@@ -271,7 +271,10 @@ git push
             setup_index_html $C
         fi 
         
-
+## DNS
+        get_dns_servers $C
+        regenerate_dns
+        
 ## Pound
         msg "Pound configuration"        
         
@@ -305,9 +308,7 @@ git push
 
         regenerate_pound_files
 
-## DNS
-        get_dns_servers $C
-        regenerate_dns
+
 
 ## Node / npm
         ## npm root -g => /usr/lib/node_modules

@@ -196,29 +196,5 @@ regenerate_var_ve
 
 source $install_dir/hs-install/mkrootfs.sh
 
-## dyndns stuff
-mkdir -p /var/srvctl-host/dyndns
-cat /etc/srvctl/cert/$CDN/$CDN.key /var/srvctl-host/dyndns/key.pem
-cat /etc/srvctl/cert/$CDN/$CDN.crt /var/srvctl-host/dyndns/crt.pem
-chown -R 600 /var/srvctl-host/dyndns
-
-
-set_file /lib/systemd/system/dyndns-server.service '## srvctl generated
-[Unit]
-Description=Dyndns server.
-After=syslog.target network.target
-
-[Service]
-Type=simple
-ExecStart=/bin/node '$install_dir'/hs-apps/dyndns-server.js
-User=node
-Group=node
-
-[Install]
-WantedBy=multi-user.target
-'
-
-systemctl daemon-reload
-add_service dyndns-server
 
 

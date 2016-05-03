@@ -66,6 +66,12 @@ function argument {
         then
             CMS=$arg
         fi
+        
+        
+        if [ "$1" == "dyndnshost" ]
+        then
+            dyndnshost=$arg
+        fi
 
 
 }
