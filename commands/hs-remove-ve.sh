@@ -6,29 +6,38 @@ then ## no identation.
 
 ## reMOVE host
 hint "remove VE" "Remove a container."
-if [ "$CMD" == "remove" ]
+if [ "$CMD" == "remove" ] || [ "$CMD" == "destroy" ]
 then
 
         argument C
         sudomize
         authorize
         
-        bind_unmount $C
-        nfs_unmount $C
-        backup_unmount $C
+        if [ -d "$SRV/$C" ] 
+        then
+            
+            bind_unmount $C
+            nfs_unmount $C
+            backup_unmount $C
 
-        lxc-stop -k -n $ARG
+            lxc-stop -k -n $ARG
 
-        ## remove from known_hosts ... regenerate?
+            ## remove from known_hosts ... regenerate?
 
-        RMD=$TMP/$C-$NOW
-        mkdir -p $RMD
-
-        if [ -d "$SRV/$C" ]; then
+            RMD=$TMP/$C-$NOW
+            mkdir -p $RMD
+        
+            if [ "$CMD" == "remove" ] 
+            then
                 log "Removing container to $RMD"
-
-                rsync -a $SRV/$C $RMD
+                rsync -a $SRV/$C $RMD        
                 rm -fr $SRV/$C
+            fi
+            
+            if [ "$CMD" == "destroy" ]
+            then
+                rm -fr $SRV/$C
+            fi
 
                 ## delete each users share.
                 for _U in $(ls /home)
@@ -73,7 +82,21 @@ then
                 regenerate_dns
                 regenerate_logfiles
         else
-                msg "Could not remove $C - no such VE."
+            if [ -f /var/dyndns/$C.auth ]
+            then
+                    auth=$(cat /var/dyndns/$C.auth)
+            
+                    if [ "${auth:0:${#SC_USER}}" == $SC_USER ] || [ $SC_USER == root ]
+                    then
+                        rm -fr /var/dyndns/$C.auth
+                        rm -fr /var/dyndns/$C.ip
+                        rm -fr /var/dyndns/$C.lock
+                        rm -fr /var/dyndns/$C.updt
+                        regenerate_dns
+                    fi
+            else
+                msg "$C not found."
+            fi
         fi
 
 ok
