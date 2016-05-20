@@ -148,6 +148,8 @@ then
     msg "Uptime: $(uptime)"
     msg "CONNECTED SHELL USERS"
     w
+    msg "MAIL QUE"
+    postqueue -p
         
         
   if $onHS && $isROOT

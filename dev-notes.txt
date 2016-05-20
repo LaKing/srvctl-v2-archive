@@ -65,6 +65,7 @@ networking-scripts
 ## A workaround is to patch saslauthd.
 ## We can consider CAPABILITY equal to OK [CAPABILITY ...], as in case of bad password / bad username / bad host, the remote server rejects the credentials.
 ## That means, if the response is not a NO, and there is a response, we can assume its an OK.
+## ... at least in our enviroment. Seems this is not true for the world.
 ##
 ## cyrus-sasl-2.1.26/saslauthd/auth_rimap.c last lines:
 ## replace: return strdup(RESP_UNEXPECTED);

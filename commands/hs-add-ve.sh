@@ -255,10 +255,12 @@ git push
         ln -s '/usr/lib/systemd/system/postfix.service' $rootfs'/etc/systemd/system/multi-user.target.wants/postfix.service'
 
         regenerate_opendkim
+        
+        regenerate_perdition_files
     
     fi
         
-        ## Apache
+## Apache
         
         ## use this patch for better logging of IP addresses
 

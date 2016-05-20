@@ -31,6 +31,9 @@ then
         
             ## create pound configuration files
             regenerate_pound_files
+            
+            ## perdition configs
+            regenerate_perdition_files
 
             ## ssh related
             regenerate_root_configs

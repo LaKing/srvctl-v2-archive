@@ -81,6 +81,7 @@ then
                 regenerate_pound_files
                 regenerate_dns
                 regenerate_logfiles
+                regenerate_perdition_files
         else
             if [ -f /var/dyndns/$C.auth ]
             then

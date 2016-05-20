@@ -568,6 +568,23 @@ function wait_for_ve_connection { #on container
         echo ''
 }
 
+function regenerate_perdition_files {
+    
+        msg "regenerate perdition popmap"
+    
+        echo '## srvctl generated' > /etc/perdition/popmap.re
+        echo '' >> /etc/perdition/popmap.re
+    
+        for _C in $(lxc-ls)
+        do
+            echo "(.*)@$_C: $_C" >> /etc/perdition/popmap.re
+        done
+
+        systemctl restart imap4
+        systemctl restart imap4s
+        systemctl restart pop3s
+        
+}
 
 fi ## if onHS
 
