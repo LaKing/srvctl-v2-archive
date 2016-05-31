@@ -1,3 +1,193 @@
+## For client certificates
+
+sc_ca_dir=/etc/srvctl/CA
+
+function root_CA_init {
+
+if [ "$rootca_host" == "$HOSTNAME" ]
+then
+
+    #msg "This server is the SC-CA"
+    
+    # make directories to work from
+    mkdir -p $sc_ca_dir/{server,client,ca,tmp}
+
+    if [ ! -f "$sc_ca_dir/ca/$CDN-root-ca.key.pem" ]
+    then
+        # Create own Root Certificate Authority
+        msg "create root-ca-key"
+    
+        openssl genrsa \
+        -out $sc_ca_dir/ca/$CDN-root-ca.key.pem \
+        2048
+
+        # Self-sign Root Certificate Authority
+        # Since this is private, the details can be as bogus as you like
+        
+    fi
+    
+    if [ ! -f "$sc_ca_dir/ca/$CDN-root-ca.crt.pem" ]
+    then
+        msg "create root-ca-cert"
+        openssl req \
+        -x509 \
+        -new \
+        -nodes \
+        -key $sc_ca_dir/ca/$CDN-root-ca.key.pem \
+        -days 3652 \
+        -out $sc_ca_dir/ca/$CDN-root-ca.crt.pem \
+        -subj "$rootca_subj/CN=$CMP"
+    fi
+
+else
+    msg "this is not the CA"
+fi    
+}
+
+function create_server_certificate { ## argument server-hostname
+
+local _servername="$1"
+
+if [ "$rootca_host" == "$HOSTNAME" ]
+then
+
+    root_CA_init 
+
+    # Create a Device Certificate for a domain,
+    # such as example.com, *.example.com, awesome.example.com
+    # NOTE: You MUST match CN to the domain name or ip address you want to use
+
+    if [ ! -f "$sc_ca_dir/server/$CDN-$_servername.key.pem" ]
+    then
+        msg "create $_servername key"
+        openssl genrsa \
+        -out $sc_ca_dir/server/$CDN-$_servername.key.pem \
+        2048
+        
+    fi
+    
+    
+    if [ ! -f "$sc_ca_dir/tmp/$CDN-$_servername.csr.pem" ]
+    then
+        msg "create $_servername csr"
+    
+        # Create a request from your Device, which your Root CA will sign
+        openssl req -new \
+        -key $sc_ca_dir/server/$CDN-$_servername.key.pem \
+        -out $sc_ca_dir/tmp/$CDN-$_servername.csr.pem \
+        -subj "$rootca_subj/CN=$_servername"
+        
+    fi
+    
+    if [ ! -f "$sc_ca_dir/server/$CDN-$_servername.crt.pem" ]
+    then
+        msg "create $_servername cert"
+    
+        # Sign the request from Device with your Root CA
+        # -CAserial $sc_ca_dir/ca/$CDN-root-ca.srl
+        openssl x509 \
+        -req -in $sc_ca_dir/tmp/$CDN-$_servername.csr.pem \
+        -CA $sc_ca_dir/ca/$CDN-root-ca.crt.pem \
+        -CAkey $sc_ca_dir/ca/$CDN-root-ca.key.pem \
+        -CAcreateserial \
+        -out $sc_ca_dir/server/$CDN-$_servername.crt.pem \
+        -days 1095
+
+    fi
+
+        # Create a public key, for funzies
+        #openssl rsa \
+        #  -in $sc_ca_dir/server/$CDN-server.key.pem \
+        #  -pubout -out $sc_ca_dir/client/$CDN-server.pub
+
+else
+    msg "this is not the CA"
+fi
+}
+
+function create_client_certificate { ## argument user
+
+local _u=$1
+
+local passtor=/var/srvctl-host/users/$_u
+local _commonname="$_u"
+local _passphrase="$(cat $passtor/.password)"
+
+if [ "$rootca_host" == "$HOSTNAME" ]
+then
+
+    root_CA_init 
+
+    # Create a Device Certificate for each trusted client
+    # such as example.net, *.example.net, awesome.example.net
+    # NOTE: You MUST match CN to the domain name or ip address you want to use
+    
+    if [ ! -f "$sc_ca_dir/client/$CDN-$_commonname.key.pem" ]
+    then
+        msg "create $_commonname key"
+        openssl genrsa \
+        -out $sc_ca_dir/client/$CDN-$_commonname.key.pem \
+        2048
+    fi
+
+    if [ ! -f "$sc_ca_dir/tmp/$CDN-$_commonname.csr.pem" ]
+    then
+        msg "create $_commonname csr"
+    
+        # Create a trusted client cert
+        openssl req -new \
+        -key $sc_ca_dir/client/$CDN-$_commonname.key.pem \
+        -out $sc_ca_dir/tmp/$CDN-$_commonname.csr.pem \
+        -subj "$rootca_subj/CN=$_commonname"
+    fi
+    
+    if [ ! -f "$sc_ca_dir/client/$CDN-$_commonname.crt.pem" ]
+    then
+        msg "create $_commonname cert"
+
+        # Sign the request from Trusted Client with your Root CA
+        # -CAserial $sc_ca_dir/ca/$CDN-root-ca.srl
+        openssl x509 \
+        -req -in $sc_ca_dir/tmp/$CDN-$_commonname.csr.pem \
+        -CA $sc_ca_dir/ca/$CDN-root-ca.crt.pem \
+        -CAkey $sc_ca_dir/ca/$CDN-root-ca.key.pem \
+        -CAcreateserial \
+        -out $sc_ca_dir/client/$CDN-$_commonname.crt.pem \
+        -days 1095
+    fi
+
+    if [ ! -f "$sc_ca_dir/client/$CDN-$_commonname.p12" ]
+    then
+        msg "create $_commonname p12"
+
+        openssl pkcs12 -export \
+        -passout pass:$_passphrase \
+        -in $sc_ca_dir/client/$CDN-$_commonname.crt.pem \
+        -inkey $sc_ca_dir/client/$CDN-$_commonname.key.pem \
+        -out $sc_ca_dir/client/$CDN-$_commonname.p12
+    fi
+    
+    if [ ! -f "/home/$_u/$CDN-$_commonname.p12" ] 
+    then
+        cat $sc_ca_dir/client/$CDN-$_commonname.p12 > /home/$_u/$CDN-$_commonname.p12
+    fi
+
+
+
+# Create a public key, for funzies
+#openssl rsa \
+#  -in $sc_ca_dir/client/$CDN-app-client.key.pem \
+#  -pubout -out $sc_ca_dir/client/$CDN-app-client.pub
+
+else
+    msg ".. this is not the CA"
+fi
+
+}
+
+
+## For pound / self signed certificates
+
 function check_pound_pem {
   
   if [ -f "$pound_pem" ]
@@ -14,6 +204,7 @@ function check_pound_pem {
   
 }
 
+## create selfsigned certificate the hard way
 function create_certificate { ## for domain
                 
         domain=$1

@@ -175,6 +175,25 @@ source $install_dir/hs-install/letsencrypt.sh
 
 regenerate_sudo_configs
       
+## srvct-gui
+set_file /lib/systemd/system/srvctl-gui.service '## srvctl generated
+[Unit]
+Description=srvctl-gui server.
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/node '$install_dir'/hs-apps/srvctl-gui.js
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+'
+
+systemctl daemon-reload
+     
+      
     add_service named  
     add_service sshd
     add_service libvirtd  
@@ -189,6 +208,7 @@ regenerate_sudo_configs
     add_service amavisd 
     add_service opendkim
     add_service acme-server
+    add_service srvctl-gui
     
 mnt_rorootfs
 

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html ng-app="app">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>srvctl-gui</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/index.css">
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/angular.min.js"></script>
+    <script src="/js/angular-sanitize.min.js"></script>
+    <script src="/js/socket.io.js"></script>
+    <script src="/index.js"></script>
+    <script src="/js/hterm_all.js"></script>
+</head>
+
+<body ng-controller="mainController">
+    <!-- header -->
+    <div id="top-nav" class="navbar navbar-inverse navbar-static-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <h4 class="navbar-brand">{{ main.user }} {{hix}} {{cix}}</h4>
+            </div>
+        </div>
+        <!-- /container -->
+    </div>
+    <!-- /Header -->
+    <!-- Main -->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-2">
+                <!-- Left column NAVIGATION -->
+
+                <h4><i class="glyphicon glyphicon-hdd"></i> servers</h4>
+
+                <div class="list-group">
+                    <button ng-repeat="h in main.hosts" class="list-group-item {{ $index == hix && cix === undefined ? 'active' : 'inactive' }}" ng-click="sethix($index); command('status-all');" type="button">{{h.name}}</button>
+                </div>
+
+                <h4><i class="glyphicon glyphicon-list"></i> containers</h4>
+
+                <div class="list-group">
+                    <div ng-repeat="c in containers" class="dropdown">
+                        <button class="list-group-item dropdown-toggle {{ $index == cix ? 'active' : 'inactive' }}" type="button" ng-click="setcix($index); command('info');" data-toggle="dropdown">{{c.name}} </button>
+                    </div>
+                </div>
+
+                <h4><i class="glyphicon glyphicon-list"></i> commands</h4>
+
+                <div ng-if="hix>=0 && !cix>=0" class="list-group">
+                    <a href='#' class="list-group-item">add-dyndns</a>
+                </div>
+                <div ng-if="hix>=0 && cix>=0" class="list-group">
+                    <a href='#' class="list-group-item">add-user</a>
+                </div>
+                <div ng-if="hix>=0 && cix>=0" class="list-group">
+                    <a href='#' class="list-group-item">add-user</a>
+                </div>
+            </div>
+
+            <!-- /Main -->
+            <div class="col-sm-10">
+
+                <!-- hosts -->
+                <div ng-if="cix === undefined" class="btn-group btn-group-justified">
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
+                            <i class="glyphicon glyphicon-cog"></i>
+                            <br> Adjust
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button class="list-group-item" ng-click="command('start-all')">start-all</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('stop-all')">stop-all</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('reboot-all')">reboot-all</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
+                            <i class="glyphicon glyphicon-plus"></i>
+                            <br> Add
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button class="list-group-item" ng-click="command('add-fedora')">add-fedora</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('add-codepad')">add-codepad</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('add-ubuntu')">add-ubuntu</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('add-apache')">add-apache</button>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <br> Info
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button class="list-group-item" ng-click="command('status-all')">status-all</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('top')">top</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('version')">version</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('diagnose')">diagnose</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('man')">man</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <!-- Containers -->
+                <div ng-if="cix !== undefined" class="btn-group btn-group-justified">
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
+                            <i class="glyphicon glyphicon-cog"></i>
+                            <br> Adjust
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button class="list-group-item" ng-click="command('start')">start</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('stop')">stop</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('reboot')">reboot</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
+                            <i class="glyphicon glyphicon-plus"></i>
+                            <br> Add
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button class="list-group-item" ng-click="command('add-user')">add-user to VE</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
+                            <i class="glyphicon glyphicon-minus"></i>
+                            <br> Remove
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button class="list-group-item" ng-click="command('kill')">kill</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('disable')">disable</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('remove')">remove</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="btn-group ">
+                        <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <br> Info
+                        </button>
+                        <ul class="dropdown-menu ">
+                            <li>
+                                <button class="list-group-item" ng-click="command('info')">info</button>
+                            </li>
+                            <li>
+                                <button class="list-group-item" ng-click="command('man')">man</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <br>
+                <div id="terminal" ng-bind-html='terminal'></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

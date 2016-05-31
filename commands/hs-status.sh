@@ -264,6 +264,69 @@ fi
 man '
     A Quick list of acessible container names to be processed further in other scripts..
 '
+
+hint "info" "Detailed container information"
+if [ "$CMD" == "info" ] 
+then
+        argument C
+        sudomize
+        authorize
+        
+        echo ''
+                
+        printf ${yellow}"%-10s"${NC} "STATUS"
+        printf ${yellow}"%-48s"${NC} "HOSTNAME"
+        printf ${yellow}"%-14s"${NC} "IP-LOCAL"
+        printf ${yellow}"%-3s"${NC} "IN"
+        printf ${yellow}"%-12s"${NC} "HTTP  HTTPS "
+        printf ${yellow}"%-4s"${NC} "RES"
+        printf ${yellow}"%-3s"${NC} "MX"        
+        printf ${yellow}"%-5s"${NC} "DISK"
+        printf ${yellow}"%-32s"${NC} "USERs"
+
+        echo ''
+        
+        get_state
+        say_name $C
+        get_ip
+        get_dig_A
+        get_pound_state
+        get_http_response
+        get_dig_MX
+        get_disk_usage
+        get_users
+        
+        echo ''
+
+        printf ${yellow}"%-5s"${NC} "DISK"
+        printf ${yellow}"%-5s"${NC} "LOGS"
+        
+        echo ''
+        
+        get_disk_usage
+        get_logs_usage
+        
+        echo ''
+        
+        printf ${yellow}"%-10s"${NC} "TYPE"
+        printf ${yellow}"%-48s"${NC} "HOSTNAME"
+        printf ${yellow}"%-14s"${NC} "IP-LOCAL"
+        printf ${yellow}"%-3s"${NC} "DETAILS"
+        echo ''
+        
+        get_ctype
+        say_name $C
+        get_ip
+        get_details
+        
+        echo ''
+        
+ok        
+fi
+man '
+    A Quick list of acessible container names to be processed further in other scripts..
+'
+
 fi ## of onHS
 
 

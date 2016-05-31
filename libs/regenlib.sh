@@ -290,7 +290,7 @@ function generate_user_configs { ## for user
         # msg "Generating user configs for user $_u"        
 
         ## create keypair
-        if [ ! -f /home/$_u/.ssh/id_rsa.pub ]
+        if [ ! -f /home/$_u/.ssh/id_rsa.pub ] || [ ! -f /home/$_u/.ssh/id_rsa ] || [ ! -f /var/srvctl-host/users/$_u/srvctl_id_rsa.pub ] || [ ! -f /var/srvctl-host/users/$_u/srvctl_id_rsa ]
         then
           msg "Creating keypair for user "$_u
           create_keypair $_u
@@ -298,16 +298,22 @@ function generate_user_configs { ## for user
 
         mkdir -p /root/srvctl-users/authorized_keys
         
+        ## root key first
         cat /root/.ssh/authorized_keys > /home/$_u/.ssh/authorized_keys
         echo '' >> /home/$_u/.ssh/authorized_keys
         
+        ## srvctl-gui key
+        cat /var/srvctl-host/users/$_u/srvctl_id_rsa.pub >> /home/$_u/.ssh/authorized_keys
+        echo '' >> /home/$_u/.ssh/authorized_keys
+        
+        ## root-managed keys
         if [ -f  /root/srvctl-users/authorized_keys/$_u ]
         then
             cat /root/srvctl-users/authorized_keys/$_u >> /home/$_u/.ssh/authorized_keys
-
-        fi                
+        fi
+        
+                        
         chown $_u:$_u /home/$_u/.ssh/authorized_keys
-
         
         ## so we use bind mounts now, and want allow users to access files in their bind-mounted container dirs....
         usermod -a -G srv $_u
@@ -333,6 +339,13 @@ function regenerate_users_configs {
         do
                 update_password $_U
         done 
+        
+        msg "regenerate client certificates"
+        for _U in $(ls /home)
+        do
+            create_client_certificate $_U
+        done
+        
 }
 
 function generate_user_structure ## for user, container

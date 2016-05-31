@@ -91,6 +91,23 @@ then
     firewall-cmd --zone=$zone --permanent --add-service=dyndns
 fi
 
+if [ -z "$(echo $services | grep ' srvctl-gui ')" ]
+then
+
+    set_file /etc/firewalld/services/srvctl-gui.xml '<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>srvctl-gui</short>
+  <description>This option allows the use of srvctl on a browser. </description>
+  <port protocol="tcp" port="250"/>
+</service>
+'
+    ## make firewall aware of the service
+    echo firewall-cmd --reload
+    firewall-cmd --reload
+
+    echo firewall-cmd --zone=$zone --permanent --add-service=srvctl-gui
+    firewall-cmd --zone=$zone --permanent --add-service=srvctl-gui
+fi
 
 echo firewall-cmd --reload
 firewall-cmd --reload

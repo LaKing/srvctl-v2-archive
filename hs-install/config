@@ -21,7 +21,7 @@ SRV=/srv
 ## Company domain name - use your own
 #CDN=Unknown
 
-## Server domain name - Access servers under a dmain with his own certificates.
+## Server domain name - Access servers under a domain with his own certificates.
 #SDN=Unknown
 
 ## IPv6 address of the host
@@ -37,5 +37,7 @@ BACKUP_PATH=/temp
 ## turn off debug messages
 debug=false
 
-
+## srvctl CA related
+rootca_host=Unknown
+rootca_subj="/C=HU/ST=Hungary/L=Budapest/O=$CMP CA"
 

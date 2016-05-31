@@ -106,13 +106,22 @@ function to_ipv6 {
 }
 
 function create_keypair { ## for user $U
-        U=$1
+        local U=$1
 
         mkdir -p /home/$U/.ssh
 
         ## create ssh keypair
-        if [ ! -f /home/$U/.ssh/id_rsa.pub ]; then
+        if [ ! -f /home/$U/.ssh/id_rsa.pub ]
+        then
            ssh-keygen -t rsa -b 4096 -f /home/$U/.ssh/id_rsa -N '' -C $U@@$(hostname)
+        fi
+        
+        ## srvctl-gui keypair
+        mkdir -p /var/srvctl-host/users/$U
+    
+        if [ ! -f /var/srvctl-host/users/$U/srvctl_id_rsa.pub ]
+        then
+            ssh-keygen -t rsa -b 4096 -f /var/srvctl-host/users/$U/srvctl_id_rsa -N '' -C $U-srvtcl-key
         fi
 
         chown -R $U:$U /home/$U/.ssh
@@ -231,6 +240,7 @@ function add_user {
     adduser $U 2> /dev/null
     update_password $U
     create_keypair $U
+    create_client_certificate $_U
 }
 
 function  get_randomstr {
