@@ -282,8 +282,9 @@ then
         printf ${yellow}"%-4s"${NC} "RES"
         printf ${yellow}"%-3s"${NC} "MX"        
         printf ${yellow}"%-5s"${NC} "DISK"
-        printf ${yellow}"%-32s"${NC} "USERs"
-
+        printf ${yellow}"%-5s"${NC} "LOGS"
+        printf ${yellow}"%-10s"${NC} "TYPE"
+        printf ${yellow}"%-3s"${NC} "DETAILS"
         echo ''
         
         get_state
@@ -294,32 +295,47 @@ then
         get_http_response
         get_dig_MX
         get_disk_usage
-        get_users
-        
-        echo ''
-
-        printf ${yellow}"%-5s"${NC} "DISK"
-        printf ${yellow}"%-5s"${NC} "LOGS"
-        
-        echo ''
-        
-        get_disk_usage
         get_logs_usage
-        
-        echo ''
-        
-        printf ${yellow}"%-10s"${NC} "TYPE"
-        printf ${yellow}"%-48s"${NC} "HOSTNAME"
-        printf ${yellow}"%-14s"${NC} "IP-LOCAL"
-        printf ${yellow}"%-3s"${NC} "DETAILS"
-        echo ''
-        
         get_ctype
-        say_name $C
-        get_ip
         get_details
         
         echo ''
+        echo ''
+        echo "LXC-log: $(cat $SRV/$C/lxc.log)"
+        echo "#$(cat $SRV/$C/config.counter) Created: $(cat $SRV/$C/creation-date)"
+        echo "DNS provider: $(cat $SRV/$C/dns-provider)"
+        echo "DNS servers: $(cat $SRV/$C/dns-servers | tr '\n' ' ')"
+        echo ''
+        
+        lxc-info -n  $C | tail -n 8
+        
+        echo ''
+        
+        if [ -f $SRV/$C/dns.log ]
+        then
+            echo ''
+            while read line
+            do
+                err "$line"
+            done < $SRV/$C/dns.log
+        fi
+        
+        if [ -f $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log ]
+        then
+            echo ''
+            while read line
+            do
+                ntc "$line"
+            done < $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log
+        fi
+        
+        echo ''
+        for i in $(ls $SRV/$C/settings); do echo "$i: $(cat $SRV/$C/settings/$i | tr '\n' ' ')"; done
+        
+        echo ''
+
+        
+
         
 ok        
 fi

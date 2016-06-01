@@ -256,6 +256,7 @@ var sc_command = function(hix, uix, cmd_json, socket) {
                 //users[uix].main.hosts[hix].containers = line_to_arrob(adat);
                 //update_user(uix);
                 console.log('Closed ssh2 connection');
+                socket.emit('unlock');
             }).on('data', function(data) {
                 adat += data;
                 socket.emit('set-terminal', term2html(adat));

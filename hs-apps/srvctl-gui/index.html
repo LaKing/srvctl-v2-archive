@@ -45,20 +45,14 @@
 
                 <div class="list-group">
                     <div ng-repeat="c in containers" class="dropdown">
-                        <button class="list-group-item dropdown-toggle {{ $index == cix ? 'active' : 'inactive' }}" type="button" ng-click="setcix($index); command('info');" data-toggle="dropdown">{{c.name}} </button>
+                        <button class="list-group-item dropdown-toggle {{ $index == cix ? 'active' : 'inactive' }}" type="button" ng-click="setcix($index); command_ve('info');" data-toggle="dropdown">{{c.name}} </button>
                     </div>
                 </div>
 
                 <h4><i class="glyphicon glyphicon-list"></i> commands</h4>
 
-                <div ng-if="hix>=0 && !cix>=0" class="list-group">
-                    <a href='#' class="list-group-item">add-dyndns</a>
-                </div>
-                <div ng-if="hix>=0 && cix>=0" class="list-group">
-                    <a href='#' class="list-group-item">add-user</a>
-                </div>
-                <div ng-if="hix>=0 && cix>=0" class="list-group">
-                    <a href='#' class="list-group-item">add-user</a>
+                <div ng-if="!block" class="list-group">
+                    <button class="list-group-item">add-publickey</button>
                 </div>
             </div>
 
@@ -66,22 +60,24 @@
             <div class="col-sm-10">
 
                 <!-- hosts -->
-                <div ng-if="cix === undefined" class="btn-group btn-group-justified">
+                <div ng-if="lock" class="btn-group btn-group-justified">
+                    <div class="btn-group">
+                        <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" ng-click="lock=false">
+                            <i class="glyphicon glyphicon-remove-sign"></i>
+                            <br> Working!
+                        </button>
+                    </div>
+                </div>
+                <div ng-if="!lock && cix === undefined" class="btn-group btn-group-justified">
 
                     <div class="btn-group">
                         <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
                             <i class="glyphicon glyphicon-cog"></i>
-                            <br> Adjust
+                            <br> Manage
                         </button>
                         <ul class="dropdown-menu">
-                            <li>
-                                <button class="list-group-item" ng-click="command('start-all')">start-all</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('stop-all')">stop-all</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('reboot-all')">reboot-all</button>
+                            <li ng-repeat="i in ['start-all','stop-all','reboot-all']">
+                                <button class="list-group-item" ng-click="command(i)">{{i}}</button>
                             </li>
                         </ul>
                     </div>
@@ -92,17 +88,8 @@
                             <br> Add
                         </button>
                         <ul class="dropdown-menu">
-                            <li>
-                                <button class="list-group-item" ng-click="command('add-fedora')">add-fedora</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('add-codepad')">add-codepad</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('add-ubuntu')">add-ubuntu</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('add-apache')">add-apache</button>
+                            <li ng-repeat="i in ['add-fedora','add-codepad','add-ubuntu','add-apache','add-dyndns']">
+                                <button class="list-group-item" ng-click="reset_modal(); modal.title=i; modal.argument_txt= 'Domain name'; modal.be_fqdn= true;" data-toggle="modal" href="#argModal">{{i}}</button>
                             </li>
                         </ul>
                     </div>
@@ -114,20 +101,8 @@
                             <br> Info
                         </button>
                         <ul class="dropdown-menu">
-                            <li>
-                                <button class="list-group-item" ng-click="command('status-all')">status-all</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('top')">top</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('version')">version</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('diagnose')">diagnose</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('man')">man</button>
+                            <li ng-repeat="i in ['status-all','usage','top','version','diagnose','man']">
+                                <button class="list-group-item" ng-click="command(i)">{{i}}</button>
                             </li>
                         </ul>
                     </div>
@@ -135,22 +110,16 @@
                 </div>
 
                 <!-- Containers -->
-                <div ng-if="cix !== undefined" class="btn-group btn-group-justified">
+                <div ng-if="!lock && cix !== undefined" class="btn-group btn-group-justified">
 
                     <div class="btn-group">
                         <button class="btn btn-primary col-sm-3 dropdown-toggle" type="button" data-toggle="dropdown">
                             <i class="glyphicon glyphicon-cog"></i>
-                            <br> Adjust
+                            <br> Manage
                         </button>
                         <ul class="dropdown-menu">
-                            <li>
-                                <button class="list-group-item" ng-click="command('start')">start</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('stop')">stop</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('reboot')">reboot</button>
+                            <li ng-repeat="i in ['start','stop','reboot']">
+                                <button class="list-group-item" ng-click="command_ve(i)">{{i}}</button>
                             </li>
                         </ul>
                     </div>
@@ -161,8 +130,8 @@
                             <br> Add
                         </button>
                         <ul class="dropdown-menu">
-                            <li>
-                                <button class="list-group-item" ng-click="command('add-user')">add-user to VE</button>
+                            <li ng-repeat="i in ['add-user']">
+                                <button class="list-group-item" ng-click="reset_modal(); modal.title=i; modal.argument_txt= 'Username';" data-toggle="modal" href="#argModal">{{i}}</button>
                             </li>
                         </ul>
                     </div>
@@ -173,15 +142,10 @@
                             <br> Remove
                         </button>
                         <ul class="dropdown-menu">
-                            <li>
-                                <button class="list-group-item" ng-click="command('kill')">kill</button>
+                            <li ng-repeat="i in ['kill','disable','remove']">
+                                <button class="list-group-item" ng-click="command_ve(i)">{{i}}</button>
                             </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('disable')">disable</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('remove')">remove</button>
-                            </li>
+
                         </ul>
                     </div>
 
@@ -191,11 +155,8 @@
                             <br> Info
                         </button>
                         <ul class="dropdown-menu ">
-                            <li>
-                                <button class="list-group-item" ng-click="command('info')">info</button>
-                            </li>
-                            <li>
-                                <button class="list-group-item" ng-click="command('man')">man</button>
+                            <li ng-repeat="i in ['info','man']">
+                                <button class="list-group-item" ng-click="command_ve(i)">{{i}}</button>
                             </li>
                         </ul>
                     </div>
@@ -207,6 +168,22 @@
             </div>
         </div>
     </div>
+    <!-- modal -->
+    <div class="modal" id="argModal">
+        <div class="modal-dialog" ng-if="!lock">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{{ modal.title }}</h4>
+                </div>
+                <div class="modal-body">
+                    <input class="form-control" placeholder="{{ modal.argument_txt }}" ng-model="modal.argument" type="text">
+                </div>
+                <div class="modal-footer">
+                    <a href="#" data-dismiss="modal" class="btn">Cancel</a>
+                    <a href="#" data-dismiss="modal" ng-if="!modal.be_fqdn || modal.be_fqdn && is_fqdn(modal.argument)" ng-click="command(modal.command + ' ' + modal.argument + ' ' + modal.optional)" class="btn btn-primary">Apply</a>
+                </div>
+            </div>
+        </div>
 
 </body>
 

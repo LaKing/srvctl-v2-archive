@@ -127,14 +127,14 @@ function get_disk_usage {
 
         du=$(du -hs $SRV/$C | head -c 4 )
 
-        printf ${yellow}"%-5s"${NC} $du
+        printf ${NC}"%-5s"${NC} $du
 }
 
 function get_logs_usage {
 
         du=$(du -hs $SRV/$C/rootfs/var/log | head -c 4 )
 
-        printf ${yellow}"%-5s"${NC} $du
+        printf ${NC}"%-5s"${NC} $du
 }
 
 function get_dig_A {
@@ -232,7 +232,7 @@ function get_ctype {
             _ctype=$(cat $SRV/$C/ctype | xargs)
         fi
 
-        printf ${yellow}"%-10s"${NC} ${_ctype}
+        printf ${NC}"%-10s"${NC} ${_ctype}
 }
 
 function get_details {
@@ -240,7 +240,7 @@ function get_details {
         if [ -f $SRV/$C/rootfs/etc/os-release ]
         then
             source $SRV/$C/rootfs/etc/os-release
-            printf ${yellow}"%-32s"${NC} "$NAME $VERSION"
+            printf ${NC}"%-32s"${NC} "$NAME $VERSION"
         else
             printf ${red}"%-32s"${NC} "ERROR no os-release"
         fi

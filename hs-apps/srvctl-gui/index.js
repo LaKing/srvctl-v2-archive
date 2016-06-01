@@ -6,7 +6,7 @@
 
         // rootscope functions and variables
 
-        $rootScope.main = {};
+        $rootScope.lock = true;
 
     });
 
@@ -36,7 +36,7 @@
 
 
     app.controller('mainController', ['$scope', '$http', '$rootScope', 'socket', function($scope, $http, $rootScope, socket) {
-
+        $scope.main = {};
         // host index
         $scope.hix = 0;
         // container index in host index
@@ -45,12 +45,34 @@
         $scope.terminal = 'Please wait.';
 
         $scope.containers = [];
+        $scope.modal = {};
+
+        $scope.reset_modal = function() {
+            $scope.modal = {
+                title: "",
+                argument_txt: '',
+                has_opa: false,
+                optional_txt: '',
+                command: '',
+                argument: '',
+                optional: ''
+            };
+        };
+        $scope.reset_modal();
+
+        $scope.is_fqdn = function(val) {
+            if (/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/.test(val)) {
+                return true;
+            } else {
+                return false;
+            }
+        };
 
         $scope.sethix = function(hix) {
             $scope.cix = undefined;
             if (hix > -1) {
                 $scope.hix = hix;
-                $scope.containers = $rootScope.main.hosts[hix].containers;
+                $scope.containers = $scope.main.hosts[hix].containers;
             } else $scope.hix = undefined;
         };
         $scope.setcix = function(cix) {
@@ -60,12 +82,23 @@
 
         $scope.command = function(c) {
             $scope.terminal = '';
+            $rootScope.lock = true;
 
             var cmd = c;
-            if (c === 'info' || c === 'start' || c === 'stop') cmd = c + ' ' + $scope.containers[$scope.cix].name;
             var cmd_json = {
                 hix: $scope.hix,
-                cix: $scope.cix,
+                cmd: cmd
+            };
+            socket.emit('sc-command', cmd_json);
+
+        };
+        $scope.command_ve = function(c) {
+            $scope.terminal = '';
+            $rootScope.lock = true;
+
+            var cmd = c + ' ' + $scope.containers[$scope.cix].name;
+            var cmd_json = {
+                hix: $scope.hix,
                 cmd: cmd
             };
             socket.emit('sc-command', cmd_json);
@@ -78,7 +111,7 @@
 
         socket.on('set-main', function(main) {
             console.log(main);
-            $rootScope.main = main;
+            $scope.main = main;
 
             $scope.sethix(0);
 
@@ -87,7 +120,9 @@
             //console.log(term);
             $scope.terminal = '<pre>' + term + '</pre>';
         });
-
+        socket.on('unlock', function() {
+            $rootScope.lock = false;
+        });
     }]);
 
 
