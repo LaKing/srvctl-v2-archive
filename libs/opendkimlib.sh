@@ -2,7 +2,7 @@ function regenerate_opendkim {
     
     msg "regenerate opendkim"
     
-     _var=/var/opendkim
+     local _var=/var/opendkim
     
      mkdir -p $_var
      
@@ -19,6 +19,8 @@ function regenerate_opendkim {
      
      for _c in $(lxc-ls)
      do
+         echo "opendkim-test $_c" 
+         
          if [ ! -d $SRV/$_c/opendkim ]
          then
              dkim_selector="default"
@@ -32,7 +34,10 @@ function regenerate_opendkim {
 
          
          if [ "${_c: -6}" == "-devel" ] || [ "${_c: -6}" == ".devel" ] || [ "${_c: -6}" == "-local" ] || [ "${_c: -6}" == ".local" ]
-         then 
+         then
+             echo 'Skipping'
+         else
+             echo "opendkim-make $_c" 
              echo $_c >> $_var/TrustedHosts
              
              for i in $SRV/$_c/opendkim/*.private
