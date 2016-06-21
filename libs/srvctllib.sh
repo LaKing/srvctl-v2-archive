@@ -159,17 +159,17 @@ function get_password {
 
 }
 
-function update_password {
-        ## for local user
-       local _u=$1
-       local password=''
-       local passtor=/var/srvctl-host/users/$_u
+function update_password { ## for local user
+
+    local _u=$1
+    local password=''
+    local passtor=/var/srvctl-host/users/$_u
     
-       
     mkdir -p $passtor
    
     if [ -f /home/$_u/.password ] && [ -f $passtor/.password ] && [ -z "$(diff /home/$_u/.password $passtor/.password)" ] && [ -f /home/$_u/.password.sha512 ] && [ -f $passtor/.password.sha512 ] && [ -z "$(diff /home/$_u/.password.sha512 $passtor/.password.sha512)" ]
     then
+        dbg "#return $_u $passtor" 
         ## nothing to do
         return
     fi
@@ -179,7 +179,7 @@ function update_password {
     then
         echo -n $(cat /home/$_u/.password.sha512) > $passtor/.password.sha512
     fi
-   
+
     ## copy from store to home
     if [ -f $passtor/.password.sha512 ] && [ ! -f /home/$_u/.password.sha512 ]
     then
@@ -196,14 +196,14 @@ function update_password {
     if [ -f $passtor/.password ] && [ ! -f /home/$_u/.password ]
     then
         echo -n $(cat $passtor/.password) > /home/$_u/.password
-    fi   
+    fi  
 
     if [ -z "$(cat $passtor/.password 2> /dev/null)" ]
     then
         rm -rf $passtor/.password
         rm -rf /home/$_u/.password
     fi
-    
+ 
     ## load / generate password
     if ! [ -f "$passtor/.password" ]
     then
@@ -231,11 +231,12 @@ function update_password {
     chmod 400 /home/$_u/.password  
     chown $_u:$_u /home/$_u/.password.sha512
     chmod 400 /home/$_u/.password.sha512
+
 }
 
 function add_user {
 
-    U=$1
+    local U=$1
     #msg "add_user $U"
     adduser $U 2> /dev/null
     update_password $U

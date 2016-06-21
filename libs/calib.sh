@@ -107,14 +107,14 @@ fi
 
 function create_client_certificate { ## argument user
 
-local _u=$1
-
-local passtor=/var/srvctl-host/users/$_u
-local _commonname="$_u"
-local _passphrase="$(cat $passtor/.password)"
-
 if [ "$rootca_host" == "$HOSTNAME" ]
 then
+
+    local _u=$1
+
+    local passtor=/var/srvctl-host/users/$_u
+    local _commonname="$_u"
+    local _passphrase="$(cat $passtor/.password)"
 
     root_CA_init 
 

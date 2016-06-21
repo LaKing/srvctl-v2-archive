@@ -210,7 +210,7 @@ function dyndns_create_named_zone {
     echo '        file "'$named_slave_zone'";' >> $named_slave
     echo '};' >> $named_slave
 
-echo "dyndns: $D $ip"
+    ## dbg "dyndns: $D $ip"
         
     serial_file=/var/srvctl-host/named-serial/$today
     mkdir -p /var/srvctl-host/named-serial
