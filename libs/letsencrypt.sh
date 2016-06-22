@@ -173,7 +173,7 @@ function get_acme_certificate { ## for container
     #echo "letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist"
     echo @$_domlist >> $LOG/letsencrypt.log
     echo "$NOW attempt to create letsencrypt certificate" >> $le_log
-    letsencrypt certonly --agree-tos --webroot --webroot-path /var/acme/ $_domlist >> $LOG/letsencrypt.log 2> $le_log
+    letsencrypt certonly --non-interactive --agree-tos --keep-until-expiring --expand --webroot --webroot-path /var/acme/ $_domlist >> $LOG/letsencrypt.log 2> $le_log
     ## Well, this may hang like that, ... in case, simply comment out that >> ... ^ above here  
     
     if [ "$?" == 0 ]

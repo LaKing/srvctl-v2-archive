@@ -169,7 +169,6 @@ function update_password { ## for local user
    
     if [ -f /home/$_u/.password ] && [ -f $passtor/.password ] && [ -z "$(diff /home/$_u/.password $passtor/.password)" ] && [ -f /home/$_u/.password.sha512 ] && [ -f $passtor/.password.sha512 ] && [ -z "$(diff /home/$_u/.password.sha512 $passtor/.password.sha512)" ]
     then
-        dbg "#return $_u $passtor" 
         ## nothing to do
         return
     fi

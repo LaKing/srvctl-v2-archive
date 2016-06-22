@@ -112,6 +112,8 @@ then
 
     local _u=$1
 
+dbg $_u
+
     local passtor=/var/srvctl-host/users/$_u
     local _commonname="$_u"
     local _passphrase="$(cat $passtor/.password)"
@@ -179,8 +181,8 @@ then
 #  -in $sc_ca_dir/client/$CDN-app-client.key.pem \
 #  -pubout -out $sc_ca_dir/client/$CDN-app-client.pub
 
-else
-    msg ".. this is not the CA"
+#else
+#    msg ".. this is not the CA"
 fi
 
 }
