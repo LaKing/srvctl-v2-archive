@@ -111,9 +111,6 @@ if [ "$rootca_host" == "$HOSTNAME" ]
 then
 
     local _u=$1
-
-dbg $_u
-
     local passtor=/var/srvctl-host/users/$_u
     local _commonname="$_u"
     local _passphrase="$(cat $passtor/.password)"
