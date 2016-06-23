@@ -124,9 +124,10 @@ function get_pound_state {
 }
 
 function get_disk_usage {
-
+dbg 'get_disk_usage'
+dbg "du -hs $SRV/$C | head -c 4"
         du=$(du -hs $SRV/$C | head -c 4 )
-
+dbg 'done'
         printf ${NC}"%-5s"${NC} $du
 }
 

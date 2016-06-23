@@ -91,6 +91,14 @@ If you use or plan to use this script you should contact me for support.
 
 [current srvctl documentation](http://srvctl.d250.hu/)
 
+Installation
+```
+cd /usr/share
+git clone https://github.com/LaKing/srvctl.git
+cd /usr/share/srvctl
+bash srvctl.sh update-install all
+```
+
 Made on codepad. Made in hungary.
     
 
