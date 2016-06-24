@@ -331,13 +331,13 @@ function regenerate_users_configs {
         msg "regenrate user configs"
         for _U in $(ls /home)
         do
-                generate_user_configs $_U
+            generate_user_configs $_U
         done 
         
         msg "regenrate user hashes"
         for _U in $(ls /home)
         do
-                update_password $_U
+            update_password $_U
         done 
         
         msg "regenerate client certificates"
@@ -418,7 +418,7 @@ function regenerate_users_structure {
         msg "Generate user access." 
         for _C in $(lxc-ls)
         do
-            dbg "bind_mount $_C"
+            #dbg "bind_mount $_C"
             bind_mount $_C
             
                 if $all_arg_set
@@ -429,12 +429,12 @@ function regenerate_users_structure {
                         nfs_mount $_C
                         #backup_mount $_U $_C
                 else            
-                    dbg "nfs_mount $_C"
+                    #dbg "nfs_mount $_C"
                     nfs_mount $_C
                     
                     for _U in $(cat $SRV/$_C/settings/users)
                     do
-                        dbg "backup_mount $_C"
+                        #dbg "backup_mount $_C"
                         backup_mount $_U $_C
                     done
                 fi

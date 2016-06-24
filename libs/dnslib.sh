@@ -324,7 +324,7 @@ function regenerate_dns {
                 then
                         for A in $(cat /$SRV/$_C/settings/aliases)
                         do
-                                dbg "$A is an alias of $_C"
+                                #dbg "$A is an alias of $_C"
                                 create_named_zone $A
                                 echo 'include "/var/named/srvctl/'$A'.conf";' >> $named_local
                                 #echo 'include "/var/named/srvctl/'$A'.slave.conf";' >> $named_slave_conf
