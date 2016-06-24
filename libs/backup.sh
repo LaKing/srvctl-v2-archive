@@ -308,7 +308,7 @@ function srvctl_backup {
     server_backup $srvctl_host /etc
     server_backup $srvctl_host /root
     server_backup $srvctl_host /var
-    server_backup $srvctl_host /home
+    #server_backup $srvctl_host /home
 
     for c in $(ssh -n $srvctl_host 'srvctl ls')
     do
