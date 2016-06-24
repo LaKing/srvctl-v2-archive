@@ -421,7 +421,7 @@ function add_service {
 
         systemctl enable $1.service
         systemctl restart $1.service
-        systemctl status $1.service 
+        systemctl status $1.service --no-pager
     else
         err "No such service - $1 (add)"
     fi

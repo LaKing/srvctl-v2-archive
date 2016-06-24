@@ -108,7 +108,7 @@ then
                 msg $service $(systemctl is-active $service) $(systemctl is-enabled $service)
             else
                 err $service $(systemctl is-active $service) $(systemctl is-enabled $service)
-                systemctl status $service
+                systemctl status $service --no-pager
             fi
         done
 

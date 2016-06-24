@@ -203,7 +203,7 @@ then
         cp -r $SRV/$C/cert /var/pound/$C 
         msg "certificate added for $C"
         systemctl restart pound.service
-        systemctl status pound.service
+        systemctl status pound.service  --no-pager
         #echo 'Cert "'$SRV/$C/cert'/pound.pem"' >> /var/pound/https-certificates.cfg
     else
         err "Could not verify the certificate."
@@ -278,7 +278,7 @@ then
     update-ca-trust
     log "Imported root-certificate $ca_file_name $(openssl x509 -noout -subject -in /etc/pki/ca-trust/source/anchors/$ca_hash.pem)"
     systemctl restart pound.service
-    systemctl status pound.service
+    systemctl status pound.service  --no-pager
     
 ok
 fi # CMD

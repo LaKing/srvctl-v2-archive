@@ -69,7 +69,7 @@ function regenerate_opendkim {
     then
         msg "OpenDKIM running." > /dev/null
     else
-        systemctl status opendkim.service
+        systemctl status opendkim.service --no-pager
     fi
 }
 

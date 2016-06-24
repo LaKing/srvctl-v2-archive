@@ -684,7 +684,7 @@ function regenerate_pound_files {
         cat /var/pound/https-1-domains.lok > /var/pound/https-1-domains.cfg
         
         log "$_C Pound-debug restart FAILED!"
-        systemctl status pound.service
+        systemctl status pound.service --no-pager
         cat /var/pound/*
         echo "--------- DEBUG $_C ----------"
         cat /var/pound/$_C/*
@@ -710,7 +710,7 @@ function regenerate_pound_files {
     pound -c -f /etc/pound.cfg
     
     err "Pound restart FAILED!"
-    systemctl status pound.service
+    systemctl status pound.service --no-pager
     
     msg "Debbuging pound configuration..."
     regenerate_pound_files debug

@@ -155,7 +155,7 @@ function get_acme_certificate { ## for container
     if [ "$(systemctl is-active pound.service)" != "active" ]
     then
         err "Pound is not running!"
-        systemctl status pound.service
+        systemctl status pound.service --no-pager
         
         exit 99
     fi
@@ -163,7 +163,7 @@ function get_acme_certificate { ## for container
     if [ "$(systemctl is-active acme-server.service)" != "active" ]
     then
         err "Acme server is not running!"
-        systemctl status acme-server.service
+        systemctl status acme-server.service --no-pager
         
         exit 98
     fi

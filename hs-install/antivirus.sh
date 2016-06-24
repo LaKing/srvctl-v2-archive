@@ -25,7 +25,7 @@ add_service spamassassin
 ## TODO here - check / enable it for real
 systemctl enable clamd@amavisd 
 systemctl start clamd@amavisd 
-systemctl status clamd@amavisd 
+systemctl status clamd@amavisd --no-pager
 
 sed_file /etc/amavisd/amavisd.conf "mydomain = 'example.com';   " "mydomain = '$CDN';   "
 sed_file /etc/amavisd/amavisd.conf "# myhostname = 'host.example.com';  " "myhostname = '$(hostname)';  "

@@ -418,7 +418,7 @@ function regenerate_dns {
         if ! [ "$test" == "active" ]
         then
             err "Error loading DNS settings."
-            systemctl status named.service
+            systemctl status named.service --no-pager
             exit
         else
             msg "DNS server OK"

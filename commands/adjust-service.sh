@@ -21,7 +21,7 @@ then
   
     if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
     then
-        systemctl status $SERVICE.service
+        systemctl status $SERVICE.service  --no-pager
     else
     
         if $isROOT   
@@ -37,7 +37,7 @@ then
             then
                 systemctl enable  $SERVICE.service
                 systemctl restart $SERVICE.service
-                systemctl status $SERVICE.service
+                systemctl status $SERVICE.service  --no-pager
             fi
 
 
@@ -45,7 +45,7 @@ then
             then
                 systemctl disable $SERVICE.service
                 systemctl stop $SERVICE.service
-                systemctl status $SERVICE.service
+                systemctl status $SERVICE.service  --no-pager
             fi
     
     
