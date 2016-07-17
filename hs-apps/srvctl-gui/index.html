@@ -23,7 +23,7 @@
     <div id="top-nav" class="navbar navbar-inverse navbar-static-top">
         <div class="container-fluid">
             <div class="navbar-header">
-                <h4 class="navbar-brand">{{ main.user }} {{hix}} {{cix}}</h4>
+                <h4 class="navbar-brand">{{ main.user }} {{hix}} {{cix}} {{lock}}</h4>
             </div>
         </div>
         <!-- /container -->
@@ -38,21 +38,23 @@
                 <h4><i class="glyphicon glyphicon-hdd"></i> servers</h4>
 
                 <div class="list-group">
-                    <button ng-repeat="h in main.hosts" class="list-group-item {{ $index == hix && cix === undefined ? 'active' : 'inactive' }}" ng-click="sethix($index); command('status-all');" type="button">{{h.name}}</button>
+                    <button ng-repeat="h in main.hosts" class="list-group-item {{ $index == hix && cix === undefined ? 'active' : 'inactive' }}" ng-click=" sethix($index); command('status'); " type="button" ng-disabled="lock">{{h.name}}</button>
                 </div>
 
                 <h4><i class="glyphicon glyphicon-list"></i> containers</h4>
 
                 <div class="list-group">
                     <div ng-repeat="c in containers" class="dropdown">
-                        <button class="list-group-item dropdown-toggle {{ $index == cix ? 'active' : 'inactive' }}" type="button" ng-click="setcix($index); command_ve('info');" data-toggle="dropdown">{{c.name}} </button>
+                        <button class="list-group-item dropdown-toggle {{ $index == cix ? 'active' : 'inactive' }}" type="button" ng-click="setcix($index); command_ve('info'); " data-toggle="dropdown" ng-disabled="lock">{{c.name}} </button>
                     </div>
                 </div>
 
                 <h4><i class="glyphicon glyphicon-list"></i> commands</h4>
 
-                <div ng-if="!block" class="list-group">
-                    <button class="list-group-item">add-publickey</button>
+                <div class="list-group">
+                    <button class="list-group-item" ng-click="reset_modal();modal.cmd='add-publickey'; modal.argument_txt= 'ssh-rsa AAA...';" type="button" data-toggle="modal" href="#argModal">add-publickey</button>
+                    <a ng-if="hix !== undefined" href="/ssh/{{main.user}}@{{ main.hosts[hix].name }}" target="_blank" id="code" type="submit" class="list-group-item">ssh {{main.user}}@{{ main.hosts[hix].name }}</a>
+                    <a ng-if="cix !== undefined" href="/ssh/root@{{ main.hosts[hix].containers[cix].name }}" target="_blank" id="code" type="submit" class="list-group-item">ssh root@{{ main.hosts[hix].containers[cix].name }}</a>
                 </div>
             </div>
 
@@ -89,7 +91,7 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li ng-repeat="i in ['add-fedora','add-codepad','add-ubuntu','add-apache','add-dyndns']">
-                                <button class="list-group-item" ng-click="reset_modal(); modal.title=i; modal.argument_txt= 'Domain name'; modal.be_fqdn= true;" data-toggle="modal" href="#argModal">{{i}}</button>
+                                <button class="list-group-item" ng-click="reset_modal();modal.cmd=i; modal.argument_txt= 'Domain name'; modal.be_fqdn= true;" data-toggle="modal" href="#argModal">{{i}}</button>
                             </li>
                         </ul>
                     </div>
@@ -131,7 +133,7 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li ng-repeat="i in ['add-user']">
-                                <button class="list-group-item" ng-click="reset_modal(); modal.title=i; modal.argument_txt= 'Username';" data-toggle="modal" href="#argModal">{{i}}</button>
+                                <button class="list-group-item" ng-click="reset_modal();modal.cmd=i; modal.argument_txt= 'Username';" data-toggle="modal" href="#argModal">{{i}}</button>
                             </li>
                         </ul>
                     </div>
@@ -165,22 +167,23 @@
 
                 <br>
                 <div id="terminal" ng-bind-html='terminal'></div>
+
             </div>
         </div>
     </div>
     <!-- modal -->
     <div class="modal" id="argModal">
-        <div class="modal-dialog" ng-if="!lock">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">{{ modal.title }}</h4>
+                    <h4 class="modal-title">{{modal.cmd }}</h4>
                 </div>
                 <div class="modal-body">
                     <input class="form-control" placeholder="{{ modal.argument_txt }}" ng-model="modal.argument" type="text">
                 </div>
                 <div class="modal-footer">
                     <a href="#" data-dismiss="modal" class="btn">Cancel</a>
-                    <a href="#" data-dismiss="modal" ng-if="!modal.be_fqdn || modal.be_fqdn && is_fqdn(modal.argument)" ng-click="command(modal.command + ' ' + modal.argument + ' ' + modal.optional)" class="btn btn-primary">Apply</a>
+                    <a href="#" data-dismiss="modal" ng-if="!modal.be_fqdn || modal.be_fqdn && is_fqdn(modal.argument)" ng-click="command(modal.cmd + ' ' + modal.argument + ' ' + modal.optional)" class="btn btn-primary">Apply</a>
                 </div>
             </div>
         </div>

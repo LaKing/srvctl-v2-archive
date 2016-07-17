@@ -513,6 +513,35 @@ function get_dns_servers { ## argument domain
     fi
 }
 
+function get_dyndns_status {
+    
+    for d in /var/dyndns/*.auth
+    do
+        D=${d:12: -5}
+        
+        if [ -f "/var/dyndns/$D.auth" ]
+        then
+            auth=$(cat /var/dyndns/$D.auth)
+            
+            if [ "${auth:0:${#SC_USER}}" == $SC_USER ] || [ $SC_USER == root ]
+            then
+        
+                IP=''
+                if [ -f "/var/dyndns/$D.ip" ]
+                then
+                    IP=$(cat /var/dyndns/$D.ip)
+                    if [ ${IP:0:7} == '::ffff:' ]
+                    then
+                        IP=${IP:7}
+                    fi
+                    
+                    msg $D $IP
+                fi
+            
+            fi
+        fi
+    done   
+}
 
 
 

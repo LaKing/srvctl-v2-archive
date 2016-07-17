@@ -11,7 +11,7 @@ function run_backup {
         
         if $is_running
         then
-            ssh $_C "srvctl backup-db"
+            ssh $_C "srvctl backup-db clean"
         
             if [ -f $SRV/$_C/rootfs/var/log/dnf.log ]
             then
@@ -315,7 +315,7 @@ function srvctl_backup {
         msg $c
         if $BACKUP
         then
-            ssh -n $srvctl_host "ssh -n $c 'srvctl backup-db'"
+            ssh -n $srvctl_host "ssh -n $c 'srvctl backup-db clean'"
         fi
         server_backup $srvctl_host $SRV/$c/cert
         server_backup $srvctl_host $SRV/$c/settings

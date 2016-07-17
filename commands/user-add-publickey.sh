@@ -31,22 +31,51 @@ then
         fi
         
     else
-
-        msg "Import public key from file-path."
-        
-        
-        tmp_file=$ARG
-
-        if [ ! -f "$ARG" ]
-        then
-            tmp_file=$CWD/$ARG
-        fi
     
-        if [ ! -f "$tmp_file" ]
+        if [ "$ARG" == "ssh-rsa" ] && [ ! -z "$OPA" ]
         then
-            err "File not found. $tmp_file"
+    
+            if $isUSER
+            then
+                sudo $install_dir/srvctl-sudo.sh add-publickey $OPAS
+                exit
+            fi
+            
+            local _to=/root/srvctl-users/authorized_keys/
+            
+            if $isROOT
+            then
+                _to=/root/.ssh/authorized_keys
+            fi
+            
+            msg "Import ssh-rsa publickey for $SC_USER"
+            echo '## srvctl import' >> $_to/$SC_USER
+            echo "$OPAS" >> $_to/$SC_USER
+            echo '' >> $_to/$SC_USER   
+            
+            regenerate_users_structure
+            msg "Done."
             exit
+        
+        else
+
+            msg "Import public key from file-path."
+        
+        
+            tmp_file=$ARG
+
+            if [ ! -f "$ARG" ]
+            then
+                tmp_file=$CWD/$ARG
+            fi
+    
+            if [ ! -f "$tmp_file" ]
+            then
+                err "File not found. $tmp_file"
+                exit
+            fi
         fi
+        
     fi
     
     if $isUSER

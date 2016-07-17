@@ -292,7 +292,6 @@ function generate_user_configs { ## for user
         ## create keypair
         if [ ! -f /home/$_u/.ssh/id_rsa.pub ] || [ ! -f /home/$_u/.ssh/id_rsa ] || [ ! -f /var/srvctl-host/users/$_u/srvctl_id_rsa.pub ] || [ ! -f /var/srvctl-host/users/$_u/srvctl_id_rsa ]
         then
-          msg "Creating keypair for user "$_u
           create_keypair $_u
         fi
 
@@ -353,7 +352,7 @@ function generate_user_structure ## for user, container
     _u=$1
     _c=$2
 
-     #dbg  "Generating user structure for $_u in $C"
+     dbg  "Generating user structure for $_u in $_c"
 
                 ## add users host public key to container root user - for ssh access.
                 if [ -f /home/$_u/.ssh/id_rsa.pub ]
@@ -368,6 +367,14 @@ function generate_user_structure ## for user, container
                 then
                         cat /root/srvctl-users/authorized_keys/$_u >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
                 fi
+                
+                ## add users srvctl-gui public key to container root user - for gui ssh access.
+                if [ -f /var/srvctl-host/users/$_u/srvctl_id_rsa.pub ]
+                then
+                        dbg "&& $_u @ $_c"
+                        cat /var/srvctl-host/users/$_u/srvctl_id_rsa.pub >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
+                fi
+
 
                 ## Share via mount
                 ## Second, create common share

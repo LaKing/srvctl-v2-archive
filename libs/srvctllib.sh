@@ -108,6 +108,8 @@ function to_ipv6 {
 function create_keypair { ## for user $U
         local U=$1
 
+        msg "Creating keypair for user "$U
+
         mkdir -p /home/$U/.ssh
 
         ## create ssh keypair

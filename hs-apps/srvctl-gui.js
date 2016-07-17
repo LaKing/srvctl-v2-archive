@@ -39,7 +39,6 @@ var line_to_arrob = function(line) {
 };
 
 // Connected socket id clients array.
-var clients = [];
 var users = [];
 var users_dir = fs.readdirSync("/var/srvctl-host/users");
 
@@ -47,11 +46,13 @@ var i;
 for (i = 0; i < users_dir.length; ++i) {
 
     var user = users_dir[i];
-    var key = fs.readFileSync("/var/srvctl-host/users/" + user + "/srvctl_id_rsa", 'utf8');
+    var keyfile = "/var/srvctl-host/users/" + user + "/srvctl_id_rsa";
+    var key = fs.readFileSync(keyfile, 'utf8');
 
     users.push({
         user: user,
         key: key,
+        keyfile: keyfile,
         main: {
             hosts: [],
             user: user,
@@ -63,7 +64,7 @@ for (i = 0; i < users_dir.length; ++i) {
 
 
 var hosts = [];
-exec("hostname && cat /etc/srvctl/hosts", function(error, stdout, stderr) {
+exec("cat /var/srvctl-gui/hosts", function(error, stdout, stderr) {
     if (error !== null) {
         console.log('exec error: ' + error);
     } else {
@@ -78,6 +79,7 @@ exec("hostname && cat /etc/srvctl/hosts", function(error, stdout, stderr) {
 
 
 app.use(express.static(__dirname + '/srvctl-gui'));
+/*
 app.get('/test', function(req, res) {
     res.setHeader('Content-Type', 'text/plain');
     var cert = req.connection.getPeerCertificate();
@@ -86,7 +88,7 @@ app.get('/test', function(req, res) {
     else res.end('! Hi!');
 
 });
-
+*/
 
 //----------------------------------
 
@@ -208,7 +210,7 @@ function term2html(text) {
 //----------------------------------
 
 
-var sc_ls = function(hix, uix) {
+var sc_ls = function(hix, uix, socket) {
 
     var conn = new Client();
     conn.on('ready', function() {
@@ -218,18 +220,16 @@ var sc_ls = function(hix, uix) {
             stream.on('close', function(code, signal) {
                 conn.end();
                 users[uix].main.hosts[hix].containers = line_to_arrob(adat);
-                update_clients_main();
+                update_client(socket);
             }).on('data', function(data) {
                 adat += data;
             }).stderr.on('data', function(data) {
-                //users[uix].main.debug = data;
-                //update_clients_main(uix);
                 console.log(data);
             });
         });
     });
     conn.on('error', function(err) {
-        //console.log(err);
+        console.log(err);
     });
     conn.on('close', function(err) {
         console.log('ssh2 connection closed');
@@ -256,7 +256,7 @@ var sc_command = function(hix, uix, cmd_json, socket) {
                 //users[uix].main.hosts[hix].containers = line_to_arrob(adat);
                 //update_user(uix);
                 console.log('Closed ssh2 connection');
-                socket.emit('unlock');
+                socket.emit('lock', false);
             }).on('data', function(data) {
                 adat += data;
                 socket.emit('set-terminal', term2html(adat));
@@ -281,78 +281,98 @@ var sc_command = function(hix, uix, cmd_json, socket) {
     });
 };
 
-var update_clients_main = function() {
-    var i;
-    for (i = 0; i < clients.length; ++i) {
-        clients[i].emit('set-main', users[clients[i].uix].main);
-
-    }
+var update_client = function(socket) {
+    socket.emit('set-main', users[socket.uix].main);
 };
 
-var send_main = function(six) {
-
-    var uix = clients[six].uix;
+var send_main = function(socket) {
 
     var hix;
     for (hix = 0; hix < hosts.length; hix++) {
-        sc_ls(hix, uix);
+        sc_ls(hix, socket.uix, socket);
 
     }
 };
 
-var cc = 0;
+app.get('/ssh/:user', function(req, res) {
+    res.sendfile(__dirname + '/srvctl-gui/wetty.html');
+});
+
 io.on('connection', function(socket) {
     console.log('a user connected (id=' + socket.id + ')');
 
-    // add to clients array
-    clients.push(socket);
-    cc = clients.length - 1;
-    clients[cc].user = '';
-    clients[cc].key = '';
-    clients[cc].uix = -1;
-    clients[cc].term = false;
+    socket.user = '';
+    socket.key = '';
+    socket.uix = -1;
+    //socket.term = false;    
 
     var cert = socket.client.request.client.getPeerCertificate();
     if (cert.subject !== undefined) {
         // client is identified
-        clients[cc].user = cert.subject.CN;
+        socket.user = cert.subject.CN;
         var i;
         for (i = 0; i < users_dir.length; ++i) {
             if (users[i].user === cert.subject.CN) {
                 console.log("#USER-uix " + i);
-                clients[cc].key = users[i].key;
-                clients[cc].uix = i;
+                socket.key = users[i].key;
+                socket.uix = i;
             }
         }
+    } else return;
+
+    if (socket.request.headers.referer.split('/')[3] === 'ssh') {
+
+        var ssh_user = socket.request.headers.referer.split('/')[4];
+
+        socket.term = pty.spawn('ssh', ['-p', 22, '-o', 'UserKnownHostsFile=/dev/null', '-o', 'StrictHostKeyChecking=no', '-o', 'PreferredAuthentications=publickey', '-i', users[socket.uix].keyfile, ssh_user], {
+
+            name: 'xterm-256color',
+            cols: 80,
+            rows: 30
+        });
+
+        socket.term.on('data', function(data) {
+            socket.emit('output', data);
+
+        });
+        socket.term.on('exit', function(code) {
+            console.log((new Date()) + " PID=" + socket.term.pid + " ENDED");
+        });
+        socket.on('resize', function(data) {
+            socket.term.resize(data.col, data.row);
+        });
+        socket.on('input', function(data) {
+            socket.term.write(data);
+        });
+
     }
+
 
     socket.on('get-main', function() {
         console.log('get-main (id=' + socket.id + ')');
-        send_main(clients.indexOf(socket));
+        send_main(socket);
     });
 
     socket.on('sc-command', function(cmd_json) {
-        console.log('command (id=' + socket.id + ') ' + JSON.stringify(cmd_json));
-
-        var uix = clients[clients.indexOf(socket)].uix;
-        sc_command(cmd_json.hix, uix, cmd_json, socket);
-
+        console.log('sc_command (id=' + socket.id + ') ' + JSON.stringify(cmd_json));
+        sc_command(cmd_json.hix, socket.uix, cmd_json, socket);
     });
 
     socket.on('disconnect', function() {
-        var six = clients.indexOf(socket);
-        if (six != -1) {
-            clients.splice(six, 1);
-            console.info('Client gone (id=' + socket.id + ').');
-        }
+        console.info('Client gone (id=' + socket.id + ').');
     });
 
 });
 
+
+process.on('uncaughtException', function(e) {
+    console.error('Error: ' + e);
+});
 server.listen(port, function() {
     port = server.address().port;
     console.log('Listening on port' + port);
-    process.setgid('node');
-    process.setuid('node');
+    //process.setgid('node');
+    //process.setuid('node');
 
+    // TODO use it as srvctl-gui user
 });

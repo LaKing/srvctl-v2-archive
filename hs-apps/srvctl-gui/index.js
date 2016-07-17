@@ -6,7 +6,7 @@
 
         // rootscope functions and variables
 
-        $rootScope.lock = true;
+        $rootScope.lock = false;
 
     });
 
@@ -81,6 +81,10 @@
         };
 
         $scope.command = function(c) {
+            if ($rootScope.lock) {
+                alert("Please wait.");
+                return;
+            }
             $scope.terminal = '';
             $rootScope.lock = true;
 
@@ -93,6 +97,10 @@
 
         };
         $scope.command_ve = function(c) {
+            if ($rootScope.lock) {
+                alert("Please wait.");
+                return;
+            }
             $scope.terminal = '';
             $rootScope.lock = true;
 
@@ -106,7 +114,7 @@
         };
 
         socket.emit('get-main');
-        $scope.command('status-all');
+        $scope.command('status');
 
 
         socket.on('set-main', function(main) {
@@ -120,8 +128,8 @@
             //console.log(term);
             $scope.terminal = '<pre>' + term + '</pre>';
         });
-        socket.on('unlock', function() {
-            $rootScope.lock = false;
+        socket.on('lock', function(status) {
+            $rootScope.lock = status;
         });
     }]);
 

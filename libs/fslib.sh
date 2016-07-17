@@ -160,7 +160,7 @@ function nfs_mount { # user on container
                                         
                                 fi
 
-                        done < $SRV/$_c/rootfs/etc/exports
+                        done < $SRV/$_C/rootfs/etc/exports
                         ## we could use showmount -e here ....
                 fi 
             fi

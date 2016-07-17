@@ -208,7 +208,7 @@ systemctl daemon-reload
     add_service amavisd 
     add_service opendkim
     add_service acme-server
-    add_service srvctl-gui
+    
     
 mnt_rorootfs
 
@@ -217,4 +217,23 @@ regenerate_var_ve
 source $install_dir/hs-install/mkrootfs.sh
 
 
+## srvctl-gui
+if [ "$rootca_host" == "$HOSTNAME" ]
+then
+
+    mkdir -p /var/srvctl-gui
+
+    if [ ! -f /var/srvctl-gui/hosts ]
+    then
+        hostname > /var/srvctl-gui/hosts
+        ntc "You may can add additional srvctl-hosts to srvctl-gui in /var/srvctl-gui/hosts"
+    else 
+        msg "Current srvctl-gui hosts are:"
+        cat /var/srvctl-gui/hosts
+        msg "Additional hosts can be added to /var/srvctl-gui/hosts"
+    fi
+
+    add_service srvctl-gui
+
+fi
 
