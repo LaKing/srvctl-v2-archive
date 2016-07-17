@@ -330,19 +330,30 @@ function regenerate_users_configs {
         msg "regenrate user configs"
         for _U in $(ls /home)
         do
+            if [ -d "$_U" ]
+            then
             generate_user_configs $_U
+            else
+                err "$_U is not a directory? in /home?"
+            fi
         done 
         
         msg "regenrate user hashes"
         for _U in $(ls /home)
-        do
-            update_password $_U
+        do  
+            if [ -d "$_U" ]
+            then
+                update_password $_U
+            fi
         done 
         
         msg "regenerate client certificates"
         for _U in $(ls /home)
         do
-            create_client_certificate $_U
+            if [ -d "$_U" ]
+            then
+                create_client_certificate $_U
+            fi
         done
         
 }
@@ -352,7 +363,7 @@ function generate_user_structure ## for user, container
     _u=$1
     _c=$2
 
-     dbg  "Generating user structure for $_u in $_c"
+     #dbg  "Generating user structure for $_u in $_c"
 
                 ## add users host public key to container root user - for ssh access.
                 if [ -f /home/$_u/.ssh/id_rsa.pub ]
@@ -371,7 +382,7 @@ function generate_user_structure ## for user, container
                 ## add users srvctl-gui public key to container root user - for gui ssh access.
                 if [ -f /var/srvctl-host/users/$_u/srvctl_id_rsa.pub ]
                 then
-                        dbg "&& $_u @ $_c"
+                        #dbg "&& $_u @ $_c"
                         cat /var/srvctl-host/users/$_u/srvctl_id_rsa.pub >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
                 fi
 
