@@ -330,7 +330,7 @@ function regenerate_users_configs {
         msg "regenrate user configs"
         for _U in $(ls /home)
         do
-            if [ -d "$_U" ]
+            if [ -d "/home/$_U" ]
             then
             generate_user_configs $_U
             else
@@ -341,7 +341,7 @@ function regenerate_users_configs {
         msg "regenrate user hashes"
         for _U in $(ls /home)
         do  
-            if [ -d "$_U" ]
+            if [ -d "/home/$_U" ]
             then
                 update_password $_U
             fi
@@ -350,7 +350,7 @@ function regenerate_users_configs {
         msg "regenerate client certificates"
         for _U in $(ls /home)
         do
-            if [ -d "$_U" ]
+            if [ -d "/home/$_U" ]
             then
                 create_client_certificate $_U
             fi
