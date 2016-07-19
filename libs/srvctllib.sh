@@ -106,15 +106,14 @@ function to_ipv6 {
 }
 
 function create_keypair { ## for user $U
+        
         local U=$1
-
-        msg "Creating keypair for user "$U
-
         mkdir -p /home/$U/.ssh
 
         ## create ssh keypair
         if [ ! -f /home/$U/.ssh/id_rsa.pub ]
         then
+           msg "Creating keypair for user "$U
            ssh-keygen -t rsa -b 4096 -f /home/$U/.ssh/id_rsa -N '' -C $U@@$(hostname)
         fi
         
@@ -242,7 +241,8 @@ function add_user {
     adduser $U 2> /dev/null
     update_password $U
     create_keypair $U
-    create_client_certificate $_U
+    create_client_certificate $U
+    
 }
 
 function  get_randomstr {
@@ -275,13 +275,26 @@ function authorize { ## sudo access to container $C for current user
         exit 34
     fi
     
-    if [ ! -f $SRV/$C/config ]
+    if [ ! -f $SRV/$C/config ] && [ -f /var/dyndns/$C.auth ]
     then
-        err "No such container."
+        auth=$(cat /var/dyndns/$C.auth)
+            
+        if [ "${auth:0:${#SC_USER}}" == $SC_USER ] || [ $SC_USER == root ]
+        then
+            echo OK > /dev/null
+        else
+            err "Permission denied. $SC_USER@$C"
+            exit 7
+        fi
+    fi
+    
+    if [ ! -f $SRV/$C/config ] && [ ! -f /var/dyndns/$C.auth ]
+    then
+        err "No such thing here."
         exit 35
     fi
     
-    if $isSUDO
+    if $isSUDO && [ -f $SRV/$C/settings/users ]
     then   
         for _uti in $(cat $SRV/$C/settings/users)
         do

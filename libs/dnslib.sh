@@ -22,12 +22,15 @@ function create_named_zone {
     mail_server="mail"
     spf_string="v=spf1"
     
-    while read IP
-    do
-        get_pure_ip $IP
-        spf_string="$spf_string ip4:$ip"
-    done < /var/srvctl/ifcfg/ipv4
- 
+    if [ -f /var/srvctl/ifcfg/ipv4 ]
+    then
+        while read IP
+        do
+            get_pure_ip $IP
+            spf_string="$spf_string ip4:$ip"
+        done < /var/srvctl/ifcfg/ipv4
+    fi
+    
     if [ -f /var/srvctl/ifcfg/ipv6 ]
     then
         while read IP
@@ -184,7 +187,7 @@ function dyndns_create_named_zone {
         IP=$(cat /var/dyndns/$D.ip)
     fi
     
-    if [ ${IP:0:7} == '::ffff:' ]
+    if [ "${IP:0:7}" == '::ffff:' ]
     then
         ip=${IP:7}
     fi
@@ -357,7 +360,7 @@ function regenerate_dns {
         cp $named_main_path/*.conf $named_live_path
 
 
-        for host in $srvctl_hosts
+        for host in $SRVCTL_HOSTS
         do
             
               if [ "$(ssh -n -o ConnectTimeout=1 $host hostname 2> /dev/null)" == "$host" ]
@@ -542,6 +545,7 @@ function get_dyndns_status {
         fi
     done   
 }
+
 
 
 

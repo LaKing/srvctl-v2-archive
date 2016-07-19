@@ -26,7 +26,7 @@ function generate_lxc_config {
     _mac=$(to_mac $_counter)
     _ip4=$(to_ip $_counter)      
     
-    echo "10.10."$_ip4 > $SRV/$_c/config.ipv4  
+    echo "10.$HOSTNET."$_ip4 > $SRV/$_c/config.ipv4  
 
     ## four digit hex part only
     _ip6=$(to_ipv6 $_counter)
@@ -65,26 +65,26 @@ function generate_lxc_config {
     _rootfs_path=$SRV/$_c/rootfs
     
 
-set_file $SRV/$_c/config '## Template for srvctl created fedora container #'$_counter' '$_c' '$NOW'
+set_file $SRV/$_c/config "## Template for srvctl created fedora container #$_counter $_c $NOW
 
 ## system
-lxc.rootfs = '$_rootfs_path'
-lxc.include = '$lxc_usr_path'/share/lxc/config/fedora.common.conf
-lxc.utsname = '$_c'
+lxc.rootfs = $_rootfs_path
+lxc.include = $lxc_usr_path/share/lxc/config/fedora.common.conf
+lxc.utsname = $_c
 lxc.autodev = 1
 
 ## extra mountpoints
-lxc.mount = '$SRV'/'$_c'/fstab
+lxc.mount = $SRV/$_c/fstab
 
 ## networking IPv4
 lxc.network.type = veth
 lxc.network.flags = up
 lxc.network.link = srv-net
-lxc.network.hwaddr = 00:00:10:10:'$_mac'
-lxc.network.ipv4 = 10.10.'$_ip4'/8
-lxc.network.name = srv-'$_counter'
+lxc.network.hwaddr = FA:00:10:$HOSTNET:$_mac
+lxc.network.ipv4 = 10.$HOSTNET.$_ip4/8
+lxc.network.name = srv-$_counter
 lxc.network.ipv4.gateway = auto
-'
+"
     ## share some common files across containers and host
     echo "/var/srvctl $_rootfs_path/var/srvctl none ro,bind 0 0" > $SRV/$_c/fstab
     ## share srvctl
@@ -119,8 +119,8 @@ lxc.mount = '$SRV/$_c/$_ctype'.fstab
 lxc.network.type = veth
 lxc.network.flags = up
 lxc.network.link = srv-net
-lxc.network.hwaddr = 00:00:10:10:'$_mac'
-lxc.network.ipv4 = 10.10.'$_ip4'/8
+lxc.network.hwaddr = 00:00:10.$HOSTNET:'$_mac'
+lxc.network.ipv4 = 10.$HOSTNET.'$_ip4'/8
 lxc.network.name = srv-'$_counter'
 lxc.network.ipv4.gateway = auto
 '
@@ -231,6 +231,7 @@ function lxc_start { ## container
     fi
     
 }
+
 
 
 

@@ -111,10 +111,8 @@ if [ "$rootca_host" == "$HOSTNAME" ]
 then
 
     local _u=$1
-    local passtor=/var/srvctl-host/users/$_u
     local _commonname="$_u"
-    local _passphrase="$(cat $passtor/.password)"
-
+    
     root_CA_init 
 
     # Create a Device Certificate for each trusted client
@@ -155,22 +153,26 @@ then
         -days 1095
     fi
 
-    if [ ! -f "$sc_ca_dir/client/$CDN-$_commonname.p12" ]
+    if [ -f /var/srvctl-host/users/$_u/.password ]
     then
-        msg "create $_commonname p12"
+        local _passphrase="$(cat $passtor/.password)"
 
-        openssl pkcs12 -export \
-        -passout pass:$_passphrase \
-        -in $sc_ca_dir/client/$CDN-$_commonname.crt.pem \
-        -inkey $sc_ca_dir/client/$CDN-$_commonname.key.pem \
-        -out $sc_ca_dir/client/$CDN-$_commonname.p12
-    fi
+        if [ ! -f "$sc_ca_dir/client/$CDN-$_commonname.p12" ]
+        then
+            msg "create $_commonname p12"
+
+            openssl pkcs12 -export \
+            -passout pass:$_passphrase \
+            -in $sc_ca_dir/client/$CDN-$_commonname.crt.pem \
+            -inkey $sc_ca_dir/client/$CDN-$_commonname.key.pem \
+            -out $sc_ca_dir/client/$CDN-$_commonname.p12
+        fi
     
-    if [ ! -f "/home/$_u/$CDN-$_commonname.p12" ] 
-    then
-        cat $sc_ca_dir/client/$CDN-$_commonname.p12 > /home/$_u/$CDN-$_commonname.p12
+        if [ ! -f "/home/$_u/$CDN-$_commonname.p12" ] 
+        then
+            cat $sc_ca_dir/client/$CDN-$_commonname.p12 > /home/$_u/$CDN-$_commonname.p12
+        fi
     fi
-
 
 
 # Create a public key, for funzies

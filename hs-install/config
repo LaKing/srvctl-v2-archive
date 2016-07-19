@@ -12,9 +12,6 @@ LOG=/var/log/srvctl
 ## temporal backup and work directory for removing containers
 TMP=/temp
 
-## The main /srv folder mount point - SSD recommended
-SRV=/srv
-
 ## Company codename - use your own
 #CMP=Unknown
 
@@ -23,6 +20,9 @@ SRV=/srv
 
 ## Server domain name - Access servers under a domain with his own certificates.
 #SDN=Unknown
+
+## numeric Server ID between 10 and 250 used in IP addresses - as X: 10.X.a.b
+HOSTNET=10
 
 ## IPv6 address of the host
 # HOSTIPv6=::1
@@ -38,6 +38,6 @@ BACKUP_PATH=/temp
 debug=false
 
 ## srvctl CA related
-rootca_host=Unknown
+rootca_host=$CDN
 rootca_subj="/C=HU/ST=Hungary/L=Budapest/O=$CMP CA"
 

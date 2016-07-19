@@ -2,16 +2,16 @@ msg "Installing openvpn"
 
 ## configure openvpn
 pm openvpn
-pm easy-rsa
 
-#cp -ai /usr/share/easy-rsa/2.0 ~/srvctl-openvpn-rsa
-## TODO continiue here
+mkdir -p /etc/srvctl/openvpn
 
-## add firewall rule
-if [ -z "$(firewall-cmd --get-services | grep ' openvpn ')" ]
+if [ ! -f /etc/openvpn/dh2048.pem ]
 then
-    firewall-cmd --permanent --add-service=openvpn
-fi
-## reload daemon in firewall.sh
+    openssl dhparam -out /etc/openvpn/dh2048.pem 2048
+fi 
+
+regenerate_hosts_config
+
+
 
 

@@ -10,7 +10,7 @@ function get_primary_ip {
 function process_ip_addr {
     
      IP=$2
-     msg $IP   
+     echo "  $IP"   
      
      
      if [ "$1" == inet ]
@@ -32,60 +32,34 @@ function process_ip_addr {
      
 }
 
+function process_network_interface_configuration {
+ 
+        interface=$9
+        
+        msg "$interface"
+        
+        ip addr show $interface | grep 'scope global' > /var/srvctl/ifcfg/$interface
+        
+            while read a
+            do
+                process_ip_addr $a
+            done < /var/srvctl/ifcfg/$interface
+        
+}
+
+
 function import_network_configuration {
     msg "Scanning network configuration"
  
     mkdir -p /var/srvctl/ifcfg
     rm -rf /var/srvctl/ifcfg/*
     
-    for f in /etc/sysconfig/network-scripts/ifcfg-*
+    ls -l /sys/class/net | grep 'devices/pci' > /var/srvctl/ifcfg/cards
+    
+    while read i 
     do
-
-        
-        NAME=''
-        IPADDR=''
-        NETMASK=''
-        PREFIX=''
-        GATEWAY=''
-        DNS1=''
-        DNS2=''
-        
-        source $f
-        
-        if [ "${f: -4}" == ".bak" ]
-        then
-            continue
-        fi
-        
-        if [ -z "$NAME" ]
-        then
-            bak $f
-            file=$(basename $f)
-            NAME=${file:6}
-                msg "NAME=$NAME is missing from $f. Fixing."
-            echo "NAME=$NAME" >> $f
-        fi
-        
-        if [ "$NAME" != "loopback" ] && [ ! -z "$(ip link show $NAME | grep 'state UP')" ]
-        then
-            if [ ! -z "$GATEWAY" ]
-            then
-                msg $NAME appears to be the default interface
-            else
-                msg $NAME appears to be a secondary interface
-            fi
-            echo "IPADDR  $IPADDR"
-            echo "NETMASK $NETMASK$PREFIX"
-            echo "GATEWAY $GATEWAY"
-            echo "DNS1    $DNS1"
-            echo "DNS2    $DNS2"
-            ip addr show $NAME | grep 'scope global' > $TMP/srvctl-network
-            while read a
-            do
-                process_ip_addr $a
-            done < $TMP/srvctl-network
-        fi
-    done
+         process_network_interface_configuration $i  
+    done < /var/srvctl/ifcfg/cards
 
     
 }

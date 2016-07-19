@@ -47,6 +47,10 @@ then
 
         for C in $(lxc_ls)
         do
+                msg "start-all: $C"
+                sleep 6
+                dbg 'starting'
+        
                 set_is_running
         
                 if [ ! -f $SRV/$C/settings/disabled ] && ! $is_running
@@ -58,6 +62,7 @@ then
                         echo ''
                 fi        
 
+                msg "started $C"
                 echo ''
         done
 ok

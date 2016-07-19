@@ -43,15 +43,20 @@ fi
 
 if [ -z "$(echo $services | grep ' dns ')" ]
 then
-    echo firewall-cmd --permanent --add-service=dns
-    firewall-cmd --permanent --add-service=dns
+    echo firewall-cmd --zone=$zone  --permanent --add-service=dns
+    firewall-cmd --zone=$zone --permanent --add-service=dns
 fi
 
+if [ -z "$(echo $services | grep ' openvpn ')" ]
+then
+    echo firewall-cmd --zone=$zone --permanent --add-service=openvpn
+    firewall-cmd --zone=$zone --permanent --add-service=openvpn
+fi
 
 if [ -z "$(echo $services | grep ' smtp ')" ]
 then
-    echo firewall-cmd --permanent --add-service=smtp
-    firewall-cmd --permanent --add-service=smtp
+    echo firewall-cmd --zone=$zone --permanent --add-service=smtp
+    firewall-cmd --zone=$zone --permanent --add-service=smtp
 fi
 
 if [ -z "$(echo $services | grep ' smtps ')" ]
@@ -107,6 +112,24 @@ then
 
     echo firewall-cmd --zone=$zone --permanent --add-service=srvctl-gui
     firewall-cmd --zone=$zone --permanent --add-service=srvctl-gui
+fi
+
+if [ -z "$(echo $services | grep ' srvctl-openvpn ')" ]
+then
+
+    set_file /etc/firewalld/services/srvctl-openvpn.xml '<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>srvctl-openvpn</short>
+  <description>Openvpn connection directly to containers. </description>
+  <port protocol="udp" port="1100"/>
+</service>
+'
+    ## make firewall aware of the service
+    echo firewall-cmd --reload
+    firewall-cmd --reload
+
+    echo firewall-cmd --zone=$zone --permanent --add-service=srvctl-openvpn
+    firewall-cmd --zone=$zone --permanent --add-service=srvctl-openvpn
 fi
 
 echo firewall-cmd --reload

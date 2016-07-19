@@ -60,7 +60,7 @@ then
           exit 11
         fi
         
-        for host in $srvctl_hosts
+        for host in $SRVCTL_HOSTS
         do
             for _c in $(ssh $host srvctl ls)
             do
@@ -190,7 +190,7 @@ git push
 
         generate_lxc_config $C
 
-        IPv4="10.10."$(to_ip $counter)
+        IPv4="10.$HOSTNET."$(to_ip $counter)
         
    
         ## Add IP to hosts file

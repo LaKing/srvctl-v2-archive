@@ -31,7 +31,7 @@ then
         local_backup /root
         local_backup /var
         
-        for host in $srvctl_hosts
+        for host in $SRVCTL_HOSTS
         do
                 if [ "$(ssh -n -o ConnectTimeout=1 $host hostname 2> /dev/null)" == "$host" ]
                 then

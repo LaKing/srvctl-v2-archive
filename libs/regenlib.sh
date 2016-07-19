@@ -89,12 +89,25 @@ function regenerate_config_files {
             if [ ! -f $SRV/$_C/config.ipv4 ] || [ ! -f $SRV/$_C/config ] || $all_arg_set
             then
                     generate_lxc_config $_C
+                    cat /etc/resolv.conf > $SRV/$_C/rootfs/etc/resolv.conf
             fi
             
         done
         
 }
 
+function regenerate_hosts_config {
+
+        msg "regenerate hosts config"
+        create_client_certificate $HOSTNAME
+        
+        for _S in $SRVCTL_HOSTS
+        do
+            ## openvpn client certificate
+            create_client_certificate $_S
+        done
+
+}
 
 function regenerate_etc_hosts {
         ## and relaydomains
@@ -120,7 +133,7 @@ function regenerate_etc_hosts {
                                 err "No counter, no IPv4 for "$_C
                                 exit
                         else
-                                ip="10.10."$(to_ip $counter)
+                                ip="10.$HOSTNET."$(to_ip $counter)
                                 echo $ip > $SRV/$_C/config.ipv4
                         fi        
                 fi
@@ -189,7 +202,7 @@ function regenerate_known_hosts {
 
         echo '## srvctl generated ..' > /etc/ssh/ssh_known_hosts
         
-        for _S in $srvctl_hosts
+        for _S in $SRVCTL_HOSTS
         do
             echo "## $_S" >> /etc/ssh/ssh_known_hosts
             ssh-keyscan -t rsa -H $(dig $_S +short) >> /etc/ssh/ssh_known_hosts 2>/dev/null
@@ -618,6 +631,7 @@ function regenerate_perdition_files {
 }
 
 fi ## if onHS
+
 
 
 

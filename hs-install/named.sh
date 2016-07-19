@@ -14,7 +14,7 @@ then
         set_file /etc/named.conf '// srvctl generated named.conf
 
 acl "trusted" {
-     10.10.0.0/16;
+     10.'$HOSTNET'.0.0/16;
      localhost;
      localnets;
  };
@@ -69,13 +69,16 @@ else
     msg "Bind - DNS server already configured."
 fi ## install named
 
+
 ## dyndns stuff
-mkdir -p /var/dyndns
-chown node:root /var/dyndns
-chmod 754 /var/dyndns
 
 if [ ! -f /lib/systemd/system/dyndns-server.service ]
 then
+    log "Installing BIND based dyndns."
+ 
+        mkdir -p /var/dyndns
+    chown node:root /var/dyndns
+    chmod 754 /var/dyndns
 
     set_file /lib/systemd/system/dyndns-server.service '## srvctl generated
 [Unit]
@@ -92,8 +95,8 @@ Group=root
 WantedBy=multi-user.target
 '
 
-systemctl daemon-reload
-add_service dyndns-server
+    systemctl daemon-reload
+    add_service dyndns-server
 
 fi
 

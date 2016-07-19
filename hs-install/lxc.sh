@@ -154,11 +154,11 @@ then
   <name>default</name>
   <uuid>00000000-0000-aaaa-aaaa-aaaaaaaaaaaa</uuid>
   <bridge name="inet-br"/>
-  <mac address="00:00:00:AA:AA:AA"/>
+  <mac address="FE:00:00:AA:AA:AA"/>
   <forward/>
-  <ip address="192.168.0.1" netmask="255.255.0.0">
+  <ip address="192.168.10.1" netmask="255.255.0.0">
     <dhcp>
-      <range start="192.168.0.2" end="192.168.0.254"/>
+      <range start="192.168.10.2" end="192.168.10.254"/>
     </dhcp>
   </ip>
 </network>
@@ -167,9 +167,9 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
   <name>primary</name>
   <uuid>00000000-0000-2010-0010-000000000001</uuid>
   <bridge name="srv-net"/>
-  <mac address="00:00:10:10:00:01"/>
+  <mac address="FA:00:10:'$HOSTNET':00:01"/>
   <forward/>
-  <ip address="10.10.0.1" netmask="255.255.0.0"></ip>
+  <ip address="10.'$HOSTNET'.0.1" netmask="255.255.0.0"></ip>
 </network>
 '
 
@@ -182,9 +182,9 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
 #  <name>primary</name>
 #  <uuid>00000000-0000-2010-0010-000000000001</uuid>
 #  <bridge name="srv-net"/>
-#  <mac address="00:00:10:10:00:01"/>
+#  <mac address="00:00:10:$HOSTNET:00:01"/>
 #  <forward/>
-#  <ip address="10.10.0.1" netmask="255.255.0.0"></ip>
+#  <ip address="10.$HOSTNET.0.1" netmask="255.255.0.0"></ip>
 #  <ip family="ipv6" address="2001: ... :1" prefix="64" />
 #</network>
 
@@ -202,5 +202,6 @@ set_file /etc/libvirt/qemu/networks/primary.xml '<network>
 else
     msg "LXC is OK! "$(lxc-info --version)
 fi ## Install LXC
+
 
 

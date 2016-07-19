@@ -32,7 +32,7 @@ fi
 ## TODO test.$myhostname, dev.$myhostname, sys.$myhostname, www.$myhostname, log, .. etc
 
 echo '
-## srvctl-generated postfix main.cf 2.6.0.0
+## srvctl-generated postfix main.cf 2.6.0.1
 ## Do not edit manually, changes will be overwritten!
 
 # COMPATIBILITY
@@ -75,7 +75,7 @@ unknown_local_recipient_reject_code = 550
 relay_domains = $mydestination
 
 # INTERNET OR INTRANET
-relayhost = 10.10.0.1
+relayhost = 10.'$HOSTNET'.0.1
 
 # REJECTING UNKNOWN RELAY USERS
 #relay_recipient_maps = hash:/etc/postfix/relay_recipients

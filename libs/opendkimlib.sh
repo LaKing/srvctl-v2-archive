@@ -10,7 +10,7 @@ function regenerate_opendkim {
      rm -rf $_var/*
      echo '127.0.0.1' >> $_var/TrustedHosts
      echo '::1' >> $_var/TrustedHosts
-     echo '10.10.0.0/16' >> $_var/TrustedHosts
+     echo "10.$HOSTNET.0.0/16" >> $_var/TrustedHosts
      echo '' >> $_var/SigningTable
      echo '' >> $_var/KeyTable
      

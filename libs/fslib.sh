@@ -1,5 +1,10 @@
 function bind_mount { ## container
         
+    if $DISABLE_BINDMOUNT
+    then
+        return
+    fi
+        
     local _C=$1
 
         if [ -f $SRV/$_C/settings/users ]
@@ -48,6 +53,12 @@ function bind_mount { ## container
 }
 
 function bind_unmount {
+    
+    if $DISABLE_BINDMOUNT
+    then
+        return
+    fi
+    
     local _C=$1
                 for _U in $(ls /home)
                 do
@@ -96,12 +107,12 @@ function generate_exports { # for rootfs
         ## keep exports consistent with srvctl system_users !!
 
         ## We export everything with the userIDs in mind, eg: /var/www/html - with apache user rights
-        set_file  $1/etc/exports '## srvctl generated
-/var/log 10.10.0.1(ro)
-/srv 10.10.0.1(rw,all_squash,anonuid=101,anongid=101)
-/var/git 10.10.0.1(rw,all_squash,anonuid=102,anongid=102)
-/var/www/html 10.10.0.1(rw,all_squash,anonuid=48,anongid=48)
-'
+        set_file  $1/etc/exports "## srvctl generated
+/var/log 10.$HOSTNET.0.1(ro)
+/srv 10.$HOSTNET.0.1(rw,all_squash,anonuid=101,anongid=101)
+/var/git 10.$HOSTNET.0.1(rw,all_squash,anonuid=102,anongid=102)
+/var/www/html 10.$HOSTNET.0.1(rw,all_squash,anonuid=48,anongid=48)
+"
 
 }
 
@@ -125,6 +136,11 @@ function generate_exports { # for rootfs
 
 function nfs_mount { # user on container
     
+    if $DISABLE_NFS
+    then
+        return
+    fi
+    
     local _C=$1
 
     if [ -f $SRV/$_C/settings/users ]
@@ -142,7 +158,7 @@ function nfs_mount { # user on container
                 then                        
                         while read line ## of exports file
                         do
-                                if ! [ -z "$(echo $line | grep 10.10.0.1 )" ] && [ ${line:0:1} == '/' ]
+                                if ! [ -z "$(echo $line | grep 10.$HOSTNET.0.1 )" ] && [ ${line:0:1} == '/' ]
                                 then
                                         #nfs_mount_folder $(echo $line | cut -d ' ' -f 1)
                                         
@@ -170,6 +186,12 @@ function nfs_mount { # user on container
 
 
 function nfs_unmount { ## container
+
+    if $DISABLE_NFS
+    then
+        return
+    fi
+
         local _C=$1
                 for _U in $(ls /home)
                 do

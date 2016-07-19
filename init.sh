@@ -23,7 +23,7 @@ source /etc/os-release
 ARCH=$(uname -m)
 
 
-srvctl_hosts=''
+SRVCTL_HOSTS=''
 
 if [ -f /etc/srvctl/hosts ]
 then
@@ -36,7 +36,7 @@ then
             continue
         fi
               
-        srvctl_hosts="$_h $srvctl_hosts"
+        SRVCTL_HOSTS="$_h $SRVCTL_HOSTS"
 
     done < /etc/srvctl/hosts
 fi
@@ -54,6 +54,9 @@ then
 fi
 
 ####################################################
+
+## The main /srv folder mount point - SSD recommended
+SRV=/srv
 
 ## These where the variables to be custimized - used in update-install too!
 source $install_dir/hs-install/config

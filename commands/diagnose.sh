@@ -87,6 +87,7 @@ then
         echo "CDN: $CDN"
         echo "SDN: $SDN"
         echo "HOSTNAME: $HOSTNAME"
+        echo "SRVCTL_HOSTS: $SRVCTL_HOSTS"
 
         #echo "HOSTIPv6: $HOSTIPv6"
         #echo "RANGEv6: $RANGEv6"
@@ -244,6 +245,7 @@ man '
 '
 
 #fi ## isROOT
+
 
 
 

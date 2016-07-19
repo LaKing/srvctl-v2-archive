@@ -105,7 +105,7 @@ before = paths-fedora.conf
 
 [DEFAULT]
 
-ignoreip = 127.0.0.1/8 10.10.0.1/16
+ignoreip = 127.0.0.1/8 10.$HOSTNET.0.1/16
 ignorecommand =
 bantime  = 600
 findtime  = 600
