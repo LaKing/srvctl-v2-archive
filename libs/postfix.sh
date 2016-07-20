@@ -8,13 +8,13 @@ hasMX=false
 
 if $onHS
 then
-    to=$TMP/$_c-srvctl.main.cf
+    to=$SRV/$_c/rootfs/etc/postfix/srvctl.main.cf
     cf=$SRV/$_c/rootfs/etc/postfix/main.cf
 fi
 
 if $onVE
 then
-    to=$TMP/srvctl.main.cf
+    to=/etc/postfix/srvctl.main.cf
     cf=/etc/postfix/main.cf
 fi
 
@@ -153,7 +153,7 @@ if [ -f $cf ]
 then 
     if ! cmp $to $cf >/dev/null 2>&1
     then
-        ntc "Postfix configuration update for $_c"
+        ntc "Postfix configuration update on $_c"
         bak $cf
         cat $to > $cf
     fi
@@ -161,6 +161,6 @@ else
     cat $to > $cf
 fi
 
-rm -rf $to
+#rm -rf $to
 }
 

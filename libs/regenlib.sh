@@ -89,7 +89,14 @@ function regenerate_config_files {
             if [ ! -f $SRV/$_C/config.ipv4 ] || [ ! -f $SRV/$_C/config ] || $all_arg_set
             then
                     generate_lxc_config $_C
-                    cat /etc/resolv.conf > $SRV/$_C/rootfs/etc/resolv.conf
+                    
+            fi
+            
+            if $all_arg_set
+            then
+                ## TODO resolv conf from host? or special one?
+                cat /etc/resolv.conf > $SRV/$_C/rootfs/etc/resolv.conf
+                write_ve_postfix_main $_C
             fi
             
         done

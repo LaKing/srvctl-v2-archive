@@ -1,3 +1,15 @@
+#########
+    
+    fedora 24 uses kernel 4.5 or 4.6
+    lxc as of version 2.0.3 is not stable on those kernels.
+    lxc-starts uses 100% cpu, and renders the system unstable.
+    https://github.com/lxc/lxc/issues/1088
+    
+    A workaround is to use kernel 4.4.6 from fedora 23.
+    https://ask.fedoraproject.org/en/question/30549/stop-grub2-changing-default-boot-everytime-i-run-yum-update/
+
+#########
+
 
 Should start using this ...
 http://arachnoid.com/python/beautify_bash_program.html

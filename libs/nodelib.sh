@@ -1,11 +1,13 @@
 function install_nodejs_getver {
     
     ## we will update this variable
-    nodejs_ver='5.7.0-1'
+    nodejs_ver='6.3.0-1'
     
     ## get the listing
-    #echo https://rpm.nodesource.com/pub_5.x/fc/$VERSION_ID/$ARCH/
-    curl -s https://rpm.nodesource.com/pub_5.x/fc/$VERSION_ID/$ARCH/ | grep 'href="nodejs-' > /tmp/nodeversion
+    
+    local _nodesource='https://rpm.nodesource.com/pub_6.x/fc'
+    
+    curl -s $_nodesource/$VERSION_ID/$ARCH/ | grep 'href="nodejs-' > /tmp/nodeversion
     
     if [ "$?" == "0" ]
     then
@@ -18,12 +20,15 @@ function install_nodejs_getver {
         ## process 
         while read line
         do
+            echo $line
+            
             if ! [[ "${line:16:1}" == "d" ]]
             then
                 ## substract the version from that listing
                 _check=${line:16:7}
                 _checknum=$(echo $_check | tr '.' '0' | tr '-' '0' )
-        
+
+                
                 if [ "$_checknum" -gt "$_checkcount" ]
                 then
                 ## update version number, as it seems to be the highest so far
@@ -38,7 +43,7 @@ function install_nodejs_getver {
          msg "latest node version known is $nodejs_ver"
     fi
     
-    nodejs_rpm_url='https://rpm.nodesource.com/pub_5.x/fc/'$VERSION_ID'/'$ARCH'/nodejs-'$nodejs_ver'nodesource.fc'$VERSION_ID'.'$ARCH'.rpm'
+    nodejs_rpm_url=$_nodesource'/'$VERSION_ID'/'$ARCH'/nodejs-'$nodejs_ver'nodesource.fc'$VERSION_ID'.'$ARCH'.rpm'
    
 }
 
@@ -64,6 +69,11 @@ function install_nodejs_latest {
         
         echo "dnf -y install $nodejs_rpm_url"
         dnf -y install $nodejs_rpm_url
+        
+        if [ "$?" !== '0' ]
+        then
+            err "nodejs installation failed!"
+        fi
     fi
 }
 
