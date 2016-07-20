@@ -20,8 +20,7 @@ function install_nodejs_getver {
         ## process 
         while read line
         do
-            echo $line
-            
+
             if ! [[ "${line:16:1}" == "d" ]]
             then
                 ## substract the version from that listing

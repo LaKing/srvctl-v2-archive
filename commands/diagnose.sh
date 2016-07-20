@@ -47,9 +47,19 @@ man '
 
 hint "diagnose" "Run a set of diagnostic commands."
 if [ "$CMD" == "diagnose" ]
-then        
+then      
+        msg "System"  
         uname -a
-
+        
+    if $isROOT
+    then
+        msg "Kernel"
+        uname -r
+        msg "Booting"
+        grub2-editenv list
+        msg "Available for boot"
+        grep ^menuentry /boot/grub2/grub.cfg | cut -d "'" -f2
+    fi
         ## maintain these list of variables for debugging!
         msg "srvctl variables and settings."
         echo "NAME: $NAME"
