@@ -70,7 +70,7 @@ function install_nodejs_latest {
         echo "dnf -y install $nodejs_rpm_url"
         dnf -y install $nodejs_rpm_url
         
-        if [ "$?" !== '0' ]
+        if ! [ "$?" == '0' ]
         then
             err "nodejs installation failed!"
         fi
