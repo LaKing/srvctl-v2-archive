@@ -6,7 +6,7 @@ then
 
         pm opendkim
 
-        set_file /etc/opendkim.conf '#### srvctl tuned onemdkim.conf
+        save_file /etc/opendkim.conf '#### srvctl tuned onemdkim.conf
         
 ## CONFIGURATION OPTIONS
 PidFile        /var/run/opendkim/opendkim.pid
@@ -19,7 +19,7 @@ Syslog        yes
 SyslogSuccess        yes
 LogWhy        yes
 UserID        opendkim:opendkim
-Socket        inet:8891@localhost
+Socket        inet:8891@127.0.0.1
 Umask        002
 
 SendReports        yes

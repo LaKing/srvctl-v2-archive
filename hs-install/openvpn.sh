@@ -3,7 +3,7 @@ msg "Installing openvpn"
 ## installl openvpn
 pmc openvpn
 
-    if [ "$rootca_host" == "$HOSTNAME" ]
+    if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
     then
         msg "regenerate hosts config - this is the CA"
     
@@ -33,37 +33,37 @@ pmc openvpn
         
     else
     
-        if [ "$(ssh -n -o ConnectTimeout=1 $rootca_host hostname 2> /dev/null)" == "$rootca_host" ]
+        if [ "$(ssh -n -o ConnectTimeout=1 $ROOTCA_HOST hostname 2> /dev/null)" == "$ROOTCA_HOST" ]
         then
     
-            msg "regenerate hosts config - CA is $rootca_host"
+            msg "regenerate hosts config - CA is $ROOTCA_HOST"
     
             if [ ! -f /etc/openvpn/usernet-ca.crt.pem ] || [ ! -f /etc/openvpn/hostnet-ca.crt.pem ] || $all_arg_set
             then
-                msg "Grabbing CA certificates from $rootca_host for openvpn"
-                ssh -n -o ConnectTimeout=1 root@$rootca_host "cat /etc/srvctl/CA/ca/usernet.crt.pem" > /etc/openvpn/usernet-ca.crt.pem
-                ssh -n -o ConnectTimeout=1 root@$rootca_host "cat /etc/srvctl/CA/ca/hostnet.crt.pem" > /etc/openvpn/hostnet-ca.crt.pem
+                msg "Grabbing CA certificates from $ROOTCA_HOST for openvpn"
+                ssh -n -o ConnectTimeout=1 root@$ROOTCA_HOST "cat /etc/srvctl/CA/ca/usernet.crt.pem" > /etc/openvpn/usernet-ca.crt.pem
+                ssh -n -o ConnectTimeout=1 root@$ROOTCA_HOST "cat /etc/srvctl/CA/ca/hostnet.crt.pem" > /etc/openvpn/hostnet-ca.crt.pem
             fi
                 
             if [ ! -f /etc/openvpn/usernet.crt.pem ] || [ ! -f /etc/openvpn/usernet.key.pem ] || $all_arg_set
             then
-                msg "Grabbing usernet $HOSTNAME certificate from $rootca_host for openvpn"
-                ssh -n -o ConnectTimeout=1 root@$rootca_host "cat /etc/srvctl/CA/usernet/$CDN-$HOSTNAME.crt.pem" > /etc/openvpn/usernet.crt.pem
-                ssh -n -o ConnectTimeout=1 root@$rootca_host "cat /etc/srvctl/CA/usernet/$CDN-$HOSTNAME.key.pem" > /etc/openvpn/usernet.key.pem
+                msg "Grabbing usernet $HOSTNAME certificate from $ROOTCA_HOST for openvpn"
+                ssh -n -o ConnectTimeout=1 root@$ROOTCA_HOST "cat /etc/srvctl/CA/usernet/$CDN-$HOSTNAME.crt.pem" > /etc/openvpn/usernet.crt.pem
+                ssh -n -o ConnectTimeout=1 root@$ROOTCA_HOST "cat /etc/srvctl/CA/usernet/$CDN-$HOSTNAME.key.pem" > /etc/openvpn/usernet.key.pem
             fi
         
             if [ ! -f /etc/openvpn/hostnet.crt.pem ] || [ ! -f /etc/openvpn/hostnet.key.pem ] || $all_arg_set
             then
-                msg "Grabbing hostnet $HOSTNAME certificate from $rootca_host for openvpn"
-                ssh -n -o ConnectTimeout=1 root@$rootca_host "cat /etc/srvctl/CA/hostnet/$HOSTNAME.crt.pem" > /etc/openvpn/hostnet.crt.pem
-                ssh -n -o ConnectTimeout=1 root@$rootca_host "cat /etc/srvctl/CA/hostnet/$HOSTNAME.key.pem" > /etc/openvpn/hostnet.key.pem
+                msg "Grabbing hostnet $HOSTNAME certificate from $ROOTCA_HOST for openvpn"
+                ssh -n -o ConnectTimeout=1 root@$ROOTCA_HOST "cat /etc/srvctl/CA/hostnet/$HOSTNAME.crt.pem" > /etc/openvpn/hostnet.crt.pem
+                ssh -n -o ConnectTimeout=1 root@$ROOTCA_HOST "cat /etc/srvctl/CA/hostnet/$HOSTNAME.key.pem" > /etc/openvpn/hostnet.key.pem
             fi
             
             chmod 600 /etc/openvpn/usernet.key.pem
             chmod 600 /etc/openvpn/hostnet.key.pem 
         
         else
-            err "CA $rootca_host connection failed!"
+            err "CA $ROOTCA_HOST connection failed!"
             
         fi
         

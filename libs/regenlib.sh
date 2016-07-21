@@ -188,7 +188,7 @@ function regenerate_etc_hosts {  ## and relaydomains
         echo '127.0.0.1                localhost.localdomain localhost' >> /etc/hosts
         echo '::1                localhost6.localdomain6 localhost6' >> /etc/hosts
         
-        cat /var/srvctl-host/etchosts/* > /etc/hosts
+        cat /var/srvctl-host/etchosts/* >> /etc/hosts
 
         #bak /etc/postfix/relaydomains
         echo '' > /etc/postfix/relaydomains

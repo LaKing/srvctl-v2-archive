@@ -176,7 +176,7 @@ source $install_dir/hs-install/openvpn.sh
 regenerate_sudo_configs
 
 ## srvctl-gui
-if [ "$rootca_host" == "$HOSTNAME" ]
+if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
 then
 
     mkdir -p /var/srvctl-gui

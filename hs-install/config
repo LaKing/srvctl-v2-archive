@@ -38,6 +38,6 @@ BACKUP_PATH=/temp
 debug=false
 
 ## srvctl CA related
-rootca_host=$CDN
-rootca_subj="/C=HU/ST=Hungary/L=Budapest/O=$CMP CA"
+ROOTCA_HOST=$CDN
+ROOTCA_SUBJ="/C=HU/ST=Hungary/L=Budapest/O=$CMP CA"
 

@@ -30,7 +30,7 @@ function root_CA_create {
         -key $sc_ca_dir/ca/$_name.key.pem \
         -days 3652 \
         -out $sc_ca_dir/ca/$_name.crt.pem \
-        -subj "$rootca_subj/CN=$CMP-$_name-ca"
+        -subj "$ROOTCA_SUBJ/CN=$CMP-$_name-ca"
     fi 
     
     if [ ! -f "$sc_ca_dir/ca/$_name.srl" ]
@@ -43,7 +43,7 @@ function root_CA_create {
 
 function root_CA_init {
 
-if [ "$rootca_host" == "$HOSTNAME" ]
+if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
 then    
     # make directories to work from
     mkdir -p $sc_ca_dir/{usernet,hostnet,ca,tmp}
@@ -59,7 +59,7 @@ fi
 
 function create_client_certificate { ## argument user, ca
 
-if [ "$rootca_host" == "$HOSTNAME" ]
+if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
 then
     
     local _name=$1
@@ -90,7 +90,7 @@ then
         openssl req -new \
         -key $sc_ca_dir/$_name/$_file.key.pem \
         -out $sc_ca_dir/tmp/$_file.csr.pem \
-        -subj "$rootca_subj/CN=$_u"
+        -subj "$ROOTCA_SUBJ/CN=$_u"
     fi
     
     if [ ! -f "$sc_ca_dir/$_name/$_file.crt.pem" ]

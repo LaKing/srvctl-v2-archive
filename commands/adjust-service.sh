@@ -3,7 +3,7 @@
 ## start or restart service
 hint "SERVICE OP | OP SERVICE" "start|stop|restart|status a service via systemctl.  +|-|!|?"
 
-if [ "$ARG" == "add" ] || [ "$ARG" == "start" ] || [ "$ARG" == "+" ] || [ "$ARG" == "restart" ] || [ "$ARG" == "!" ] || [ "$ARG" == "stop" ]  || [ "$ARG" == "-" ] || [ "$ARG" == "status" ]  || [ "$ARG" == "?" ] || [ "$CMD" == "remove" ]
+if [ "$ARG" == "add" ] || [ "$ARG" == "start" ] || [ "$ARG" == "+" ] || [ "$ARG" == "restart" ] || [ "$ARG" == "!" ] || [ "$ARG" == "stop" ]  || [ "$ARG" == "-" ] || [ "$ARG" == "status" ]  || [ "$ARG" == "?" ] || [ "$ARG" == "remove" ]
 then
     OP=$ARG
     SERVICE=$CMD
@@ -15,7 +15,7 @@ then
     SERVICE=$ARG
 fi
 
-if [ ! -z "$SERVICE" ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/$SERVICE.service" ] 
+if [ ! -z "$SERVICE" ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/$SERVICE.service" ] && [ ! "$SERVICE" == openvpn ]
 then
   
   
@@ -61,6 +61,23 @@ then
     fi
   
 ok
+fi
+
+if [ "$SERVICE" == openvpn ]
+then
+    
+    if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
+    then
+        
+        for c in /etc/openvpn/*.conf
+        do
+            s="${c:13: -5}"
+            echo $s
+            systemctl status openvpn@$s --no-pager
+
+        done  
+        ok
+    fi
 fi
 
 man '
