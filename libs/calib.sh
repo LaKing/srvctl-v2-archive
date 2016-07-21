@@ -1,155 +1,110 @@
+## https://github.com/coolaj86/nodejs-ssl-trusted-peer-example/blob/master/make-root-ca-and-certificates.sh
+
 ## For client certificates
 
 sc_ca_dir=/etc/srvctl/CA
 
-function root_CA_init {
-
-if [ "$rootca_host" == "$HOSTNAME" ]
-then
-
-    #msg "This server is the SC-CA"
+function root_CA_create {
     
-    # make directories to work from
-    mkdir -p $sc_ca_dir/{server,client,ca,tmp}
-
-    if [ ! -f "$sc_ca_dir/ca/$CDN-root-ca.key.pem" ]
+    local _name=$1
+    
+    if [ ! -f "$sc_ca_dir/ca/$_name.key.pem" ]
     then
         # Create own Root Certificate Authority
-        msg "create root-ca-key"
+        msg "create $_name ca-key"
     
         openssl genrsa \
-        -out $sc_ca_dir/ca/$CDN-root-ca.key.pem \
+        -out $sc_ca_dir/ca/$_name.key.pem \
         2048
-
-        # Self-sign Root Certificate Authority
-        # Since this is private, the details can be as bogus as you like
         
+        chmod 600 $sc_ca_dir/ca/$_name.key.pem
     fi
     
-    if [ ! -f "$sc_ca_dir/ca/$CDN-root-ca.crt.pem" ]
+    if [ ! -f "$sc_ca_dir/ca/$_name.crt.pem" ]
     then
-        msg "create root-ca-cert"
+        msg "create $_name ca-cert"
         openssl req \
         -x509 \
         -new \
         -nodes \
-        -key $sc_ca_dir/ca/$CDN-root-ca.key.pem \
+        -key $sc_ca_dir/ca/$_name.key.pem \
         -days 3652 \
-        -out $sc_ca_dir/ca/$CDN-root-ca.crt.pem \
-        -subj "$rootca_subj/CN=$CMP"
+        -out $sc_ca_dir/ca/$_name.crt.pem \
+        -subj "$rootca_subj/CN=$CMP-$_name-ca"
+    fi 
+    
+    if [ ! -f "$sc_ca_dir/ca/$_name.srl" ]
+    then
+        echo 02 > $sc_ca_dir/ca/$_name.srl
     fi
 
-else
-    msg "this is not the CA"
+}
+
+
+function root_CA_init {
+
+if [ "$rootca_host" == "$HOSTNAME" ]
+then    
+    # make directories to work from
+    mkdir -p $sc_ca_dir/{usernet,hostnet,ca,tmp}
+    chmod 600 $sc_ca_dir/ca/*
+    chmod 600 $sc_ca_dir/usernet/*
+    chmod 600 $sc_ca_dir/hostnet/*
+
+    root_CA_create usernet
+    root_CA_create hostnet
 fi    
 }
 
-function create_server_certificate { ## argument server-hostname
 
-local _servername="$1"
-
-if [ "$rootca_host" == "$HOSTNAME" ]
-then
-
-    root_CA_init 
-
-    # Create a Device Certificate for a domain,
-    # such as example.com, *.example.com, awesome.example.com
-    # NOTE: You MUST match CN to the domain name or ip address you want to use
-
-    if [ ! -f "$sc_ca_dir/server/$CDN-$_servername.key.pem" ]
-    then
-        msg "create $_servername key"
-        openssl genrsa \
-        -out $sc_ca_dir/server/$CDN-$_servername.key.pem \
-        2048
-        
-    fi
-    
-    
-    if [ ! -f "$sc_ca_dir/tmp/$CDN-$_servername.csr.pem" ]
-    then
-        msg "create $_servername csr"
-    
-        # Create a request from your Device, which your Root CA will sign
-        openssl req -new \
-        -key $sc_ca_dir/server/$CDN-$_servername.key.pem \
-        -out $sc_ca_dir/tmp/$CDN-$_servername.csr.pem \
-        -subj "$rootca_subj/CN=$_servername"
-        
-    fi
-    
-    if [ ! -f "$sc_ca_dir/server/$CDN-$_servername.crt.pem" ]
-    then
-        msg "create $_servername cert"
-    
-        # Sign the request from Device with your Root CA
-        # -CAserial $sc_ca_dir/ca/$CDN-root-ca.srl
-        openssl x509 \
-        -req -in $sc_ca_dir/tmp/$CDN-$_servername.csr.pem \
-        -CA $sc_ca_dir/ca/$CDN-root-ca.crt.pem \
-        -CAkey $sc_ca_dir/ca/$CDN-root-ca.key.pem \
-        -CAcreateserial \
-        -out $sc_ca_dir/server/$CDN-$_servername.crt.pem \
-        -days 1095
-
-    fi
-
-        # Create a public key, for funzies
-        #openssl rsa \
-        #  -in $sc_ca_dir/server/$CDN-server.key.pem \
-        #  -pubout -out $sc_ca_dir/client/$CDN-server.pub
-
-else
-    msg "this is not the CA"
-fi
-}
-
-function create_client_certificate { ## argument user
+function create_client_certificate { ## argument user, ca
 
 if [ "$rootca_host" == "$HOSTNAME" ]
 then
-
-    local _u=$1
-    local _commonname="$_u"
     
-    root_CA_init 
-
-    # Create a Device Certificate for each trusted client
-    # such as example.net, *.example.net, awesome.example.net
-    # NOTE: You MUST match CN to the domain name or ip address you want to use
+    local _name=$1
+    local _u=$2
     
-    if [ ! -f "$sc_ca_dir/client/$CDN-$_commonname.key.pem" ]
+    local _file=$_u
+    
+    if [ "$1" == usernet ]
     then
-        msg "create $_commonname key"
+        _file=$CDN-$_u
+    fi
+    
+    if [ ! -f "$sc_ca_dir/$_name/$_file.key.pem" ]
+    then
+        msg "create $_name $_u key"
         openssl genrsa \
-        -out $sc_ca_dir/client/$CDN-$_commonname.key.pem \
+        -out $sc_ca_dir/$_name/$_file.key.pem \
         2048
+        
+        chmod 600 $sc_ca_dir/$_name/$_file.key.pem
     fi
 
-    if [ ! -f "$sc_ca_dir/tmp/$CDN-$_commonname.csr.pem" ]
+    if [ ! -f "$sc_ca_dir/tmp/$_file.csr.pem" ]
     then
-        msg "create $_commonname csr"
+        msg "create $_name $_u csr"
     
         # Create a trusted client cert
         openssl req -new \
-        -key $sc_ca_dir/client/$CDN-$_commonname.key.pem \
-        -out $sc_ca_dir/tmp/$CDN-$_commonname.csr.pem \
-        -subj "$rootca_subj/CN=$_commonname"
+        -key $sc_ca_dir/$_name/$_file.key.pem \
+        -out $sc_ca_dir/tmp/$_file.csr.pem \
+        -subj "$rootca_subj/CN=$_u"
     fi
     
-    if [ ! -f "$sc_ca_dir/client/$CDN-$_commonname.crt.pem" ]
+    if [ ! -f "$sc_ca_dir/$_name/$_file.crt.pem" ]
     then
-        msg "create $_commonname cert"
+        msg "create $_name $_u cert"
 
         # Sign the request from Trusted Client with your Root CA
-        # -CAserial $sc_ca_dir/ca/$CDN-root-ca.srl
+        # we wont use CAcreateserial   
         openssl x509 \
-        -req -in $sc_ca_dir/tmp/$CDN-$_commonname.csr.pem \
-        -CA $sc_ca_dir/ca/$CDN-root-ca.crt.pem \
-        -CAkey $sc_ca_dir/ca/$CDN-root-ca.key.pem \
-        -CAcreateserial \
-        -out $sc_ca_dir/client/$CDN-$_commonname.crt.pem \
+        -req -in $sc_ca_dir/tmp/$_file.csr.pem \
+        -CA $sc_ca_dir/ca/$_name.crt.pem \
+        -CAkey $sc_ca_dir/ca/$_name.key.pem \
+        -CAserial $sc_ca_dir/ca/$_name.srl \
+        -out $sc_ca_dir/$_name/$_file.crt.pem \
         -days 1095
     fi
 
@@ -157,28 +112,24 @@ then
     then
         local _passphrase="$(cat $passtor/.password)"
 
-        if [ ! -f "$sc_ca_dir/client/$CDN-$_commonname.p12" ]
+        if [ ! -f "$sc_ca_dir/$_name/$_file.p12" ]
         then
-            msg "create $_commonname p12"
+            msg "create $_u p12"
 
             openssl pkcs12 -export \
             -passout pass:$_passphrase \
-            -in $sc_ca_dir/client/$CDN-$_commonname.crt.pem \
-            -inkey $sc_ca_dir/client/$CDN-$_commonname.key.pem \
-            -out $sc_ca_dir/client/$CDN-$_commonname.p12
+            -in $sc_ca_dir/$_name/$_file.crt.pem \
+            -inkey $sc_ca_dir/$_name/$_file.key.pem \
+            -out $sc_ca_dir/$_name/$_file.p12
         fi
     
-        if [ ! -f "/home/$_u/$CDN-$_commonname.p12" ] 
+        if [ ! -f "/home/$_u/$_file.p12" ] 
         then
-            cat $sc_ca_dir/client/$CDN-$_commonname.p12 > /home/$_u/$CDN-$_commonname.p12
+            cat $sc_ca_dir/$_name/$_file.p12 > /home/$_u/$_file.p12
+            chown $_u:$_u /home/$_u/$_file.p12
+            chmod 400 /home/$_u/$_file.p12
         fi
     fi
-
-
-# Create a public key, for funzies
-#openssl rsa \
-#  -in $sc_ca_dir/client/$CDN-app-client.key.pem \
-#  -pubout -out $sc_ca_dir/client/$CDN-app-client.pub
 
 #else
 #    msg ".. this is not the CA"

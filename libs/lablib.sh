@@ -33,6 +33,12 @@ function new_file {
     fi
 }
 
+function save_file {
+    ## cerate a file with the content overwriting everything
+    ## filename=$1 content=$2
+    echo "$2" > $1
+}
+
 function set_file {
     ## cerate a file with the content overwriting everything
     ## filename=$1 content=$2
@@ -144,7 +150,7 @@ function pmc { ## package-name ## binary-name
             b=$2
         fi
         
-        if [ ! -f /usr/bin/$b ]
+        if [ ! -f /usr/bin/$b ] && [ ! -f /usr/sbin/$b ]
         then  
             echo "dnf -y install $p"
             dnf -y install $p

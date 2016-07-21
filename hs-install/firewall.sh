@@ -1,7 +1,7 @@
 add_service firewalld
 
 zone=$(firewall-cmd --get-default-zone)
-services=" $(firewall-cmd --zone=$zone --list-services) "
+services="services: $(firewall-cmd --zone=$zone --list-services) ."
 
 msg "Firewall $(firewall-cmd --state) - default zone: $zone"
 echo $services
@@ -96,9 +96,9 @@ then
     firewall-cmd --zone=$zone --permanent --add-service=dyndns
 fi
 
+
 if [ -z "$(echo $services | grep ' srvctl-gui ')" ]
 then
-
     set_file /etc/firewalld/services/srvctl-gui.xml '<?xml version="1.0" encoding="utf-8"?>
 <service>
   <short>srvctl-gui</short>
@@ -114,12 +114,12 @@ then
     firewall-cmd --zone=$zone --permanent --add-service=srvctl-gui
 fi
 
-if [ -z "$(echo $services | grep ' srvctl-openvpn ')" ]
+if [ -z "$(echo $services | grep ' usernet-openvpn ')" ]
 then
 
-    set_file /etc/firewalld/services/srvctl-openvpn.xml '<?xml version="1.0" encoding="utf-8"?>
+    set_file /etc/firewalld/services/usernet-openvpn.xml '<?xml version="1.0" encoding="utf-8"?>
 <service>
-  <short>srvctl-openvpn</short>
+  <short>usernet-openvpn</short>
   <description>Openvpn connection directly to containers. </description>
   <port protocol="udp" port="1100"/>
 </service>
@@ -128,8 +128,26 @@ then
     echo firewall-cmd --reload
     firewall-cmd --reload
 
-    echo firewall-cmd --zone=$zone --permanent --add-service=srvctl-openvpn
-    firewall-cmd --zone=$zone --permanent --add-service=srvctl-openvpn
+    echo firewall-cmd --zone=$zone --permanent --add-service=usernet-openvpn
+    firewall-cmd --zone=$zone --permanent --add-service=usernet-openvpn
+fi
+
+if [ -z "$(echo $services | grep ' hostnet-openvpn ')" ]
+then
+
+    set_file /etc/firewalld/services/hostnet-openvpn.xml '<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>hostnet-openvpn</short>
+  <description>Openvpn connection between hosts. </description>
+  <port protocol="udp" port="1101"/>
+</service>
+'
+    ## make firewall aware of the service
+    echo firewall-cmd --reload
+    firewall-cmd --reload
+
+    echo firewall-cmd --zone=$zone --permanent --add-service=hostnet-openvpn
+    firewall-cmd --zone=$zone --permanent --add-service=hostnet-openvpn
 fi
 
 echo firewall-cmd --reload

@@ -103,28 +103,18 @@ function regenerate_config_files {
         
 }
 
-function regenerate_hosts_config {
+function regenerate_etc_hosts {  ## and relaydomains
 
-        msg "regenerate hosts config"
-        create_client_certificate $HOSTNAME
-        
-        for _S in $SRVCTL_HOSTS
-        do
-            ## openvpn client certificate
-            create_client_certificate $_S
-        done
+        mkdir -p /var/srvctl-host/etchosts
+        local _eh=/var/srvctl-host/etchosts/$HOSTNAME
+        mkdir -p /var/srvctl-host/relaydomains
+        local _rd=/var/srvctl-host/relaydomains/$HOSTNAME
 
-}
+        msg "regenerate etc_hosts" ## first in var
 
-function regenerate_etc_hosts {
-        ## and relaydomains
+        echo "## $HOSTNAME ##" > $_eh
+        echo '' > $_rd
 
-        msg "regenerate etc_hosts" ## fist in $TMP
-        echo '# srvctl generated' > $TMP/hosts
-        echo '127.0.0.1                localhost.localdomain localhost' >> $TMP/hosts
-        echo '::1                localhost6.localdomain6 localhost6' >> $TMP/hosts
-        echo '' >> $TMP/hosts
-        echo '' > $TMP/relaydomains
 
         for _C in $(lxc-ls)
         do
@@ -148,12 +138,12 @@ function regenerate_etc_hosts {
                 if [ ! -z "$ip" ]
                 then
  
-                        echo $ip'                '$_C >>  $TMP/hosts
+                        echo $ip'                '$_C >>  $_eh
                         if [ ! -d $SRV/mail.$_C ] && [ "${_C:0:5}" != "mail." ]
                         then
-                        echo $ip'                mail.'$_C >>  $TMP/hosts
+                        echo $ip'                mail.'$_C >>  $_eh
                         fi
-                        echo $_C' #' >>  $TMP/relaydomains
+                        echo $_C' #' >>  $_rd
 
                                 if [ -f /$SRV/$_C/settings/aliases ]
                                 then
@@ -164,28 +154,45 @@ function regenerate_etc_hosts {
                                                         err "$_C alias: $A - is the host itself!"
                                                 else
                                                         #dbg "$A is an alias of $_C"
-                                                        echo $ip'                '$A >>  $TMP/hosts
+                                                        echo $ip'                '$A >>  $_eh
                                                         
                                                         if [ ! -d $SRV/mail.$A ] && [ ! -d $SRV/mail.$_C ] && [ "${A:0:5}" != "mail." ] && [ "${_C:0:5}" != "mail." ]
                                                         then
-                                                        echo $ip'                mail.'$A >>  $TMP/hosts
+                                                        echo $ip'                mail.'$A >>  $_eh
                                                         fi
-                                                        echo $A' #' >>  $TMP/relaydomains
+                                                        echo $A' #' >>  $_rd
                                                 fi
                                         done
                                 fi
 
-                        echo ''  >>  $TMP/hosts
+                        echo ''  >>  $_eh
 
 
                 fi
-        done ## regenerated etc_hosts
+        done 
+        
+        ## regenerated local etc_hosts, now check the remote ones
 
-        #bak /etc/hosts
-        cat $TMP/hosts > /etc/hosts
+        for _S in $SRVCTL_HOSTS
+        do
+            if [ "$(ssh -n -o ConnectTimeout=1 $_S hostname 2> /dev/null)" == "$_S" ]
+            then
+                msg "get hosts on $_S"
+                ssh -n -o ConnectTimeout=1 $_S "cat /var/srvctl-host/etchosts/$_S" > /var/srvctl-host/etchosts/$_S
+                ssh -n -o ConnectTimeout=1 $_S "cat /var/srvctl-host/relaydomains/$_S" > /var/srvctl-host/relaydomains/$_S
+            fi
+        done
+
+
+        echo '# srvctl generated' > /etc/hosts
+        echo '127.0.0.1                localhost.localdomain localhost' >> /etc/hosts
+        echo '::1                localhost6.localdomain6 localhost6' >> /etc/hosts
+        
+        cat /var/srvctl-host/etchosts/* > /etc/hosts
 
         #bak /etc/postfix/relaydomains
-        cat $TMP/relaydomains > /etc/postfix/relaydomains
+        echo '' > /etc/postfix/relaydomains
+        cat /var/srvctl-host/relaydomains/* > /etc/postfix/relaydomains
         postmap /etc/postfix/relaydomains
 
 } 
@@ -372,7 +379,18 @@ function regenerate_users_configs {
         do
             if [ -d "/home/$_U" ]
             then
-                create_client_certificate $_U
+                create_client_certificate usernet $_U
+            fi
+        done
+        
+        msg "regenerate openvpn authorisations"
+        mkdir -p /var/openvpn
+        rm -fr /var/openvpn/*
+        for _U in $(ls /home)
+        do
+            if [ -d "/home/$_U" ]
+            then
+                echo '## srvctl' > /var/openvpn/$_U
             fi
         done
         

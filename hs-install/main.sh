@@ -236,6 +236,12 @@ regenerate_var_ve
 
 source $install_dir/hs-install/mkrootfs.sh
 
-
+if [ ! -z "$BOOT" ]
+then
+    msg "Boot of $BOOT requested"
+    GRUBBOOT="$(grep ^menuentry /boot/grub2/grub.cfg | cut -d "'" -f2 | grep $BOOT)"
+    grub2-set-default "$GRUBBOOT"
+    grub2-editenv list
+fi
 
 

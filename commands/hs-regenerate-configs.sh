@@ -56,9 +56,6 @@ then
             ## bind / named configs
             regenerate_dns
             
-            ## hostname and srvctl-hosts configs
-            regenerate_hosts_config
-            
             ## make logfiles for apache log - kind of cosmetic action
             regenerate_logfiles
             

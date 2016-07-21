@@ -60,6 +60,16 @@ then
         msg "Available for boot"
         grep ^menuentry /boot/grub2/grub.cfg | cut -d "'" -f2
     fi
+    
+    if $DISABLE_NFS
+    then
+        ntc 'NFS mounts disabled'
+    fi
+    if $DISABLE_BINDMOUNT
+    then
+        ntc 'Bindmounts disabled.'
+    fi
+    
         ## maintain these list of variables for debugging!
         msg "srvctl variables and settings."
         echo "NAME: $NAME"
@@ -109,6 +119,7 @@ then
         #echo ": $"
         echo ""
 
+        sleep 3
 
         msg "Checking for services"
         
@@ -127,6 +138,8 @@ then
         
         if $isROOT && [ "$(type -a netstat)" == "netstat is /usr/bin/netstat" ]
         then
+            sleep 3
+        
             msg "NETWORK PORTS and PROTOCOLLS"
             netstat -tulpn
         
@@ -155,13 +168,16 @@ then
         cat /var/srvctl/ifcfg/ipv* 
         echo ''
         
+    sleep 3
         
     msg "Uptime: $(uptime)"
     msg "CONNECTED SHELL USERS"
     w
     msg "MAIL QUE"
     postqueue -p
-        
+    ntc "To flush the mail que, use: postqueue -f"
+    ntc "To remove all mail from the que use: postsuper -d ALL" 
+    sleep 3
         
   if $onHS && $isROOT
     then    
@@ -184,7 +200,7 @@ then
             echo ''
         done
     
-
+    sleep 3
     
     msg 'Query spamhouse.org'    
     while read IP
@@ -228,6 +244,7 @@ then
             done < $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log
         fi
 
+        
     done
     
     msg "Certificates"
@@ -244,7 +261,9 @@ then
        check_pound_pem
     done
    
+    sleep 3
     
+    top -n 1
     
   fi
 ok

@@ -42,7 +42,8 @@ then
 fi
 
 
-
+DISABLE_NFS=false
+DISABLE_BINDMOUNT=false
 
 ## set FEDORA to the corresponding fedora version on this computer
 
@@ -132,6 +133,7 @@ ARGS="$*"
 ## Current start directory
 CWD=$(pwd)
 cd ~
+
 
 
 

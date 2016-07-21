@@ -18,12 +18,13 @@ then
         msg 'LXC: '$(lxc-info --version)' installed'
     fi
     msg_dnf_version_installed Pound
-    pound -V 2> /dev/null | grep Version
+    #pound -V 2> /dev/null | grep Version
     msg_dnf_version_installed postfix
     msg_dnf_version_installed perdition
     msg_dnf_version_installed fail2ban
     msg_dnf_version_installed bind
     msg_dnf_version_installed clamav
+    msg_dnf_version_installed nodejs
   fi
 
 ok

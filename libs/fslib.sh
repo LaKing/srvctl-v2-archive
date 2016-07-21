@@ -2,6 +2,7 @@ function bind_mount { ## container
         
     if $DISABLE_BINDMOUNT
     then
+        ntc 'Bindmounts disabled.'
         return
     fi
         
@@ -138,6 +139,7 @@ function nfs_mount { # user on container
     
     if $DISABLE_NFS
     then
+        ntc 'NFS mounts disabled'
         return
     fi
     
