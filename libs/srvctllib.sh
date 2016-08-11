@@ -241,7 +241,7 @@ function add_user {
     adduser $U 2> /dev/null
     update_password $U
     create_keypair $U
-    create_client_certificate usernet $U
+    create_ca_certificate client usernet $U
     
 }
 

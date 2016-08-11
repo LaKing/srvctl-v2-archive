@@ -10,7 +10,7 @@ var pty = require('pty.js');
 var options = {
     cert: fs.readFileSync('/etc/srvctl/cert/d250.hu/d250.hu.pem'),
     key: fs.readFileSync('/etc/srvctl/cert/d250.hu/d250.hu.key'),
-    ca: [fs.readFileSync('/etc/srvctl/CA/ca/d250.hu-root-ca.crt.pem')],
+    ca: [fs.readFileSync('/etc/srvctl/CA/ca/usernet.crt.pem')],
     requestCert: true,
     rejectUnauthorized: true,
 };
@@ -38,44 +38,50 @@ var line_to_arrob = function(line) {
     return r;
 };
 
-// Connected socket id clients array.
-var users = [];
-var users_dir = fs.readdirSync("/var/srvctl-host/users");
-
-var i;
-for (i = 0; i < users_dir.length; ++i) {
+function process_user(i) {
 
     var user = users_dir[i];
-    var keyfile = "/var/srvctl-host/users/" + user + "/srvctl_id_rsa";
+    var keyfile = "/var/srvctl-gui/users/" + user + "/srvctl_id_rsa";
     var key = fs.readFileSync(keyfile, 'utf8');
+    var hosts = [];
 
-    users.push({
-        user: user,
-        key: key,
-        keyfile: keyfile,
-        main: {
-            hosts: [],
-            user: user,
-            debug: ''
+    exec("cat /var/srvctl-gui/users/" + user + "/hosts", function(error, stdout, stderr) {
+        if (error !== null) {
+            console.log('- ' + user);
+            //console.log('exec error: ' + error);
+        } else {
+            console.log('+ ' + user);
+            hosts = line_to_arrob(stdout);
         }
+        users.push({
+            user: user,
+            key: key,
+            keyfile: keyfile,
+            main: {
+                hosts: hosts,
+                user: user,
+                debug: ''
+            }
+        });
     });
 
 }
 
+// Connected socket id clients array.
+var users = [];
+var users_dir = fs.readdirSync("/var/srvctl-gui/users");
 
-var hosts = [];
-exec("cat /var/srvctl-gui/hosts", function(error, stdout, stderr) {
-    if (error !== null) {
-        console.log('exec error: ' + error);
-    } else {
-        hosts = line_to_arrob(stdout);
-        var i;
-        for (i = 0; i < users.length; ++i) {
-            users[i].main.hosts = hosts;
-        }
+var i;
+for (i = 0; i < users_dir.length; ++i) {
 
-    }
-});
+    process_user(i);
+
+}
+
+
+
+
+
 
 
 app.use(express.static(__dirname + '/srvctl-gui'));
@@ -232,13 +238,14 @@ var sc_ls = function(hix, uix, socket) {
         console.log(err);
     });
     conn.on('close', function(err) {
-        console.log('ssh2 connection closed');
+        //console.log('ssh2 connection closed');
     });
     conn.connect({
-        host: hosts[hix].name,
+        host: users[uix].main.hosts[hix].name,
         port: 22,
         username: users[uix].user,
-        privateKey: users[uix].key
+        privateKey: users[uix].key,
+        readyTimeout: 500
     });
 
 };
@@ -255,7 +262,7 @@ var sc_command = function(hix, uix, cmd_json, socket) {
                 conn.end();
                 //users[uix].main.hosts[hix].containers = line_to_arrob(adat);
                 //update_user(uix);
-                console.log('Closed ssh2 connection');
+                //console.log('Closed ssh2 connection');
                 socket.emit('lock', false);
             }).on('data', function(data) {
                 adat += data;
@@ -264,20 +271,25 @@ var sc_command = function(hix, uix, cmd_json, socket) {
                 //users[uix].main.debug = data;
                 //update_user(uix);
                 console.log(data);
+                //socket.emit('set-terminal', 'Error.');
+                //socket.emit('lock', false);
             });
         });
     });
     conn.on('error', function(err) {
-        console.log(err);
+        //console.log(err);
+        socket.emit('set-terminal', err.level + ' error.');
+        socket.emit('lock', false);
     });
     conn.on('close', function(err) {
-        console.log('ssh2 connection closed');
+        //console.log('ssh2 connection closed');
     });
     conn.connect({
-        host: hosts[hix].name,
+        host: users[uix].main.hosts[hix].name,
         port: 22,
         username: users[uix].user,
-        privateKey: users[uix].key
+        privateKey: users[uix].key,
+        readyTimeout: 500
     });
 };
 
@@ -286,20 +298,20 @@ var update_client = function(socket) {
 };
 
 var send_main = function(socket) {
-
+    console.log(socket.uix);
     var hix;
-    for (hix = 0; hix < hosts.length; hix++) {
+    for (hix = 0; hix < users[socket.uix].main.hosts.length; hix++) {
         sc_ls(hix, socket.uix, socket);
 
     }
 };
 
 app.get('/ssh/:user', function(req, res) {
-    res.sendfile(__dirname + '/srvctl-gui/wetty.html');
+    res.sendFile(__dirname + '/srvctl-gui/wetty.html');
 });
 
 io.on('connection', function(socket) {
-    console.log('a user connected (id=' + socket.id + ')');
+    //    console.log('a user connected (id=' + socket.id + ')');
 
     socket.user = '';
     socket.key = '';
@@ -310,6 +322,7 @@ io.on('connection', function(socket) {
     if (cert.subject !== undefined) {
         // client is identified
         socket.user = cert.subject.CN;
+        console.log(socket.user + ' connected (id=' + socket.id + ')');
         var i;
         for (i = 0; i < users_dir.length; ++i) {
             if (users[i].user === cert.subject.CN) {
@@ -370,7 +383,7 @@ process.on('uncaughtException', function(e) {
 });
 server.listen(port, function() {
     port = server.address().port;
-    console.log('Listening on port' + port);
+    console.log('Listening on port ' + port);
     //process.setgid('node');
     //process.setuid('node');
 

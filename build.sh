@@ -1,5 +1,9 @@
 #!/bin/bash
 
+exit
+
+## Outdates. Doesent make sence to build an rpm, and does not getting updated,...
+
 ## this is for debugging 
 set -u
 

@@ -83,7 +83,6 @@ then
         echo "onHS: $onHS"
         echo "USER: $USER / $(whoami)"
         echo "HOST: $C / $(hostname)"
-        echo "HOSTIPv4: $HOSTIPv4"
         echo "SC_USER: $SC_USER"
         echo "isUSER: $isUSER"
         echo "isROOT: $isROOT"

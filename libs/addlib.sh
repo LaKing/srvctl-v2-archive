@@ -28,15 +28,68 @@ function setup_srvctl_ve_dirs { ## needs rootfs
 function setup_index_html { ## needs rootfs and some name as argument
     
         ## set default index page 
-        index=$rootfs/var/www/html/index.html
-        echo '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;">
-        <img src="logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div>
-        <p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">' > $index
-        echo '<b>'$1'</b> @ '$HOSTNAME >> $index
-        echo '</font><p></body>' >> $index
+        local _index=$rootfs/var/www/html/index.html
+        local _name=$1
         
-        cp /var/www/html/logo.png $rootfs/var/www/html
-        cp /var/www/html/favicon.ico $rootfs/var/www/html
+        save_file $_index '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>'$_name'</title>
+  </head>
+<body style="background-color:#333;">
+    <div id="header" style="background-color:#222;">
+        <p align="center">
+            '"$(cat $LOGO_SVG)"'
+        </p>
+    </div>
+        <p align="center">
+                <font style="margin-left: auto; margin-right: auto; color: #AAA" size="6px" face="Arial">
+                '"$_name @ $HOSTNAME"'
+            </font>
+        </p>
+</body>
+</html>
+'
+        
+        cp $LOGO_ICO $rootfs/var/www/html
     
     }
+
+function setup_varwwwhtml_error { ## type, text 
+        local _name=$1
+        local _text=$2
+        local _index=/var/www/html/$_name.html
+        
+             save_file $_index '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ERROR '$_name'</title>
+    <style type="text/css"> html, body {overflow: hidden;} </style>
+  </head>
+<body style="background-color:#333;">
+    <div id="header" style="background-color:#222;">
+        <p align="center">
+            '"$(cat $LOGO_SVG)"'
+        </p>
+    </div>
+        <p align="center">
+                <font style="margin-left: auto; margin-right: auto; color: #FFF" size="6px" face="Arial">
+                Error '"$_name @ $HOSTNAME"'<br>
+                '"$_text"'
+                <br>
+                <br>
+                </font>
+                <font style="margin-left: auto; margin-right: auto; color: #555" size="5px" face="Arial">
+                ERROR!<br>HIBA!<br>FEHLER!<br>ERREUR!<br>POGREŠKA!<br>ERRORE!<br>FEJL!<br>FOUT!<br>NAPAKA!<br>HATA!<br>
+                ERRO!<br>BŁĄD!<br>CHYBA!<br>ПОМИЛКА!<br>EROARE!<br>エラー!<br>VILLA!<br>FEL!<br>LỖI!<br>GRESKA!<br>
+                ОШИБКА!<br>错误<br>ข้อผิดพลาด!<br>त्रुटि!<br>កំហុស!<br>ΛΆΘΟΣ!<br>දෝෂය !<br>ХАТО!<br>VIRHE!<br>Kikowaena!<br>IPHUTHA!
+            </font>
+        </p>
+</body>
+</html>
+'   
+        
+}
 

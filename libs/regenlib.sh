@@ -109,10 +109,11 @@ function regenerate_etc_hosts {  ## and relaydomains
         local _eh=/var/srvctl-host/etchosts/$HOSTNAME
         mkdir -p /var/srvctl-host/relaydomains
         local _rd=/var/srvctl-host/relaydomains/$HOSTNAME
-
+        local _dig=''
         msg "regenerate etc_hosts" ## first in var
 
         echo "## $HOSTNAME ##" > $_eh
+        echo "10.$HOSTNET.0.1    ${HOSTNAME%%.*}" >> $_eh
         echo '' > $_rd
 
 
@@ -171,22 +172,58 @@ function regenerate_etc_hosts {  ## and relaydomains
                 fi
         done 
         
-        ## regenerated local etc_hosts, now check the remote ones
+        ## regenerated local etc_hosts, now check the remote ones and put them together
+
+        _eh=/var/srvctl-host/etchosts/srvctl-hosts
+        
+        
+        IP="$(cat /var/srvctl/ifcfg/ipv4)"
+        
+        echo "## srvctl-hosts ##" > $_eh
+        echo "${IP%/*}    $HOSTNAME" >> $_eh
+        echo "" >> $_eh
+        
+        echo "${IP%/*}" > /var/srvctl/ifcfg/$HOSTNAME
+        
+        _dig="$(dig $HOSTNAME +short)"
+        if [ "$_dig" != "$(cat /var/srvctl/ifcfg/$HOSTNAME)" ]
+        then
+                err "CRITICAL ERROR - DNS $_dig != CONFIG $(cat /var/srvctl/ifcfg/$HOSTNAME)"
+        fi
+            
 
         for _S in $SRVCTL_HOSTS
         do
             if [ "$(ssh -n -o ConnectTimeout=1 $_S hostname 2> /dev/null)" == "$_S" ]
             then
                 msg "get hosts on $_S"
+
+                SIP="$(ssh -n -o ConnectTimeout=1 $_S 'cat /var/srvctl/ifcfg/ipv4' 2> /dev/null)"
+                if ! [ -z "$SIP" ]
+                then
+                    echo "${SIP%/*}    $_S" >> $_eh
+                    echo "${SIP%/*}" > /var/srvctl/ifcfg/$_S
+                fi
+
                 ssh -n -o ConnectTimeout=1 $_S "cat /var/srvctl-host/etchosts/$_S" > /var/srvctl-host/etchosts/$_S
                 ssh -n -o ConnectTimeout=1 $_S "cat /var/srvctl-host/relaydomains/$_S" > /var/srvctl-host/relaydomains/$_S
+
+            else 
+                err "Connection to $_S failed!"
+            fi
+            
+            _dig="$(dig $_S +short)"
+            if [ "$_dig" != "$(cat /var/srvctl/ifcfg/$_S)" ]
+            then
+                err "CRITICAL ERROR for $_S DNS $_dig != CONFIG $(cat /var/srvctl/ifcfg/$_S)"
             fi
         done
-
-
-        echo '# srvctl generated' > /etc/hosts
-        echo '127.0.0.1                localhost.localdomain localhost' >> /etc/hosts
-        echo '::1                localhost6.localdomain6 localhost6' >> /etc/hosts
+        
+        echo "" >> $_eh
+        
+        echo "# srvctl generated" > /etc/hosts
+        echo "127.0.0.1                localhost.localdomain localhost" >> /etc/hosts
+        echo "::1                localhost6.localdomain6 localhost6" >> /etc/hosts
         
         cat /var/srvctl-host/etchosts/* >> /etc/hosts
 
@@ -218,9 +255,10 @@ function regenerate_known_hosts {
         
         for _S in $SRVCTL_HOSTS
         do
-            echo "## $_S" >> /etc/ssh/ssh_known_hosts
-            ssh-keyscan -t rsa -H $(dig $_S +short) >> /etc/ssh/ssh_known_hosts 2>/dev/null
+            echo "## $_S $(cat /var/srvctl/ifcfg/$_S) ${_S%%.*}" >> /etc/ssh/ssh_known_hosts
+            #ssh-keyscan -t rsa -H $(cat /var/srvctl/ifcfg/$_S) >> /etc/ssh/ssh_known_hosts 2>/dev/null
             ssh-keyscan -t rsa -H $_S >> /etc/ssh/ssh_known_hosts 2>/dev/null
+            ssh-keyscan -t rsa -H ${_S%%.*} >> /etc/ssh/ssh_known_hosts 2>/dev/null
             #2>/dev/null
             echo '' >> /etc/ssh/ssh_known_hosts
         done
@@ -347,6 +385,7 @@ function generate_user_configs { ## for user
         usermod -a -G node $_u
         usermod -a -G git $_u
         usermod -a -G codepad $_u
+        
 }
 
 
@@ -379,7 +418,7 @@ function regenerate_users_configs {
         do
             if [ -d "/home/$_U" ]
             then
-                create_client_certificate usernet $_U
+                create_ca_certificate client usernet $_U
             fi
         done
         
@@ -391,8 +430,23 @@ function regenerate_users_configs {
             if [ -d "/home/$_U" ]
             then
                 echo '## srvctl' > /var/openvpn/$_U
+                make_openvpn_client_conf $_U
             fi
         done
+        
+    if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
+    then 
+        
+        msg "Update settings for srvctl-gui"
+        
+        rsync -a /var/srvctl-host/users /var/srvctl-gui
+        
+        chown -R srvctl-gui:srvctl-gui /var/srvctl-gui
+        chmod 700 /var/srvctl-gui
+        
+        systemctl restart srvctl-gui
+        
+    fi
         
 }
 

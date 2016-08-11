@@ -66,7 +66,7 @@
 ## Requirement checks .--
 ## certificate
         cert_path=/etc/srvctl/cert/$CDN
-        create_certificate $CDN
+        create_selfsigned_domain_certificate $CDN
         ## verify against the hostname?
 
         ## this will save a little space. 
@@ -118,6 +118,12 @@ source $install_dir/hs-install/named.sh
 
 ## Add system users, so they have a name. Ignore errr messages.
 
+## So ...
+## ubuntu adds users 100 and up.
+## fedora adds dynamic system users from 999 downwards
+## great ... 101..104 should be changed to 501..504
+## okay?
+
 groupadd -r -g 48 apache 2> /dev/null
 useradd -r -u 48 -g 48 -s /sbin/nologin -d /usr/share/httpd apache 2> /dev/null
 
@@ -135,6 +141,10 @@ useradd -r -u 104 -g 104 -s /sbin/nologin -d /tmp codepad 2> /dev/null
 
 groupadd -r -g 27 mysql 2> /dev/null
 useradd -r -u 27 -g 27 -s /sbin/nologin -d /var/lib/mysql mysql 2> /dev/null
+
+## acording to new users struct
+groupadd -r -g 505 srvctl-gui 2> /dev/null
+useradd -r -u 505 -g 505 -s /sbin/nologin -d /tmp codepad 2> /dev/null
 
 git config --global user.email "root@$CDN"
 git config --global user.name root
@@ -243,5 +253,6 @@ then
     grub2-set-default "$GRUBBOOT"
     grub2-editenv list
 fi
+
 
 

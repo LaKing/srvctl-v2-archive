@@ -15,7 +15,7 @@ function root_CA_create {
     
         openssl genrsa \
         -out $sc_ca_dir/ca/$_name.key.pem \
-        2048
+        4096 
         
         chmod 600 $sc_ca_dir/ca/$_name.key.pem
     fi
@@ -30,14 +30,15 @@ function root_CA_create {
         -key $sc_ca_dir/ca/$_name.key.pem \
         -days 3652 \
         -out $sc_ca_dir/ca/$_name.crt.pem \
-        -subj "$ROOTCA_SUBJ/CN=$CMP-$_name-ca"
+        -subj "$ROOTCA_SUBJ/CN=$CMP-$_name-ca" 
     fi 
     
     if [ ! -f "$sc_ca_dir/ca/$_name.srl" ]
     then
         echo 02 > $sc_ca_dir/ca/$_name.srl
     fi
-
+    
+    openssl x509 -noout -text -in $sc_ca_dir/ca/$_name.crt.pem
 }
 
 
@@ -46,67 +47,101 @@ function root_CA_init {
 if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
 then    
     # make directories to work from
-    mkdir -p $sc_ca_dir/{usernet,hostnet,ca,tmp}
-    chmod 600 $sc_ca_dir/ca/*
-    chmod 600 $sc_ca_dir/usernet/*
-    chmod 600 $sc_ca_dir/hostnet/*
+    mkdir -p $sc_ca_dir/usernet
+    mkdir -p $sc_ca_dir/hostnet
+
+    mkdir -p $sc_ca_dir/ca
+    mkdir -p $sc_ca_dir/tmp
+    
+    chmod -R 600 $sc_ca_dir
 
     root_CA_create usernet
     root_CA_create hostnet
+    
+    rm -fr /etc/srvctl/CA/tmp/*
 fi    
 }
 
 
-function create_client_certificate { ## argument user, ca
+function create_ca_certificate { ## arguments: type user
 
 if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
 then
+
+    local _e=$1
+    local _name=$2
+    local _u=$3
+
+    local _ext=''
+    local _cmd=''
     
-    local _name=$1
-    local _u=$2
-    
-    local _file=$_u
-    
-    if [ "$1" == usernet ]
+    if [ "$_e" == server ] ||[ "$_e" == client ]
     then
-        _file=$CDN-$_u
+        local _file=$_e-$_u
+    else
+        err "create_ca_certificate error client/server not specified!"
+        return
     fi
     
-    if [ ! -f "$sc_ca_dir/$_name/$_file.key.pem" ]
+    if [ "$_e" == server ]
     then
-        msg "create $_name $_u key"
+        _ext="-extfile $install_dir/openssl-server-ext.cnf -extensions server"
+    fi
+    
+    if  [ -f "$sc_ca_dir/$_name/$_file.key.pem" ] && [ -f "$sc_ca_dir/$_name/$_file.crt.pem" ]
+    then
+    
+    if [ "$(openssl x509 -noout -modulus -in $sc_ca_dir/$_name/$_file.crt.pem | openssl md5)" == "$(openssl rsa -noout -modulus -in $sc_ca_dir/$_name/$_file.key.pem | openssl md5)" ]
+    then
+        if openssl x509 -checkend 86400 -noout -in $sc_ca_dir/$_name/$_file.crt.pem
+        then
+              echo "$_name certificate for $_u is OK" > /dev/null
+        else
+            err "$_name certificate for $_u EXPIRED"
+            rm -fr $sc_ca_dir/$_name/$_file.crt.pem
+            rm -fr $sc_ca_dir/$_name/$_file.key.pem
+        fi
+    else
+        err "$_name certificate for $_u INVALID"
+        rm -fr $sc_ca_dir/$_name/$_file.crt.pem
+        rm -fr $sc_ca_dir/$_name/$_file.key.pem
+    fi
+           
+    fi
+    
+    if [ ! -f "$sc_ca_dir/$_name/$_file.key.pem" ] || [ ! -f "$sc_ca_dir/$_name/$_file.crt.pem" ]
+    then
+        msg "create $_name $_file key"
+        echo "openssl genrsa -out $sc_ca_dir/$_name/$_file.key.pem 4096"
         openssl genrsa \
         -out $sc_ca_dir/$_name/$_file.key.pem \
-        2048
+        4096 
         
         chmod 600 $sc_ca_dir/$_name/$_file.key.pem
-    fi
 
-    if [ ! -f "$sc_ca_dir/tmp/$_file.csr.pem" ]
-    then
         msg "create $_name $_u csr"
-    
+        echo "openssl req -new -key $sc_ca_dir/$_name/$_file.key.pem -out $sc_ca_dir/tmp/$_file.csr.pem -subj '$ROOTCA_SUBJ/CN=$_u'"
         # Create a trusted client cert
+        
         openssl req -new \
         -key $sc_ca_dir/$_name/$_file.key.pem \
         -out $sc_ca_dir/tmp/$_file.csr.pem \
         -subj "$ROOTCA_SUBJ/CN=$_u"
-    fi
-    
-    if [ ! -f "$sc_ca_dir/$_name/$_file.crt.pem" ]
-    then
-        msg "create $_name $_u cert"
+
+        msg "create $_name $_file cert"
 
         # Sign the request from Trusted Client with your Root CA
-        # we wont use CAcreateserial   
-        openssl x509 \
+        # we wont use CAcreateserial
+        echo "openssl x509 -req $_ext -in $sc_ca_dir/tmp/$_file.csr.pem -CA $sc_ca_dir/ca/$_name.crt.pem -CAkey $sc_ca_dir/ca/$_name.key.pem -CAserial $sc_ca_dir/ca/$_name.srl -out $sc_ca_dir/$_name/$_file.crt.pem -days 1095"   
+        openssl x509 $_ext \
         -req -in $sc_ca_dir/tmp/$_file.csr.pem \
         -CA $sc_ca_dir/ca/$_name.crt.pem \
         -CAkey $sc_ca_dir/ca/$_name.key.pem \
         -CAserial $sc_ca_dir/ca/$_name.srl \
         -out $sc_ca_dir/$_name/$_file.crt.pem \
-        -days 1095
+        -days 1095 
     fi
+
 
     if [ -f /var/srvctl-host/users/$_u/.password ]
     then
@@ -114,23 +149,28 @@ then
 
         if [ ! -f "$sc_ca_dir/$_name/$_file.p12" ]
         then
-            msg "create $_u p12"
+            msg "create $_file p12"
 
             openssl pkcs12 -export \
             -passout pass:$_passphrase \
             -in $sc_ca_dir/$_name/$_file.crt.pem \
             -inkey $sc_ca_dir/$_name/$_file.key.pem \
-            -out $sc_ca_dir/$_name/$_file.p12
+            -out $sc_ca_dir/$_name/$_file.p12 
         fi
     
-        if [ ! -f "/home/$_u/$_file.p12" ] 
+        if [ ! -f "/home/$_u/$CDN-$_file.p12" ] 
         then
-            cat $sc_ca_dir/$_name/$_file.p12 > /home/$_u/$_file.p12
-            chown $_u:$_u /home/$_u/$_file.p12
-            chmod 400 /home/$_u/$_file.p12
+            cat $sc_ca_dir/$_name/$_file.p12 > /home/$_u/$CDN-$_file.p12
+            chown $_u:$_u /home/$_u/$CDN-$_file.p12
+            chmod 400 /home/$_u/$CDN-$_file.p12
         fi
     fi
 
+    # verify server extension
+    #openssl x509 -noout -text -in $sc_ca_dir/$_name/$_file.crt.pem
+    #openssl x509 -noout -in /etc/srvctl/CA/hostnet/server-sc.d250.hu.crt.pem -purpose
+    #sleep 2
+    
 #else
 #    msg ".. this is not the CA"
 fi
@@ -157,7 +197,7 @@ function check_pound_pem {
 }
 
 ## create selfsigned certificate the hard way
-function create_certificate { ## for domain
+function create_selfsigned_domain_certificate { ## for domain
                 
         domain=$1
         #cert_path=/etc/srvctl/cert/$domain
@@ -314,4 +354,5 @@ function create_certificate { ## for domain
         ## ca-bundle
         cat $ssl_pem > $cert_path/pound.pem
 }
+
 

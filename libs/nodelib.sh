@@ -43,6 +43,7 @@ function install_nodejs_getver {
     fi
     
     nodejs_rpm_url=$_nodesource'/'$VERSION_ID'/'$ARCH'/nodejs-'$nodejs_ver'nodesource.fc'$VERSION_ID'.'$ARCH'.rpm'
+    nodejs_rpm_name='nodejs-'$nodejs_ver'nodesource.fc'$VERSION_ID'.'$ARCH'.rpm'
    
 }
 
@@ -66,13 +67,31 @@ function install_nodejs_latest {
             dnf -y remove npm
         fi
         
-        echo "dnf -y install $nodejs_rpm_url"
-        dnf -y install $nodejs_rpm_url
+        cd /tmp
+        
+        echo "wget $nodejs_rpm_url"
+        wget $nodejs_rpm_url    
+        if ! [ "$?" == '0' ]
+        then
+            err "nodejs download failed!"
+        fi   
+        
+        echo "dnf -y install $nodejs_rpm_name"
+        dnf -y install $nodejs_rpm_name
         
         if ! [ "$?" == '0' ]
         then
             err "nodejs installation failed!"
         fi
+        
+        ## make further updates possible
+        
+        echo 'wget https://rpm.nodesource.com/pub_6.x/fc/'$VERSION_ID'/'$ARCH'/nodesource-release-fc'$VERSION_ID'-1.noarch.rpm'
+        wget 'https://rpm.nodesource.com/pub_6.x/fc/'$VERSION_ID'/'$ARCH'/nodesource-release-fc'$VERSION_ID'-1.noarch.rpm'
+        
+        echo 'dnf -y install nodesource-release-fc'$VERSION_ID'-1.noarch.rpm'
+        dnf -y install 'nodesource-release-fc'$VERSION_ID'-1.noarch.rpm'
+        
     fi
 }
 

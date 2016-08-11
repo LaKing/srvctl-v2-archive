@@ -1,3 +1,9 @@
+setup_varwwwhtml_error 414 "Request URI too long!"
+setup_varwwwhtml_error 500 "An internal server error occurred. Please try again later."
+setup_varwwwhtml_error 501 "This method may not be used."
+setup_varwwwhtml_error 503 "The service is not available. Please try again later."
+
+
 if [ ! -f /etc/pound.cfg ] || $all_arg_set
 then
 
@@ -64,54 +70,6 @@ End
         mkdir -p /var/pound
         mkdir -p /var/www/html
 
-        #  echo $MSG >> /etc/srvctl/pound-include-ca.cfg
-        #  echo 'CAlist "/etc/srvctl/ca-bundle.pem"' >> /etc/srvctl/pound-include-ca.cfg
-        ## TODO check for /etc/pki maybe?
-
-        ## The pound-served custom error documents
-
-set_file /var/www/html/414.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
-<b>Error 414</b> @ '$(hostname)'<br />
-Request URI is too long.
-</font><p></body>'
-
-set_file /var/www/html/500.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
-<b>Error 500</b> @ '$(hostname)'<br />
-An internal server error occurred. Please try again later.
-</font><p></body>'
-
-set_file /var/www/html/501.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
-<b>Error 501</b> @ '$(hostname)'<br />
-Request URI is too long.
-</font><p></body>'
-
-set_file /var/www/html/503.html '<head></head><body bgcolor="#333"><div id="header" style="background-color:#151515;"><img src="http://'$CDN'/logo.png" alt="'"$CMP"'" style="display: block; margin-left: auto; margin-right: auto; vertical-align: middle"></div><p align="center"><font color="#aaa" style="margin-left: auto; margin-right: auto" size="6px" face="Arial">
-<b>Error 503</b> @ '$(hostname)'<br />
-The service is not available. Please try again later.
-</font><p></body>'
-
-
-        if [ ! -f /var/www/html/favicon.ico ]
-        then
-           msg "Downloading favicon.ico from $CDN"
-           wget -O /var/www/html/favicon.ico http://$CDN/favicon.ico
-        fi
-
-        if [ ! -f /var/www/html/logo.png ]
-        then
-           msg "Downloading logo.png from $CDN" 
-           wget -O /var/www/html/logo.png http://$CDN/logo.png
-        fi
-
-        if [ ! -f /var/www/html/favicon.ico ]
-        then
-           err "No favicon.ico from could be located."
-        fi
-
-        if [ ! -f /var/www/html/logo.png ]
-        then
-           err "No logo.png from could be located."
-        fi
 
 ## Pound logging. By default pound is logging to systemd-journald.
 ## To work with logs, use rsyslog to export to /var/log/pound
@@ -128,6 +86,7 @@ The service is not available. Please try again later.
 else
     msg "Pound config found."
 fi ## install pound
+
 
 
 

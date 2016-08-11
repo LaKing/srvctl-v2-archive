@@ -1,0 +1,13 @@
+## here we add some additional things needed by srvctl
+## openvpn warns to make server certs with this extension
+[ server ]
+
+# Make a cert with nsCertType set to "server"
+basicConstraints=CA:FALSE
+nsCertType                     = server
+nsComment                      = "Srvctl generated Server Certificate"
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer:always
+extendedKeyUsage=serverAuth
+keyUsage = digitalSignature, keyEncipherment
+

@@ -41,9 +41,13 @@ then
     done < /etc/srvctl/hosts
 fi
 
+## defaults that can stay as tey are
+## .. or can be customized, ...
 
 DISABLE_NFS=false
 DISABLE_BINDMOUNT=false
+LOGO_SVG=$install_dir/d250.svg
+LOGO_ICO=$install_dir/favicon.ico
 
 ## set FEDORA to the corresponding fedora version on this computer
 

@@ -12,7 +12,7 @@ then
           exit 10
         fi
                 cert_path=/etc/srvctl/cert/$D
-                create_certificate $D
+                create_selfsigned_domain_certificate $D
             
         ok
         fi

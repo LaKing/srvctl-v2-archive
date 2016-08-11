@@ -57,7 +57,7 @@ function make_rootfs_config {
        
     ## create selfsigned certificate
     cert_path=/var/srvctl-host/selfsigned-certificates/$N
-    create_certificate $N
+    create_selfsigned_domain_certificate $N
         
     if $_fedora
     then

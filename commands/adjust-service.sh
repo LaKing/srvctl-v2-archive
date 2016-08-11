@@ -1,25 +1,45 @@
 #!/bin/bash
 
 ## start or restart service
-hint "SERVICE OP | OP SERVICE" "start|stop|restart|status a service via systemctl.  +|-|!|?"
+hint "SERVICE OP | OP SERVICE" "start|stop|restart|status (enable|remove) a service via systemctl. Shortcuts for OP: +|-|!|?"
 
-if [ "$ARG" == "add" ] || [ "$ARG" == "start" ] || [ "$ARG" == "+" ] || [ "$ARG" == "restart" ] || [ "$ARG" == "!" ] || [ "$ARG" == "stop" ]  || [ "$ARG" == "-" ] || [ "$ARG" == "status" ]  || [ "$ARG" == "?" ] || [ "$ARG" == "remove" ]
+OP=''
+SERVICE=''
+
+if [ "$ARG" == "enable" ] || [ "$ARG" == "start" ] || [ "$ARG" == "+" ] || [ "$ARG" == "restart" ] || [ "$ARG" == "!" ] || [ "$ARG" == "stop" ]  || [ "$ARG" == "-" ] || [ "$ARG" == "status" ]  || [ "$ARG" == "?" ] || [ "$ARG" == "remove" ]
 then
     OP=$ARG
     SERVICE=$CMD
 fi 
 
-if [ "$CMD" == "add" ] || [ "$CMD" == "start" ] || [ "$CMD" == "+" ] || [ "$CMD" == "restart" ] || [ "$CMD" == "!" ] || [ "$CMD" == "stop" ]  || [ "$CMD" == "-" ] || [ "$CMD" == "status" ]  || [ "$CMD" == "?" ] || [ "$CMD" == "remove" ]
+if [ "$CMD" == "enable" ] || [ "$CMD" == "start" ] || [ "$CMD" == "+" ] || [ "$CMD" == "restart" ] || [ "$CMD" == "!" ] || [ "$CMD" == "stop" ]  || [ "$CMD" == "-" ] || [ "$CMD" == "status" ]  || [ "$CMD" == "?" ] || [ "$CMD" == "remove" ]
 then
     OP=$CMD
     SERVICE=$ARG
 fi
 
-if [ ! -z "$SERVICE" ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/$SERVICE.service" ] && [ ! "$SERVICE" == openvpn ]
+if [ "$OP" == "?" ] 
+then 
+    OP=status
+fi
+if [ "$OP" == "!" ] 
+then 
+    OP=restart
+fi
+if [ "$OP" == "+" ] 
+then 
+    OP=enable
+fi
+if [ "$OP" == "-" ] 
+then 
+    OP=remove
+fi
+
+if [ ! -z "$SERVICE" ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/$SERVICE.service" ]
 then
   
   
-    if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
+    if [ "$OP" == "status" ] 
     then
         systemctl status $SERVICE.service  --no-pager
     else
@@ -27,13 +47,13 @@ then
         if $isROOT   
         then
 
-            if [ "$OP" == "add" ] || [ "$OP" == "+" ] 
+            if [ "$OP" == "enable" ]
             then
                 add_service $SERVICE
             fi
 
 
-            if [ "$OP" == "start" ] || [ "$OP" == "restart" ] || [ "$OP" == "!" ] 
+            if [ "$OP" == "start" ]
             then
                 systemctl enable  $SERVICE.service
                 systemctl restart $SERVICE.service
@@ -49,7 +69,7 @@ then
             fi
     
     
-            if [ "$OP" == "remove" ]  || [ "$OP" == "-" ] 
+            if [ "$OP" == "remove" ]
             then
                 rm_service $SERVICE
             fi 
@@ -63,21 +83,23 @@ then
 ok
 fi
 
-if [ "$SERVICE" == openvpn ]
+if [ "$SERVICE" == openvpn ] && [ ! -z "$OP" ] && [ -f "/usr/lib/systemd/system/openvpn@.service" ] && $isROOT
 then
-    
-    if [ "$OP" == "status" ]  || [ "$OP" == "?" ] 
-    then
         
         for c in /etc/openvpn/*.conf
         do
             s="${c:13: -5}"
-            echo $s
-            systemctl status openvpn@$s --no-pager
-
+            msg "$s"
+            echo "systemctl $OP openvpn@$s --no-pager"
+            systemctl $OP openvpn@$s --no-pager
+            
+            if [ "$OP" == "restart" ]
+            then
+                systemctl status openvpn@$s --no-pager
+            fi
+            
         done  
         ok
-    fi
 fi
 
 man '

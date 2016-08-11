@@ -282,7 +282,7 @@ git push
         
         ## create selfsigned certificate
         cert_path=/var/srvctl-host/selfsigned-certificates/$C
-        create_certificate $C
+        create_selfsigned_domain_certificate $C
         
         if [ $ctype == fedora ]
         then

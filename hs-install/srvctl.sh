@@ -9,10 +9,8 @@ fi
 
 msg "Install/update srvctl"
 
-if ! [ -f /usr/bin/git ]
-then
-    dnf -y install git
-fi
+pmc git
+
 
 #if [ -z "$install_dir" ]
 #then
