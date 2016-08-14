@@ -15,13 +15,14 @@ then
             regenerate_counter
 
             ## for each container generate_lxc_config
-            regenerate_config_files
+            regenerate_config_files  
+         
+            ## for each host and container scan_host_key
+            regenerate_known_hosts       
         
             ## /etc/hosts for trusted localhosts
             regenerate_etc_hosts 
-        
-            ## for each container scan_host_key
-            regenerate_known_hosts
+            regenerate_relaydomains 
 
             ## query 8.8.8.8 for dns information
             regenerate_dns_publicinfo
@@ -31,6 +32,8 @@ then
         
             ## create pound configuration files
             regenerate_pound_files
+            regenerate_pound_sync
+            restart_pound
             
             ## perdition configs
             regenerate_perdition_files

@@ -105,7 +105,10 @@ then
             exit 13
         fi
       
-
+        if [ ! -f /var/srvctl-host/counter ]
+        then
+            echo 0 > /var/srvctl-host/counter
+        fi
 
         ## increase the counter
         counter=$(($(cat /var/srvctl-host/counter)+1))
@@ -195,6 +198,7 @@ git push
    
         ## Add IP to hosts file
         regenerate_etc_hosts
+        regenerate_relaydomains 
 
 ## USERs
         
@@ -309,6 +313,8 @@ git push
         fi 
 
         regenerate_pound_files
+        regenerate_pound_sync
+        restart_pound
 
 
 
@@ -371,6 +377,9 @@ man '
     Prefixes make sense, mail. or dev. will create MX or development servers.
     
 '
+
+
+
 
 
 

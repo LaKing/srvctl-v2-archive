@@ -89,6 +89,8 @@ then ## no identation.
             
             ## create pound configuration files
             regenerate_pound_files
+            #regenerate_pound_sync
+            restart_pound
                     
             ok       
               

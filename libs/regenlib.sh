@@ -50,8 +50,8 @@ function regenerate_var_ve {
         
 
         chmod -R 655 /var/srvctl-ve
-        chmod 644 /var/srvctl-ve/*/settings/*
-        chmod 644 /var/srvctl-ve/*/users/*/.hash
+        chmod 644 /var/srvctl-ve/*/settings/* 2>/dev/null
+        chmod 644 /var/srvctl-ve/*/users/*/.hash 2>/dev/null
 }
 
 
@@ -103,18 +103,17 @@ function regenerate_config_files {
         
 }
 
-function regenerate_etc_hosts {  ## and relaydomains
+function regenerate_etc_hosts {
 
         mkdir -p /var/srvctl-host/etchosts
         local _eh=/var/srvctl-host/etchosts/$HOSTNAME
-        mkdir -p /var/srvctl-host/relaydomains
-        local _rd=/var/srvctl-host/relaydomains/$HOSTNAME
+
         local _dig=''
+        local ip=''
         msg "regenerate etc_hosts" ## first in var
 
         echo "## $HOSTNAME ##" > $_eh
         echo "10.$HOSTNET.0.1    ${HOSTNAME%%.*}" >> $_eh
-        echo '' > $_rd
 
 
         for _C in $(lxc-ls)
@@ -126,13 +125,14 @@ function regenerate_etc_hosts {  ## and relaydomains
                 if [ -z "$ip" ] 
                 then
                         counter=$(cat $SRV/$_C/config.counter)
-                        if [ -z $counter ] 
+                        if [ -z "$counter" ] 
                         then        
                                 err "No counter, no IPv4 for "$_C
                                 exit
                         else
                                 ip="10.$HOSTNET."$(to_ip $counter)
                                 echo $ip > $SRV/$_C/config.ipv4
+                                ntc "$_C set to $ip"
                         fi        
                 fi
 
@@ -140,35 +140,32 @@ function regenerate_etc_hosts {  ## and relaydomains
                 then
  
                         echo $ip'                '$_C >>  $_eh
+                        
                         if [ ! -d $SRV/mail.$_C ] && [ "${_C:0:5}" != "mail." ]
                         then
-                        echo $ip'                mail.'$_C >>  $_eh
+                            echo $ip'                mail.'$_C >>  $_eh
                         fi
-                        echo $_C' #' >>  $_rd
 
-                                if [ -f /$SRV/$_C/settings/aliases ]
+                        if [ -f $SRV/$_C/settings/aliases ]
+                        then
+                            for A in $(cat $SRV/$_C/settings/aliases)
+                            do
+                                if [ "$A" == "$(hostname)" ]
                                 then
-                                        for A in $(cat /$SRV/$_C/settings/aliases)
-                                        do
-                                                if [ "$A" == "$(hostname)" ]
-                                                then
-                                                        err "$_C alias: $A - is the host itself!"
-                                                else
-                                                        #dbg "$A is an alias of $_C"
-                                                        echo $ip'                '$A >>  $_eh
+                                    err "$_C alias: $A - is the host itself!"
+                                else
+                                    #dbg "$A is an alias of $_C"
+                                    echo $ip'                '$A >>  $_eh
                                                         
-                                                        if [ ! -d $SRV/mail.$A ] && [ ! -d $SRV/mail.$_C ] && [ "${A:0:5}" != "mail." ] && [ "${_C:0:5}" != "mail." ]
-                                                        then
-                                                        echo $ip'                mail.'$A >>  $_eh
-                                                        fi
-                                                        echo $A' #' >>  $_rd
-                                                fi
-                                        done
+                                    if [ ! -d $SRV/mail.$A ] && [ ! -d $SRV/mail.$_C ] && [ "${A:0:5}" != "mail." ] && [ "${_C:0:5}" != "mail." ]
+                                    then
+                                        echo $ip'                mail.'$A >>  $_eh
+                                    fi
                                 fi
+                            done
+                        fi
 
                         echo ''  >>  $_eh
-
-
                 fi
         done 
         
@@ -206,7 +203,6 @@ function regenerate_etc_hosts {  ## and relaydomains
                 fi
 
                 ssh -n -o ConnectTimeout=1 $_S "cat /var/srvctl-host/etchosts/$_S" > /var/srvctl-host/etchosts/$_S
-                ssh -n -o ConnectTimeout=1 $_S "cat /var/srvctl-host/relaydomains/$_S" > /var/srvctl-host/relaydomains/$_S
 
             else 
                 err "Connection to $_S failed!"
@@ -226,13 +222,81 @@ function regenerate_etc_hosts {  ## and relaydomains
         echo "::1                localhost6.localdomain6 localhost6" >> /etc/hosts
         
         cat /var/srvctl-host/etchosts/* >> /etc/hosts
+        cat /var/srvctl-host/etchosts/* >> /var/srvctl/hosts
 
-        #bak /etc/postfix/relaydomains
+} 
+
+function regenerate_relaydomains {
+
+
+        mkdir -p /var/srvctl-host/relaydomains
+        local _rd=/var/srvctl-host/relaydomains/$HOSTNAME
+
+        msg "regenerate etc_hosts" ## first in var
+
+        echo '' > $_rd
+
+        for _C in $(lxc-ls)
+        do
+
+                ip=$(cat $SRV/$_C/config.ipv4)
+                
+                if [ -z "$ip" ] 
+                then
+                        counter=$(cat $SRV/$_C/config.counter)
+                        if [ -z "$counter" ] 
+                        then        
+                                err "No counter, no IPv4 for "$_C
+                                exit
+                        else
+                                ip="10.$HOSTNET."$(to_ip $counter)
+                                echo $ip > $SRV/$_C/config.ipv4
+                                ntc "$_C set to $ip"
+                        fi        
+                fi
+
+                if [ ! -z "$ip" ]
+                then 
+                        echo $_C' #' >>  $_rd
+                        if [ -f /$SRV/$_C/settings/aliases ]
+                        then
+                            for A in $(cat /$SRV/$_C/settings/aliases)
+                            do
+                                if [ "$A" == "$(hostname)" ]
+                                then
+                                    err "$_C alias: $A - is the host itself!"
+                                else
+                                    echo $A' #' >>  $_rd
+                                fi
+                            done
+                        fi
+                fi
+        done 
+        
+        ## regenerated local relaydomains, now check the remote ones and put them together
+                
+        IP="$(cat /var/srvctl/ifcfg/ipv4)"
+
+        for _S in $SRVCTL_HOSTS
+        do
+            if [ "$(ssh -n -o ConnectTimeout=1 $_S hostname 2> /dev/null)" == "$_S" ]
+            then
+                msg "get relaydomains on $_S"
+
+                ssh -n -o ConnectTimeout=1 $_S "cat /var/srvctl-host/relaydomains/$_S" > /var/srvctl-host/relaydomains/$_S
+
+            else 
+                err "Connection to $_S failed!"
+            fi
+            
+        done
+        
         echo '' > /etc/postfix/relaydomains
         cat /var/srvctl-host/relaydomains/* > /etc/postfix/relaydomains
         postmap /etc/postfix/relaydomains
 
 } 
+
 
 function scan_host_key {
 
@@ -240,7 +304,7 @@ function scan_host_key {
         ntc "Scanning host key for "$1
     
         ## TODO in the next line the container name may be better if not indicated.
-        echo "## srvctl host-key" > $SRV/$1/host-key
+        echo "## srvctl scanned host-key $NOW" > $SRV/$1/host-key
         ssh-keyscan -t rsa -H $(cat $SRV/$1/config.ipv4) >> $SRV/$1/host-key 2>/dev/null
         ssh-keyscan -t rsa -H $1 >> $SRV/$1/host-key 2>/dev/null
         echo '' >> $SRV/$1/host-key        
@@ -250,18 +314,41 @@ function scan_host_key {
 function regenerate_known_hosts {
 
         msg "regenerate known hosts"
-
-        echo '## srvctl generated ..' > /etc/ssh/ssh_known_hosts
+        mkdir -p /var/srvctl-host/known_hosts
         
-        for _S in $SRVCTL_HOSTS
-        do
-            echo "## $_S $(cat /var/srvctl/ifcfg/$_S) ${_S%%.*}" >> /etc/ssh/ssh_known_hosts
-            #ssh-keyscan -t rsa -H $(cat /var/srvctl/ifcfg/$_S) >> /etc/ssh/ssh_known_hosts 2>/dev/null
-            ssh-keyscan -t rsa -H $_S >> /etc/ssh/ssh_known_hosts 2>/dev/null
-            ssh-keyscan -t rsa -H ${_S%%.*} >> /etc/ssh/ssh_known_hosts 2>/dev/null
-            #2>/dev/null
-            echo '' >> /etc/ssh/ssh_known_hosts
-        done
+        local known_hosts=/var/srvctl-host/known_hosts/localhost
+
+        echo '## srvctl generated ..' > $known_hosts
+        ## local first
+        ssh-keyscan -t rsa -H 127.0.0.1 >> $known_hosts 2>/dev/null
+        ssh-keyscan -t rsa -H localhost >> $known_hosts 2>/dev/null
+        ssh-keyscan -t rsa -H localhost.localdomain >> $known_hosts 2>/dev/null
+        ssh-keyscan -t rsa -H ::1 >> $known_hosts 2>/dev/null
+        ssh-keyscan -t rsa -H localhost6 >> $known_hosts 2>/dev/null
+        ssh-keyscan -t rsa -H localhost6.localdomain6 >> $known_hosts 2>/dev/null
+        
+        known_hosts=/var/srvctl-host/known_hosts/$HOSTNAME
+        echo '## srvctl generated ..' > $known_hosts
+        
+        ssh-keyscan -t rsa -H $HOSTNAME >> $known_hosts 2>/dev/null
+        ssh-keyscan -t rsa -H ${HOSTNAME%%.*} >> $known_hosts 2>/dev/null
+        ssh-keyscan -t rsa -H 10.$HOSTNET.0.1 >> $known_hosts 2>/dev/null
+        ssh-keyscan -t rsa -H $(cat /var/srvctl/ifcfg/$HOSTNAME) >> $known_hosts 2>/dev/null
+        
+        echo '## srvctl containers' >> $known_hosts
+        
+        #for _S in $SRVCTL_HOSTS
+        #do
+        #    _known_hosts=/var/srvctl-host/known_hosts/$_S
+        #    echo "## $_S $(cat /var/srvctl/ifcfg/$_S) ${_S%%.*}" > $known_hosts
+        #    ssh-keyscan -t rsa -H $(cat /var/srvctl/ifcfg/$_S) >> $known_hosts 2>/dev/null
+        #    ssh-keyscan -t rsa -H $_S >> $known_hosts 2>/dev/null
+        #    ssh-keyscan -t rsa -H ${_S%%.*} >> $known_hosts 2>/dev/null
+        #    #2>/dev/null
+        #    echo '' >> $known_hosts
+        #done
+        #
+        #local _known_hosts=/var/srvctl-host/known_hosts/$HOSTNAME
         
         for _C in $(lxc-ls)
         do
@@ -283,12 +370,26 @@ function regenerate_known_hosts {
 
                 if [ -f $SRV/$_C/host-key ]
                 then
-                        echo "## $_C" >> /etc/ssh/ssh_known_hosts
-                        cat $SRV/$_C/host-key >> /etc/ssh/ssh_known_hosts
+                        echo "## $_C" >> $known_hosts
+                        cat $SRV/$_C/host-key >> $known_hosts
                 fi
 
         done ## regenerated  containers hosts
         #msg "Set ssh_known_hosts done."
+        
+        for _S in $SRVCTL_HOSTS
+        do
+            if [ "$(ssh -n -o ConnectTimeout=1  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $_S '[ -f /var/srvctl-host/known_hosts/$HOSTNAME ] && hostname || echo err' 2> /dev/null)" == "$_S" ]
+            then
+                #echo rsync -aze ssh $_S:/var/srvctl-host/known_hosts/$_S /var/srvctl-host/known_hosts
+                rsync -aze ssh $_S:/var/srvctl-host/known_hosts/$_S /var/srvctl-host/known_hosts
+            else
+                err "Could not fetch known_hosts of $_S"  
+            fi
+        done
+        
+        cat /var/srvctl-host/known_hosts/* > /etc/ssh/ssh_known_hosts
+        cat /var/srvctl-host/known_hosts/* > /var/srvctl/ssh_known_hosts
 }
 
 
@@ -694,14 +795,33 @@ function wait_for_ve_connection { #on container
 function regenerate_perdition_files {
     
         msg "regenerate perdition popmap"
-    
-        echo '## srvctl generated' > /etc/perdition/popmap.re
-        echo '' >> /etc/perdition/popmap.re
+        local popmap=/var/srvctl-host/popmap/$HOSTNAME
+        
+        mkdir -p /var/srvctl-host/popmap
+        
+        echo '## srvctl generated' > $popmap
+        echo '' >> $popmap
     
         for _C in $(lxc-ls)
         do
-            echo "(.*)@$_C: $_C" >> /etc/perdition/popmap.re
+            echo "(.*)@$_C: $_C" >> $popmap
         done
+        
+        for _S in $SRVCTL_HOSTS
+        do    
+            query="$(ssh -n -o ConnectTimeout=1 $_S '[ -f /var/srvctl-host/popmap/$HOSTNAME ] && cat /var/srvctl-host/popmap/$HOSTNAME || echo ""' 2> /dev/null)"
+            popmap=/var/srvctl-host/popmap/$_S
+            
+            if [ ! -z "$query" ]
+            then
+                echo "$query" > $popmap
+            else 
+                err "get $_S popmap query failed. $query"
+            fi
+        done
+        
+        
+        cat /var/srvctl-host/popmap/* > /etc/perdition/popmap.re
 
         systemctl restart imap4
         systemctl restart imap4s
@@ -710,6 +830,8 @@ function regenerate_perdition_files {
 }
 
 fi ## if onHS
+
+
 
 
 

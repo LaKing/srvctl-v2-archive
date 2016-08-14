@@ -77,28 +77,25 @@ then
 
                 ## TODO regenerate everything
                 regenerate_etc_hosts
+                regenerate_relaydomains 
                 regenerate_known_hosts
                 regenerate_pound_files
+                #regenerate_pound_sync
+                restart_pound
                 regenerate_dns
                 regenerate_logfiles
                 regenerate_perdition_files
-        else
-            if [ -f /var/dyndns/$C.auth ]
-            then
-                    auth=$(cat /var/dyndns/$C.auth)
-            
-                    if [ "${auth:0:${#SC_USER}}" == $SC_USER ] || [ $SC_USER == root ]
-                    then
-                        rm -fr /var/dyndns/$C.auth
-                        rm -fr /var/dyndns/$C.ip
-                        rm -fr /var/dyndns/$C.lock
-                        rm -fr /var/dyndns/$C.updt
-                        regenerate_dns
-                    fi
-            else
-                msg "$C not found."
-            fi
         fi
+            
+        if [ -f /var/dyndns/$C.auth ]
+        then
+            rm -fr /var/dyndns/$C.auth
+            rm -fr /var/dyndns/$C.ip
+            rm -fr /var/dyndns/$C.lock
+            rm -fr /var/dyndns/$C.updt
+            regenerate_dns    
+        fi
+        
 
 ok
 fi ## reMOVE

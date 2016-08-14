@@ -1,17 +1,5 @@
-function pound_add_pound_pem {
-  
-  if [ -f $pound_pem ]
-  then
-    #cat $pound_pem > $cfg_dir/pound.pem
-    #echo 'Cert "'$cfg_dir'/pound.pem"' >> /var/pound/https-certificates.cfg
-  
-    echo 'Cert "'$pound_pem'"' >> /var/pound/https-certificates.cfg
-  
-  fi
-  
-}
-
-## under construction
+if false
+then
 
 function pound_add_service__redirect {
     
@@ -92,84 +80,161 @@ function pound_add_service {
     
     
     ## put the config files to the includes
-    echo 'Include "'$_service_http_cfg'"' >> /var/pound/http-domains.cfg
-    echo 'Include "'$_service_https_cfg'"' >> /var/pound/https-domains.cfg
+    echo 'Include "'$_service_http_cfg'"' >> $pound_dir/http-domains.cfg
+    echo 'Include "'$_service_https_cfg'"' >> $pound_dir/https-domains.cfg
 
     
 }
 
+fi
+
 ## under construction block end
 
+function pound_add_includes {
+
+    if [ -f $1/http-includes.cfg ]
+    then
+        echo 'Include "'$1'/http-includes.cfg"' >> /var/pound/http-includes.cfg
+    fi
+    
+    if [ -f $1/https-includes.cfg ]
+    then
+        echo 'Include "'$1'/https-includes.cfg"' >> /var/pound/https-includes.cfg
+    fi
+    
+    if [ -f $1/https-certificates.cfg ]
+    then
+        echo 'Include "'$1'/https-certificates.cfg"' >> /var/pound/https-certificates.cfg   
+    fi
+}
+
+
+function regenerate_pound_sync {
+    
+    msg "sync certificates across servers"
+    
+    ## The /etc/srvctl/cert folder should be maintained on ROOTCA_HOST
+    if [ "$HOSTNAME" != "$ROOTCA_HOST" ]
+    then
+        #echo rsync --delete -aze ssh $ROOTCA_HOST:/etc/srvctl/cert /etc/srvctl/cert
+              rsync --delete -aze ssh $ROOTCA_HOST:/etc/srvctl/cert /etc/srvctl/cert
+    fi
+    
+    local MSG="## srvctl pound main $NOW"
+    echo $MSG > /var/pound/http-includes.cfg
+    echo $MSG > /var/pound/https-includes.cfg
+    echo $MSG > /var/pound/https-certificates.cfg
+    echo 'Include "/var/pound/https-certificates.cfg"' >> /var/pound/https-includes.cfg
+    
+    for host in $SRVCTL_HOSTS
+    do
+        if [ "$(ssh -n -o ConnectTimeout=1 $host '[ -d /var/pound/$HOSTNAME ] && hostname || echo err' 2> /dev/null)" == "$host" ]
+        then
+            msg "Pound sync $host"
+            
+            rsync --delete -aze ssh $host:/var/pound/$host /var/pound
+            
+        else
+            err "Could not fetch pound configurations from $host"
+        fi
+    done
+    
+    
+    
+    ## import host certificates
+    for _d in $(ls /etc/srvctl/cert)
+    do
+        pound_pem=/etc/srvctl/cert/$_d/pound.pem
+        if [ -f $pound_pem ]
+        then
+            echo 'Cert "'$pound_pem'"' >> /var/pound/https-certificates.cfg
+        fi
+    done
+    
+    pound_add_includes /var/pound/$HOSTNAME
+    
+    for host in $SRVCTL_HOSTS
+    do        
+        pound_add_includes /var/pound/$host 
+    done
+    
+}
 
 function regenerate_pound_files {
   
   msg "regenerate pound files"
+
+  local pound_dir=/var/pound/$HOSTNAME
   
-  rm -rf /var/pound
-  mkdir -p /var/pound
+  rm -rf $pound_dir
+  mkdir -p $pound_dir
   
-  local MSG="## srvctl generated $NOW"
+  local MSG="## srvctl $HOSTNAME generated $NOW"
   
   ## We will use a sort of layering, with up to 8 layers.
   
   ## We assume that /etc/pound.cfg has two includes ...
-  echo $MSG > /var/pound/http-includes.cfg
-  echo $MSG > /var/pound/https-includes.cfg
-  echo $MSG > /var/pound/https-certificates.cfg
+  echo $MSG > $pound_dir/http-includes.cfg
+  echo $MSG > $pound_dir/https-includes.cfg
+  echo $MSG > $pound_dir/https-certificates.cfg
   
-  echo $MSG > /var/pound/http-domains.cfg
-  echo $MSG > /var/pound/http-dddn-domains.cfg
+  echo $MSG > $pound_dir/http-domains.cfg
+  echo $MSG > $pound_dir/http-dddn-domains.cfg
   
-  echo $MSG > /var/pound/http-8-domains.cfg
-  echo $MSG > /var/pound/http-7-domains.cfg
-  echo $MSG > /var/pound/http-6-domains.cfg
-  echo $MSG > /var/pound/http-5-domains.cfg
-  echo $MSG > /var/pound/http-4-domains.cfg
-  echo $MSG > /var/pound/http-3-domains.cfg
-  echo $MSG > /var/pound/http-2-domains.cfg
-  echo $MSG > /var/pound/http-1-domains.cfg
+  ## the number is the count of dots.
+  ## with this we try to catch misstyped domains where possible - using wildcards
+  ## and redirect them ...
   
-  echo $MSG > /var/pound/https-domains.cfg
-  echo $MSG > /var/pound/https-dddn-domains.cfg
+  echo $MSG > $pound_dir/http-8-domains.cfg
+  echo $MSG > $pound_dir/http-7-domains.cfg
+  echo $MSG > $pound_dir/http-6-domains.cfg
+  echo $MSG > $pound_dir/http-5-domains.cfg
+  echo $MSG > $pound_dir/http-4-domains.cfg
+  echo $MSG > $pound_dir/http-3-domains.cfg
+  echo $MSG > $pound_dir/http-2-domains.cfg
+  echo $MSG > $pound_dir/http-1-domains.cfg
   
-  echo $MSG > /var/pound/https-8-domains.cfg
-  echo $MSG > /var/pound/https-7-domains.cfg
-  echo $MSG > /var/pound/https-6-domains.cfg
-  echo $MSG > /var/pound/https-5-domains.cfg
-  echo $MSG > /var/pound/https-4-domains.cfg
-  echo $MSG > /var/pound/https-3-domains.cfg
-  echo $MSG > /var/pound/https-2-domains.cfg
-  echo $MSG > /var/pound/https-1-domains.cfg
+  echo $MSG > $pound_dir/https-domains.cfg
+  echo $MSG > $pound_dir/https-dddn-domains.cfg
   
-  echo 'Include "/var/pound/https-certificates.cfg"' >> /var/pound/https-includes.cfg
+  echo $MSG > $pound_dir/https-8-domains.cfg
+  echo $MSG > $pound_dir/https-7-domains.cfg
+  echo $MSG > $pound_dir/https-6-domains.cfg
+  echo $MSG > $pound_dir/https-5-domains.cfg
+  echo $MSG > $pound_dir/https-4-domains.cfg
+  echo $MSG > $pound_dir/https-3-domains.cfg
+  echo $MSG > $pound_dir/https-2-domains.cfg
+  echo $MSG > $pound_dir/https-1-domains.cfg
   
-  echo 'Include "/var/pound/acme-server.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-domains.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-dddn-domains.cfg"' >> /var/pound/http-includes.cfg
+  #echo 'Include "'$pound_dir'/https-certificates.cfg"' >> $pound_dir/https-includes.cfg
   
-  echo 'Include "/var/pound/http-8-domains.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-7-domains.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-6-domains.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-5-domains.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-4-domains.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-3-domains.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-2-domains.cfg"' >> /var/pound/http-includes.cfg
-  echo 'Include "/var/pound/http-1-domains.cfg"' >> /var/pound/http-includes.cfg
+  echo 'Include "'$pound_dir'/acme-server.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-domains.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-dddn-domains.cfg"' >> $pound_dir/http-includes.cfg
   
-  echo 'Include "/var/pound/https-domains.cfg"' >> /var/pound/https-includes.cfg
-  echo 'Include "/var/pound/https-dddn-domains.cfg"' >> /var/pound/https-includes.cfg
+  echo 'Include "'$pound_dir'/http-8-domains.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-7-domains.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-6-domains.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-5-domains.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-4-domains.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-3-domains.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-2-domains.cfg"' >> $pound_dir/http-includes.cfg
+  echo 'Include "'$pound_dir'/http-1-domains.cfg"' >> $pound_dir/http-includes.cfg
   
-  echo 'Include "/var/pound/https-8-domains.cfg"' >> /var/pound/https-includes.cfg
-  echo 'Include "/var/pound/https-7-domains.cfg"' >> /var/pound/https-includes.cfg
-  echo 'Include "/var/pound/https-6-domains.cfg"' >> /var/pound/https-includes.cfg
-  echo 'Include "/var/pound/https-5-domains.cfg"' >> /var/pound/https-includes.cfg
-  echo 'Include "/var/pound/https-4-domains.cfg"' >> /var/pound/https-includes.cfg
-  echo 'Include "/var/pound/https-3-domains.cfg"' >> /var/pound/https-includes.cfg
-  echo 'Include "/var/pound/https-2-domains.cfg"' >> /var/pound/https-includes.cfg
-  echo 'Include "/var/pound/https-1-domains.cfg"' >> /var/pound/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-domains.cfg"' >> $pound_dir/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-dddn-domains.cfg"' >> $pound_dir/https-includes.cfg
+  
+  echo 'Include "'$pound_dir'/https-8-domains.cfg"' >> $pound_dir/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-7-domains.cfg"' >> $pound_dir/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-6-domains.cfg"' >> $pound_dir/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-5-domains.cfg"' >> $pound_dir/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-4-domains.cfg"' >> $pound_dir/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-3-domains.cfg"' >> $pound_dir/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-2-domains.cfg"' >> $pound_dir/https-includes.cfg
+  echo 'Include "'$pound_dir'/https-1-domains.cfg"' >> $pound_dir/https-includes.cfg
   
   ## first of all, set up the acme server
-  set_file /var/pound/acme-server.cfg '## srvctl generated letsencrypt responder
+  set_file $pound_dir/acme-server.cfg '## srvctl generated letsencrypt responder
         Service
             URL "^/.well-known/acme-challenge/*"
             BackEnd
@@ -178,27 +243,9 @@ function regenerate_pound_files {
             End
         End
   '
-  
 
   
-  ## import host certificates
-  for _d in $(ls /etc/srvctl/cert)
-  do
-    pound_pem=/etc/srvctl/cert/$_d/pound.pem
-    pound_add_pound_pem
-    
-  done
- 
-  ## import container certificates
-  for _C in $(lxc_ls)
-  do
-  
-    pound_pem=$SRV/$_C/cert/pound.pem
-    pound_add_pound_pem
-  
-  done
-  
-  ## $_C is the local version of $C
+  ## $_C is the local version of $C - the containers
   for _C in $(lxc-ls)
   do
     
@@ -208,9 +255,17 @@ function regenerate_pound_files {
       ## TODO - web client? 
       continue
     fi
-    
-    cfg_dir=/var/pound/$_C
+
+    cfg_dir=$pound_dir/$_C
     mkdir -p $cfg_dir 
+    
+    ## import container certificates
+    pound_pem=$SRV/$_C/cert/pound.pem
+    if [ -f $pound_pem ]
+    then
+        cat $pound_pem > $cfg_dir/pound.pem
+        echo 'Cert "'$cfg_dir'/pound.pem"' >> $pound_dir/https-certificates.cfg
+    fi
     
     ## create configs
     _ip=$(cat $SRV/$_C/config.ipv4)
@@ -270,8 +325,8 @@ function regenerate_pound_files {
       End
       End'
       
-      echo 'Include "'$cfg_dir/dddn-http-service'"' >> /var/pound/http-dddn-domains.cfg
-      echo 'Include "'$cfg_dir/dddn-https-service'"' >> /var/pound/https-dddn-domains.cfg
+      echo 'Include "'$cfg_dir/dddn-http-service'"' >> $pound_dir/http-dddn-domains.cfg
+      echo 'Include "'$cfg_dir/dddn-https-service'"' >> $pound_dir/https-dddn-domains.cfg
 
       
       
@@ -317,8 +372,8 @@ function regenerate_pound_files {
         End
         End'
         
-        echo 'Include "'$cfg_dir/altdomain-http-service'"' >> /var/pound/http-domains.cfg
-        echo 'Include "'$cfg_dir/altdomain-https-service'"' >> /var/pound/https-domains.cfg
+        echo 'Include "'$cfg_dir/altdomain-http-service'"' >> $pound_dir/http-domains.cfg
+        echo 'Include "'$cfg_dir/altdomain-https-service'"' >> $pound_dir/https-domains.cfg
       fi
       
       ## disabled - under construction
@@ -361,8 +416,8 @@ function regenerate_pound_files {
         End      
         '
         
-        echo 'Include "'$cfg_dir/codepad-http-service'"' >> /var/pound/http-domains.cfg
-        echo 'Include "'$cfg_dir/codepad-https-service'"' >> /var/pound/https-domains.cfg
+        echo 'Include "'$cfg_dir/codepad-http-service'"' >> $pound_dir/http-domains.cfg
+        echo 'Include "'$cfg_dir/codepad-https-service'"' >> $pound_dir/https-domains.cfg
         
         set_file $cfg_dir/play-https-service '## srvctl play-https-service '$_C' '$_ip'
         Service
@@ -404,8 +459,8 @@ function regenerate_pound_files {
         End       
         '
         
-        echo 'Include "'$cfg_dir/play-http-service'"' >> /var/pound/http-domains.cfg
-        echo 'Include "'$cfg_dir/play-https-service'"' >> /var/pound/https-domains.cfg
+        echo 'Include "'$cfg_dir/play-http-service'"' >> $pound_dir/http-domains.cfg
+        echo 'Include "'$cfg_dir/play-https-service'"' >> $pound_dir/https-domains.cfg
         
       fi
       
@@ -430,8 +485,8 @@ function regenerate_pound_files {
         End
         End'
         
-        echo 'Include "'$cfg_dir/dev-http-service'"' >> /var/pound/http-domains.cfg
-        echo 'Include "'$cfg_dir/dev-https-service'"' >> /var/pound/https-domains.cfg
+        echo 'Include "'$cfg_dir/dev-http-service'"' >> $pound_dir/http-domains.cfg
+        echo 'Include "'$cfg_dir/dev-https-service'"' >> $pound_dir/https-domains.cfg
       fi
       
       
@@ -461,8 +516,8 @@ function regenerate_pound_files {
         
         End'
         
-        echo 'Include "'$cfg_dir/log-http-service'"' >> /var/pound/http-domains.cfg
-        echo 'Include "'$cfg_dir/log-https-service'"' >> /var/pound/https-domains.cfg
+        echo 'Include "'$cfg_dir/log-http-service'"' >> $pound_dir/http-domains.cfg
+        echo 'Include "'$cfg_dir/log-https-service'"' >> $pound_dir/https-domains.cfg
       fi
       
       
@@ -525,13 +580,13 @@ function regenerate_pound_files {
         Redirect "'$(cat $SRV/$_C/settings/pound-redirect)'"
         End'
         
-        echo 'Include "'$cfg_dir/redirect-service'"' >> /var/pound/http-domains.cfg
-        echo 'Include "'$cfg_dir/redirect-service'"' >> /var/pound/https-domains.cfg
+        echo 'Include "'$cfg_dir/redirect-service'"' >> $pound_dir/http-domains.cfg
+        echo 'Include "'$cfg_dir/redirect-service'"' >> $pound_dir/https-domains.cfg
       else
         
         ## finally inlcude the demanded service
-        echo 'Include "'$cfg_dir/http-service'"' >> /var/pound/http-domains.cfg
-        echo 'Include "'$cfg_dir/https-service'"' >> /var/pound/https-domains.cfg
+        echo 'Include "'$cfg_dir/http-service'"' >> $pound_dir/http-domains.cfg
+        echo 'Include "'$cfg_dir/https-service'"' >> $pound_dir/https-domains.cfg
         
       fi
     
@@ -560,8 +615,8 @@ function regenerate_pound_files {
           Redirect "https://'$_C'"
           End'
           
-          echo 'Include "'$cfg_dir/$A-http-alias-service'"' >> /var/pound/http-domains.cfg
-          echo 'Include "'$cfg_dir/$A-https-alias-service'"' >> /var/pound/https-domains.cfg
+          echo 'Include "'$cfg_dir/$A-http-alias-service'"' >> $pound_dir/http-domains.cfg
+          echo 'Include "'$cfg_dir/$A-https-alias-service'"' >> $pound_dir/https-domains.cfg
           
         done
       fi
@@ -584,8 +639,8 @@ function regenerate_pound_files {
           Redirect "'$(cat $SRV/$_C/settings/pound-redirect)'"
           End'
           ## finally inlcude the demanded service
-          echo 'Include "'$cfg_dir/$A-redirect-service'"' >> /var/pound/http-$dnl-domains.cfg
-          echo 'Include "'$cfg_dir/$A-redirect-service'"' >> /var/pound/https-$dnl-domains.cfg
+          echo 'Include "'$cfg_dir/$A-redirect-service'"' >> $pound_dir/http-$dnl-domains.cfg
+          echo 'Include "'$cfg_dir/$A-redirect-service'"' >> $pound_dir/https-$dnl-domains.cfg
           
         else
           
@@ -602,8 +657,8 @@ function regenerate_pound_files {
           Redirect "'$_https_mark'://'$_host'"
           End'
           
-          echo 'Include "'$cfg_dir/$A-http-service'"' >> /var/pound/http-$dnl-domains.cfg
-          echo 'Include "'$cfg_dir/$A-https-service'"' >> /var/pound/https-$dnl-domains.cfg
+          echo 'Include "'$cfg_dir/$A-http-service'"' >> $pound_dir/http-$dnl-domains.cfg
+          echo 'Include "'$cfg_dir/$A-https-service'"' >> $pound_dir/https-$dnl-domains.cfg
           
           
         fi
@@ -612,7 +667,7 @@ function regenerate_pound_files {
     fi
     
     ## if there is some problem, start an automatic debug process, that skips broken configs
-    if [ "$1" == "debug" ] && $debug
+    if [ "$1" == "debug" ] #&& $debug
     then
       
       systemctl restart pound.service
@@ -623,71 +678,71 @@ function regenerate_pound_files {
         msg "$_C pound-debug OK"
         
         ## Ok, make a backup of this state.
-        cat /var/pound/http-includes.cfg > /var/pound/http-includes.lok
-        cat /var/pound/https-includes.cfg > /var/pound/https-includes.lok
-        cat /var/pound/https-certificates.cfg > /var/pound/https-certificates.lok
+        cat $pound_dir/http-includes.cfg > $pound_dir/http-includes.lok
+        cat $pound_dir/https-includes.cfg > $pound_dir/https-includes.lok
+        cat $pound_dir/https-certificates.cfg > $pound_dir/https-certificates.lok
         
-        cat /var/pound/http-domains.cfg > /var/pound/http-domains.lok
-        cat /var/pound/http-dddn-domains.cfg > /var/pound/http-dddn-domains.lok
+        cat $pound_dir/http-domains.cfg > $pound_dir/http-domains.lok
+        cat $pound_dir/http-dddn-domains.cfg > $pound_dir/http-dddn-domains.lok
         
-        cat /var/pound/http-8-domains.cfg > /var/pound/http-8-domains.lok
-        cat /var/pound/http-7-domains.cfg > /var/pound/http-7-domains.lok
-        cat /var/pound/http-6-domains.cfg > /var/pound/http-6-domains.lok
-        cat /var/pound/http-5-domains.cfg > /var/pound/http-5-domains.lok
-        cat /var/pound/http-4-domains.cfg > /var/pound/http-4-domains.lok
-        cat /var/pound/http-3-domains.cfg > /var/pound/http-3-domains.lok
-        cat /var/pound/http-2-domains.cfg > /var/pound/http-2-domains.lok
-        cat /var/pound/http-1-domains.cfg > /var/pound/http-1-domains.lok
+        cat $pound_dir/http-8-domains.cfg > $pound_dir/http-8-domains.lok
+        cat $pound_dir/http-7-domains.cfg > $pound_dir/http-7-domains.lok
+        cat $pound_dir/http-6-domains.cfg > $pound_dir/http-6-domains.lok
+        cat $pound_dir/http-5-domains.cfg > $pound_dir/http-5-domains.lok
+        cat $pound_dir/http-4-domains.cfg > $pound_dir/http-4-domains.lok
+        cat $pound_dir/http-3-domains.cfg > $pound_dir/http-3-domains.lok
+        cat $pound_dir/http-2-domains.cfg > $pound_dir/http-2-domains.lok
+        cat $pound_dir/http-1-domains.cfg > $pound_dir/http-1-domains.lok
         
-        cat /var/pound/https-domains.cfg > /var/pound/https-domains.lok
-        cat /var/pound/https-dddn-domains.cfg > /var/pound/https-dddn-domains.lok
+        cat $pound_dir/https-domains.cfg > $pound_dir/https-domains.lok
+        cat $pound_dir/https-dddn-domains.cfg > $pound_dir/https-dddn-domains.lok
         
-        cat /var/pound/https-8-domains.cfg > /var/pound/https-8-domains.lok
-        cat /var/pound/https-7-domains.cfg > /var/pound/https-7-domains.lok
-        cat /var/pound/https-6-domains.cfg > /var/pound/https-6-domains.lok
-        cat /var/pound/https-5-domains.cfg > /var/pound/https-5-domains.lok
-        cat /var/pound/https-4-domains.cfg > /var/pound/https-4-domains.lok
-        cat /var/pound/https-3-domains.cfg > /var/pound/https-3-domains.lok
-        cat /var/pound/https-2-domains.cfg > /var/pound/https-2-domains.lok
-        cat /var/pound/https-1-domains.cfg > /var/pound/https-1-domains.lok
+        cat $pound_dir/https-8-domains.cfg > $pound_dir/https-8-domains.lok
+        cat $pound_dir/https-7-domains.cfg > $pound_dir/https-7-domains.lok
+        cat $pound_dir/https-6-domains.cfg > $pound_dir/https-6-domains.lok
+        cat $pound_dir/https-5-domains.cfg > $pound_dir/https-5-domains.lok
+        cat $pound_dir/https-4-domains.cfg > $pound_dir/https-4-domains.lok
+        cat $pound_dir/https-3-domains.cfg > $pound_dir/https-3-domains.lok
+        cat $pound_dir/https-2-domains.cfg > $pound_dir/https-2-domains.lok
+        cat $pound_dir/https-1-domains.cfg > $pound_dir/https-1-domains.lok
         
         
       else
         ## Error in this config, skip it, .. restore the good ones.
         
-        cat /var/pound/http-includes.lok > /var/pound/http-includes.cfg
-        cat /var/pound/https-includes.lok > /var/pound/https-includes.cfg
-        cat /var/pound/https-certificates.lok > /var/pound/https-certificates.cfg
+        cat $pound_dir/http-includes.lok > $pound_dir/http-includes.cfg
+        cat $pound_dir/https-includes.lok > $pound_dir/https-includes.cfg
+        cat $pound_dir/https-certificates.lok > $pound_dir/https-certificates.cfg
         
-        cat /var/pound/http-domains.lok > /var/pound/http-domains.cfg
-        cat /var/pound/http-dddn-domains.lok > /var/pound/http-dddn-domains.cfg
+        cat $pound_dir/http-domains.lok > $pound_dir/http-domains.cfg
+        cat $pound_dir/http-dddn-domains.lok > $pound_dir/http-dddn-domains.cfg
         
-        cat /var/pound/http-8-domains.lok > /var/pound/http-8-domains.cfg
-        cat /var/pound/http-7-domains.lok > /var/pound/http-7-domains.cfg
-        cat /var/pound/http-6-domains.lok > /var/pound/http-6-domains.cfg
-        cat /var/pound/http-5-domains.lok > /var/pound/http-5-domains.cfg
-        cat /var/pound/http-4-domains.lok > /var/pound/http-4-domains.cfg
-        cat /var/pound/http-3-domains.lok > /var/pound/http-3-domains.cfg
-        cat /var/pound/http-2-domains.lok > /var/pound/http-2-domains.cfg
-        cat /var/pound/http-1-domains.lok > /var/pound/http-1-domains.cfg
+        cat $pound_dir/http-8-domains.lok > $pound_dir/http-8-domains.cfg
+        cat $pound_dir/http-7-domains.lok > $pound_dir/http-7-domains.cfg
+        cat $pound_dir/http-6-domains.lok > $pound_dir/http-6-domains.cfg
+        cat $pound_dir/http-5-domains.lok > $pound_dir/http-5-domains.cfg
+        cat $pound_dir/http-4-domains.lok > $pound_dir/http-4-domains.cfg
+        cat $pound_dir/http-3-domains.lok > $pound_dir/http-3-domains.cfg
+        cat $pound_dir/http-2-domains.lok > $pound_dir/http-2-domains.cfg
+        cat $pound_dir/http-1-domains.lok > $pound_dir/http-1-domains.cfg
         
-        cat /var/pound/https-domains.lok > /var/pound/https-domains.cfg
-        cat /var/pound/https-dddn-domains.lok > /var/pound/https-dddn-domains.cfg
+        cat $pound_dir/https-domains.lok > $pound_dir/https-domains.cfg
+        cat $pound_dir/https-dddn-domains.lok > $pound_dir/https-dddn-domains.cfg
         
-        cat /var/pound/https-8-domains.lok > /var/pound/https-8-domains.cfg
-        cat /var/pound/https-7-domains.lok > /var/pound/https-7-domains.cfg
-        cat /var/pound/https-6-domains.lok > /var/pound/https-6-domains.cfg
-        cat /var/pound/https-5-domains.lok > /var/pound/https-5-domains.cfg
-        cat /var/pound/https-4-domains.lok > /var/pound/https-4-domains.cfg
-        cat /var/pound/https-3-domains.lok > /var/pound/https-3-domains.cfg
-        cat /var/pound/https-2-domains.lok > /var/pound/https-2-domains.cfg
-        cat /var/pound/https-1-domains.lok > /var/pound/https-1-domains.cfg
+        cat $pound_dir/https-8-domains.lok > $pound_dir/https-8-domains.cfg
+        cat $pound_dir/https-7-domains.lok > $pound_dir/https-7-domains.cfg
+        cat $pound_dir/https-6-domains.lok > $pound_dir/https-6-domains.cfg
+        cat $pound_dir/https-5-domains.lok > $pound_dir/https-5-domains.cfg
+        cat $pound_dir/https-4-domains.lok > $pound_dir/https-4-domains.cfg
+        cat $pound_dir/https-3-domains.lok > $pound_dir/https-3-domains.cfg
+        cat $pound_dir/https-2-domains.lok > $pound_dir/https-2-domains.cfg
+        cat $pound_dir/https-1-domains.lok > $pound_dir/https-1-domains.cfg
         
         log "$_C Pound-debug restart FAILED!"
         systemctl status pound.service --no-pager
-        cat /var/pound/*
+        cat $pound_dir/*
         echo "--------- DEBUG $_C ----------"
-        cat /var/pound/$_C/*
+        cat $pound_dir/$_C/*
         echo '--------------------------'
       fi
       ## if no sleep,.. pound.service start request repeated too quickly, refusing to start.
@@ -697,7 +752,11 @@ function regenerate_pound_files {
     
     
   done ## foreach container
-  
+    
+}
+
+function restart_pound {
+   
   systemctl restart pound.service
   
   test=$(systemctl is-active pound.service)
@@ -712,12 +771,8 @@ function regenerate_pound_files {
     err "Pound restart FAILED!"
     systemctl status pound.service --no-pager
     
-    msg "Debbuging pound configuration..."
-    regenerate_pound_files debug
-  fi
-  
+    #msg "Debbuging pound configuration..."
+    #regenerate_pound_files debug
+  fi   
 }
-
-
-
 
