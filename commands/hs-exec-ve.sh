@@ -3,8 +3,8 @@ if $onHS
 then
 
 ## exec-all 'something' (or with "")ssh  
-hint "ssh-all 'CMD [..]'" "Execute a command on all running containers via shell."
-if [ "$CMD" == "ssh-all" ]
+hint "exec-all 'CMD [..]'" "Execute a command on all running containers of this host."
+if [ "$CMD" == "exec-all" ]
 then
 
     if [ -z "$ARG" ]
@@ -41,43 +41,6 @@ man '
     The command will be executed via ssh, as root, starting in the /root folder.
     Enclose the command into a string to use certain operators, like &&
 '
-
-
-## exec-all backup-db
-hint "top" "Show table of processes on all running containers."
-if [ "$CMD" == "top" ]
-then
-
-    sudomize
-    tmp_file=$TMP/$SC_USER-top
-
-        
-    echo "" > $tmp_file
-    
-    
-    for C in $(lxc_ls)
-    do     
-        set_is_running    
-        if $is_running
-        then
-            msg "Connecting to $C for a query."
-            msg "--- $C ---" >> $tmp_file
-            
-            #ssh -t $C "top -b -n 1" >> $tmp_file
-            lxc-attach -n $C -- top -b -n 1
-        fi
-               
-    done
-    
- cat $tmp_file
-
-ok
-fi
-man '
-    This command will run top with one run on all running containers.
-    top may help to identify hanging or resource intensive processes.
-'
-
 
 fi
 

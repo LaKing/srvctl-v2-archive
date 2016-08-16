@@ -14,10 +14,16 @@ then ## no identation.
 
 hint "exec VE [CMD ..] | VE [CMD ..] " "Enter the root shell, or execute a command on a given container. This is the default command."
 
-if [ "$CMD" == "exec" ]
+if [ "$CMD" == "exec" ] || [ -d "$SRV/$CMD/rootfs" ]
 then
 
-    argument C
+    if [ -d "$SRV/$CMD/rootfs" ]
+    then
+        C=$CMD
+    else
+        argument C
+    fi
+    
     sudomize
     authorize
 
@@ -44,41 +50,11 @@ then
 ok
 fi
  
-if [ -d "$SRV/$CMD/rootfs" ]
-then
-
-    C=$CMD
-    
-    sudomize
-    authorize
-
-    set_is_running
-    if $is_running
-    then
-        if [ -z "$OPAS" ]
-        then
-            #ntc "Switching to $C .."
-            lxc-attach -n $C 
-            #ntc "Exiting $C .."
-        else
-            #ntc "[root@$C ~]# $OPAS3"
-            lxc-attach -n $C -- $OPAS
-            if [ "$?" != "0" ]
-            then
-                err "Command returned an error. $?"
-            fi
-            
-        fi
-    else 
-        err "$C is STOPPED"
-    fi
-ok
-fi
- 
  
 man '
-    Users can access local containers directly. Syntax is similar to that of ssh.
-    eg.: sc example.com do-something with arguments
+    Users can access local containers directly. Syntax is similar to that of ssh. eg.: 
+        sc example.com
+        sc example.com "do-something with arguments"
 '
 
 fi

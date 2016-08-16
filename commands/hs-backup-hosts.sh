@@ -52,7 +52,8 @@ man '
     Optional directives may be specified in /etc/srvctl/backup-hosts-include
     - local_backup DIRs
     - server_backup HOST DIRs
-    - remote_baclup PROXY HOST DIRs
+    - remote_backup PROXY HOST DIRs
 '
 fi
+
 

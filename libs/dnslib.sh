@@ -1,4 +1,4 @@
-## constants
+get_primary_ip## constants
 named_includes=/var/named/srvctl-includes.conf
 named_live_path=/var/named/srvctl
 named_main_path=/var/srvctl-host/named-local
@@ -98,6 +98,8 @@ function create_named_zone {
     ## Create Basic Zonefile
     get_primary_ip
 
+## We require to have 4 nameservers.
+
 set_file $named_zone '$TTL 1D
 @        IN SOA        @ hostmaster.'$CDN'. (
                                         '$serial'        ; serial
@@ -108,6 +110,7 @@ set_file $named_zone '$TTL 1D
         IN         NS        ns1.'$CDN'.
         IN         NS        ns2.'$CDN'.
         IN         NS        ns3.'$CDN'.
+        IN         NS        ns4.'$CDN'.
 *        IN         A        '$ip'
 @        IN         A        '$ip'
 '

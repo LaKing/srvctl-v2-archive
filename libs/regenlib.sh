@@ -382,6 +382,7 @@ function regenerate_known_hosts {
             if [ "$(ssh -n -o ConnectTimeout=1  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $_S '[ -f /var/srvctl-host/known_hosts/$HOSTNAME ] && hostname || echo err' 2> /dev/null)" == "$_S" ]
             then
                 #echo rsync -aze ssh $_S:/var/srvctl-host/known_hosts/$_S /var/srvctl-host/known_hosts
+                msg "get $_S known_hosts"
                 rsync -aze ssh $_S:/var/srvctl-host/known_hosts/$_S /var/srvctl-host/known_hosts
             else
                 err "Could not fetch known_hosts of $_S"  
@@ -799,7 +800,7 @@ function regenerate_perdition_files {
         
         mkdir -p /var/srvctl-host/popmap
         
-        echo '## srvctl generated' > $popmap
+        echo '## $HOSTNAME $NOW' > $popmap
         echo '' >> $popmap
     
         for _C in $(lxc-ls)
@@ -807,8 +808,11 @@ function regenerate_perdition_files {
             echo "(.*)@$_C: $_C" >> $popmap
         done
         
+        echo '' >> $popmap
+        
         for _S in $SRVCTL_HOSTS
-        do    
+        do   
+            msg "get $_S popmap" 
             query="$(ssh -n -o ConnectTimeout=1 $_S '[ -f /var/srvctl-host/popmap/$HOSTNAME ] && cat /var/srvctl-host/popmap/$HOSTNAME || echo ""' 2> /dev/null)"
             popmap=/var/srvctl-host/popmap/$_S
             
