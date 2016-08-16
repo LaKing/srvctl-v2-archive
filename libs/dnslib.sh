@@ -1,4 +1,4 @@
-get_primary_ip## constants
+## constants
 named_includes=/var/named/srvctl-includes.conf
 named_live_path=/var/named/srvctl
 named_main_path=/var/srvctl-host/named-local
