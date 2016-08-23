@@ -60,20 +60,20 @@ then
           exit 11
         fi
         
-        for host in $SRVCTL_HOSTS
+        for _S in $SRVCTL_HOSTS
         do
-            for _c in $(ssh $host srvctl ls)
+            for _c in $(ssh $$_S srvctl ls)
             do
                 if [ "$_c" == "$C" ]
                 then
-                    err "$C already on $host"
+                    err "$C already on $$_S"
                     exit 111
                 fi
             done
         done
         
         
-    if [ "${C: -6}" == ".devel" ] || [ "${C: -6}" == "-devel" ] || [ "${C: -6}" == "-local" ] || [ "${C: -6}" == ".local" ]
+    if [ "${C: -6}" == ".devel" ] || [ "${C: -6}" == "-devel" ] || [ "${C: -6}" == ".local" ] || [ "${C: -6}" == "-local" ]
     then
         msg "Local container."
     else
@@ -91,7 +91,6 @@ then
         fi
         
     fi
-        
 
         if [ -z "$(ip addr show srv-net 2> /dev/null | grep UP)" ]
         then
@@ -105,10 +104,7 @@ then
             exit 13
         fi
       
-        if [ ! -f /var/srvctl-host/counter ]
-        then
-            echo 0 > /var/srvctl-host/counter
-        fi
+        regenerate_counter 
 
         ## increase the counter
         counter=$(($(cat /var/srvctl-host/counter)+1))
@@ -167,27 +163,90 @@ then
             date +%s | sha256sum | base64 | head -c 64 > $SRV/$C/rootfs/etc/codepad/APIKEY.txt
             ln -s /var/srvctl-ve/$C/users $SRV/$C/rootfs/var/codepad/users
             
-            set_file  $SRV/$C/rootfs/etc/codepad/push.sh '#!/bin/bash
-
-echo codepad-push
-exit
-git config --global user.email "root@'$C'"
-git config --global user.name "root"
-git config --global push.default simple
-
-cd /srv/codepad-project 
-git add -A .
-git commit -m codepad-auto
-git push
+            set_file $SRV/$C/rootfs/etc/codepad/settings.json '/* ep_codepad-devel settings*/
+{
+  "ep_codepad": { 
+    "theme": "Cobalt",
+    "project_path": "/srv/codepad-project",
+    "log_path": "/var/codepad/project.log",
+    "push_action": "/bin/bash /srv/codepad-project/push.sh",
+    "play_url": "https://'$(echo $C | tr '.' '-')'.play.'$CDN'"
+  },
+  "title": "codepad",
+  "favicon": "favicon.ico",
+  "ip": "0.0.0.0",
+  "port" : 9001,
+  "dbType" : "mysql",
+  "dbSettings" : {
+    "user"    : "root",
+    "host"    : "localhost",
+    "password": "",
+    "database": "codepad"
+  },
+  "defaultPadText" : "// codepad",
+  "requireSession" : false,
+  "editOnly" : false,
+  "minify" : true,
+  "maxAge" : 21600, 
+  "abiword" : null,
+  "requireAuthentication": true,
+  "requireAuthorization": false,
+  "trustProxy": false,
+  "disableIPlogging": true,  
+  "socketTransportProtocols" : ["xhr-polling", "jsonp-polling", "htmlfile"],
+  "loglevel": "INFO",
+  "logconfig" :
+    { "appenders": [
+        { "type": "console"}
+      ]
+    },
+}
 '
+
+
+cd $SRV/$C/rootfs/var/git
+git init --bare -q
+git clone $SRV/$C/rootfs/var/git $SRV/$C/rootfs/srv/codepad-project -q &> /dev/null
+
+set_file $SRV/$C/rootfs/srv/codepad-project/.git/config '[core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+[remote "origin"]
+        url = /var/git
+        fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+        remote = origin
+        merge = refs/heads/master
+'
+
+set_file $SRV/$C/rootfs/var/codepad/.gitconfig '[user]
+        email = codepad@'$C'
+        name = codepad
+[push]
+        default = simple
+'
+
+rsync -a $install_dir/ve-install/codepad-project $SRV/$C/rootfs/srv
+
+$(cd $SRV/$C/rootfs/srv/codepad-project && npm install >> /dev/null)
+
+cat $SRV/$C/rootfs/etc/pki/tls/certs/localhost.crt > $SRV/$C/rootfs/var/codepad/localhost.crt
+cat $SRV/$C/rootfs/etc/pki/tls/private/localhost.key > $SRV/$C/rootfs/var/codepad/localhost.key
+
+
+chmod 744 -R $SRV/$C/rootfs/etc/codepad
+chown -R codepad:codepad $SRV/$C/rootfs/var/codepad
+chown -R codepad:codepad $SRV/$C/rootfs/srv/codepad-project
 
         fi
 
         ## mark as dev site
-        if $isDEV
-        then
-                echo "true" > $SRV/$C/settings/pound-enable-dev
-        fi
+        #if $isDEV
+        #then
+        #        echo "true" > $SRV/$C/settings/pound-enable-dev
+        #fi
 
         echo $counter > $SRV/$C/config.counter
 
@@ -195,10 +254,10 @@ git push
 
         IPv4="10.$HOSTNET."$(to_ip $counter)
         
-   
-        ## Add IP to hosts file
+
         regenerate_etc_hosts
-        regenerate_relaydomains 
+
+
 
 ## USERs
         
@@ -358,6 +417,11 @@ git push
         systemctl start $C.$ctype.service
         msg "apache application-container ready."
     fi
+    
+
+   
+    regenerate_relaydomains 
+    regenerate_known_hosts
 
 
 ok

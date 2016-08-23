@@ -205,16 +205,14 @@ function lxc_start { ## container
         say_info "STARTED" 
         say_name $_c
         wait_for_ve_online $_c
-
+        
         scan_host_key $_c
-
-        regenerate_known_hosts
-
+        
         wait_for_ve_connection $_c
 
         set_is_running $_c
         if $is_running
-        then
+        then        
              msg "Mounting shares"
              nfs_mount $_c
              

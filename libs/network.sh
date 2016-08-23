@@ -61,6 +61,11 @@ function import_network_configuration {
          process_network_interface_configuration $i  
     done < /var/srvctl/ifcfg/cards
 
+    dig +short +time=1 $HOSTNAME > /var/srvctl/ifcfg/$HOSTNAME
     
+    for _S in $SRVCTL_HOSTS
+    do
+        dig +short +time=1 $_S > /var/srvctl/ifcfg/$_S
+    done
 }
 

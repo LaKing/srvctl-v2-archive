@@ -38,18 +38,23 @@ man '
 '
 
 ## startall
-hint "start-all" "Start all containers and services."
+hint "start-all [delay]" "Start all containers and services. Optionally with a delay in-between."
 if [ "$CMD" == "start-all" ]
 then
         sudomize
-
+        local _delay=0
+        
+        
+        if [ ! -z $OPA ]
+        then
+            _delay=$OPA
+        fi
+        
         set_file_limits
 
         for C in $(lxc_ls)
         do
-                msg "start-all: $C"
-                sleep 6
-                dbg 'starting'
+                sleep $_delay
         
                 set_is_running
         
@@ -57,12 +62,11 @@ then
                 then
                         lxc_start $C
                 else
-                          get_state
+                        get_state
                         say_name $C
-                        echo ''
+                        
                 fi        
 
-                msg "started $C"
                 echo ''
         done
 ok
@@ -71,6 +75,7 @@ fi
 man '
     Start all, except the disabled containers. It will also mount NFS shares.
     This operation is relative CPU-intensive, and depending on the number of containers it may take several minutes.
+    The delay parameter can be used to slow-down the process. Default is 1 sec.
 '
 
 fi

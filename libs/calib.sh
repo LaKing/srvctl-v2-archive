@@ -67,9 +67,11 @@ function create_ca_certificate { ## arguments: type user
 
 if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
 then
-
+    ## network: server / client
     local _e=$1
+    ## usernet / hostnet
     local _name=$2
+    ## user / root / host -name
     local _u=$3
 
     local _ext=''
@@ -145,20 +147,22 @@ then
 
     if [ -f /var/srvctl-host/users/$_u/.password ]
     then
-        local _passphrase="$(cat $passtor/.password)"
-
+        local _passphrase="$(cat /var/srvctl-host/users/$_u/.password)"
+        
         if [ ! -f "$sc_ca_dir/$_name/$_file.p12" ]
         then
-            msg "create $_file p12"
+            ntc "create $_file p12 ($_passphrase)"
 
             openssl pkcs12 -export \
             -passout pass:$_passphrase \
             -in $sc_ca_dir/$_name/$_file.crt.pem \
             -inkey $sc_ca_dir/$_name/$_file.key.pem \
             -out $sc_ca_dir/$_name/$_file.p12 
+            
+            echo $_passphrase > $sc_ca_dir/$_name/$_file.pass
         fi
     
-        if [ ! -f "/home/$_u/$CDN-$_file.p12" ] 
+        if [ ! -f "/home/$_u/$CDN-$_file.p12" ] || $all_arg_set
         then
             cat $sc_ca_dir/$_name/$_file.p12 > /home/$_u/$CDN-$_file.p12
             chown $_u:$_u /home/$_u/$CDN-$_file.p12

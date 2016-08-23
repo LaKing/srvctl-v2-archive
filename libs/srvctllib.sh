@@ -105,31 +105,6 @@ function to_ipv6 {
     
 }
 
-function create_keypair { ## for user $U
-        
-        local U=$1
-        mkdir -p /home/$U/.ssh
-
-        ## create ssh keypair
-        if [ ! -f /home/$U/.ssh/id_rsa.pub ]
-        then
-           msg "Creating keypair for user "$U
-           ssh-keygen -t rsa -b 4096 -f /home/$U/.ssh/id_rsa -N '' -C $U@@$(hostname)
-        fi
-        
-        ## srvctl-gui keypair
-        mkdir -p /var/srvctl-host/users/$U
-    
-        if [ ! -f /var/srvctl-host/users/$U/srvctl_id_rsa.pub ]
-        then
-            ssh-keygen -t rsa -b 4096 -f /var/srvctl-host/users/$U/srvctl_id_rsa -N '' -C $U-srvtcl-key
-        fi
-
-        chown -R $U:$U /home/$U/.ssh
-        chmod -R 600 /home/$U/.ssh
-        chmod    700 /home/$U/.ssh
-}
-
 function get_password {
 
         ## TODO make hash based password eventually? ...
@@ -164,84 +139,223 @@ function update_password { ## for local user
 
     local _u=$1
     local password=''
-    local passtor=/var/srvctl-host/users/$_u
-    
+    local passtor=/var/srvctl-users/$_u
     mkdir -p $passtor
-   
-    if [ -f /home/$_u/.password ] && [ -f $passtor/.password ] && [ -z "$(diff /home/$_u/.password $passtor/.password)" ] && [ -f /home/$_u/.password.sha512 ] && [ -f $passtor/.password.sha512 ] && [ -z "$(diff /home/$_u/.password.sha512 $passtor/.password.sha512)" ]
+    
+    ## make sure we dont have empty passwords
+    if [ -z "$(cat $passtor/.password 2> /dev/null)" ]
     then
-        ## nothing to do
-        return
+        rm -rf $passtor/.password
+    fi
+    
+    if [ -z "$(cat /home/$_u/.password 2> /dev/null)" ]
+    then
+        rm -rf /home/$_u/.password
+    fi
+    
+    ## Generate the passcode, which is the default password by the system
+    if [ "$ROOTCA_HOST" == $HOSTNAME ]
+    then
+        if [ ! -f /var/srvctl-users/$_u/.passcode ]
+        then
+            get_password
+            echo -n "$password" > $passtor/.passcode
+        fi
+        password="$(cat $passtor/.passcode )"
+        
+        if [ ! -f $passtor/.password ]
+        then
+            echo -n "$(cat $passtor/.passcode)"  > $passtor/.password
+        fi 
     fi
     
     ## copy from home to store
     if [ -f /home/$_u/.password.sha512 ]
     then
-        echo -n $(cat /home/$_u/.password.sha512) > $passtor/.password.sha512
+        echo -n "$(cat /home/$_u/.password.sha512)" > $passtor/.password.sha512
     fi
 
     ## copy from store to home
     if [ -f $passtor/.password.sha512 ] && [ ! -f /home/$_u/.password.sha512 ]
     then
-        echo -n $(cat $passtor/.password.sha512) > /home/$_u/.password.sha512
+        echo -n "$(cat $passtor/.password.sha512)" > /home/$_u/.password.sha512
     fi
-    
-    #TODO check on other servers
 
     if [ -f /home/$_u/.password ]
     then
-        echo -n $(cat /home/$_u/.password)  > $passtor/.password
+        echo -n "$(cat /home/$_u/.password)"  > $passtor/.password
     fi
    
-    if [ -f $passtor/.password ] && [ ! -f /home/$_u/.password ]
+    if  [ ! -f /home/$_u/.password ] && [ -f $passtor/.password ]
     then
-        echo -n $(cat $passtor/.password) > /home/$_u/.password
+        echo -n "$(cat $passtor/.password)" > /home/$_u/.password
     fi  
-
-    if [ -z "$(cat $passtor/.password 2> /dev/null)" ]
+       
+    if [ -f "$passtor/.password" ]
     then
-        rm -rf $passtor/.password
-        rm -rf /home/$_u/.password
-    fi
- 
-    ## load / generate password
-    if ! [ -f "$passtor/.password" ]
-    then
-                ## there will be an auto-generated password
-                ## generate new password
-                get_password
-                echo -n $password > $passtor/.password
-    else
                 ## use existing password
                 password=$(cat $passtor/.password )
     fi
+       
+    if [ -z "$password" ]
+    then
+        err "Password-system encountered an error. Skipping."
+        return
+    fi
+    
+    if [ -f "$passtor/$HOSTNAME.password" ]
+    then
+            ## use existing password
+            current_password=$(cat $passtor/$HOSTNAME.password )
+    fi
+    
+    if [ "$password" != "$current_password" ]
+    then
 
-    ## set password on the system
-    echo $password | passwd $_u --stdin 2> /dev/null 1> /dev/null
+        ## set password on the system
+        echo $password | passwd $_u --stdin 2> /dev/null 1> /dev/null
+        echo -n "$password" > $passtor/$HOSTNAME.password
+        log "Password is $password for $_u@$HOSTNAME"    
     
-    log "Password is $password for $_u@$HOSTNAME"    
-    ## save
-    echo -n $(echo -n $password | openssl dgst -sha512 | cut -d ' ' -f 2) > $passtor/.password.sha512
-    echo -n $(cat $passtor/.password.sha512) > /home/$_u/.password.sha512
+        ## save
+        echo -n $(echo -n $password | openssl dgst -sha512 | cut -d ' ' -f 2) > $passtor/.password.sha512
+        echo -n $(cat $passtor/.password.sha512) > /home/$_u/.password.sha512
     
-    echo -n $password > /home/$_u/.password
-    echo -n $password > $passtor/.password
-   
-    chown $_u:$_u /home/$_u/.password
-    chmod 400 /home/$_u/.password  
-    chown $_u:$_u /home/$_u/.password.sha512
-    chmod 400 /home/$_u/.password.sha512
+        echo -n $password > /home/$_u/.password
+
+    fi
+    
+        chown $_u:$_u /home/$_u/.password
+        chmod 400 /home/$_u/.password  
+        chown $_u:$_u /home/$_u/.password.sha512
+        chmod 400 /home/$_u/.password.sha512
 
 }
 
+function create_user_keypair { ## for user $U
+        
+        local _u=$1
+        mkdir -p /home/$_u/.ssh
+        
+        ## create ssh keypair
+    
+    if $onHS
+    then
+        
+        if [ "$ROOTCA_HOST" == $HOSTNAME ]
+        then
+            if [ ! -f /var/srvctl-users/$_u/user_id_rsa.pub ] || [ ! -f /var/srvctl-users/$_u/user_id_rsa ]
+            then
+                rm -fr /var/srvctl-users/$_u/user_id_rsa.pub
+                rm -fr /var/srvctl-users/$_u/user_id_rsa
+        
+               msg "Creating keypair for user "$_u
+               ssh-keygen -t rsa -b 4096 -f /var/srvctl-users/$_u/user_id_rsa -N '' -C $_u@$CDN
+            fi
+        fi
+        
+        if [ ! -f /var/srvctl-users/$_u/user_id_rsa.pub ] || [ ! -f /var/srvctl-users/$_u/user_id_rsa ]
+        then
+            err "No user_id_rsa for $_u"
+        else
+            cat /var/srvctl-users/$_u/user_id_rsa.pub > /home/$_u/.ssh/id_rsa.pub
+            cat /var/srvctl-users/$_u/user_id_rsa > /home/$_u/.ssh/id_rsa
+        fi
+        
+    fi
+    
+    if $onVE
+    then
+        ## create ssh keypair
+        if [ ! -f /home/$_u/.ssh/id_rsa.pub ]
+        then
+           msg "Creating keypair for user "$_u
+           ssh-keygen -t rsa -b 4096 -f /home/$_u/.ssh/id_rsa -N '' -C $_u@@$(hostname)
+        fi
+    fi
+    
+    
+        chown -R $_u:$_u /home/$_u/.ssh
+        chmod -R 600 /home/$_u/.ssh
+        chmod    700 /home/$_u/.ssh
+    
+}
+function create_srvctl_keypair { ## for user $U
+    
+    if [ "$ROOTCA_HOST" == $HOSTNAME ]
+    then
+        
+        local _u=$1
+
+        ## srvctl-gui keypair
+        mkdir -p /var/srvctl-users/$_u
+    
+        if [ ! -f /var/srvctl-users/$_u/srvctl_id_rsa.pub ]
+        then
+            ssh-keygen -t rsa -b 4096 -f /var/srvctl-users/$_u/srvctl_id_rsa -N '' -C $_u-srvtcl-key
+        fi
+    fi
+}
+
+
 function add_user {
+    
+    ## onHS or onVE
+    ## add-user command
+    ## add-user to container command
+    ## add-user from container-settings
 
     local U=$1
-    #msg "add_user $U"
-    adduser $U 2> /dev/null
-    update_password $U
-    create_keypair $U
-    create_ca_certificate client usernet $U
+    local _had=false
+
+    if [ ! -d /home/$U ]
+    then
+        msg "add user $U"
+        adduser $U
+    fi
+    
+    if [ -f /bin/git ]
+    then
+        if [ -z "$(su $_U -c 'cd ~ && git config --global user.email')" ]
+        then
+            su $_U -c "cd ~ && git config --global user.email $_U@$HOSTNAME"
+        fi
+        if [ -z "$(su $_U -c 'cd ~ && git config --global user.name')" ]
+        then
+            su $_U -c "cd ~ && git config --global user.name $_U"
+        fi
+        if [ -z "$(su $_U -c 'cd ~ && git config --global push.default')" ]
+        then
+            su $_U -c "cd ~ && git config --global push.default simple"
+        fi
+    fi
+    
+    if $onVE
+    then
+        update_password $U
+        create_user_keypair $U
+        return
+    fi
+    
+    if [ "$ROOTCA_HOST" == $HOSTNAME ]
+    then
+
+        update_password $U
+        create_user_keypair $U
+        create_srvctl_keypair $U
+        create_ca_certificate client usernet $U
+        
+    else
+    
+        if [ ! -d /var/srvctl-users/$U ]
+        then
+            err "Cannot sync user, not availble from the authoritive host $ROOTCA_HOST"
+        fi
+    
+        update_password $U
+        create_user_keypair $U        
+        
+    fi
     
 }
 
@@ -525,4 +639,7 @@ then
     
         
 fi
+
+
+
 

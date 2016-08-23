@@ -53,7 +53,7 @@ then
             fi
 
 
-            if [ "$OP" == "start" ]
+            if [ "$OP" == "start" ] || [ "$OP" == "restart" ]
             then
                 systemctl enable  $SERVICE.service
                 systemctl restart $SERVICE.service

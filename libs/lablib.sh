@@ -115,8 +115,8 @@ function err {
 
 function is_fqdn {
     ## check if argument is a FQDN - fully qualified domain name
-    ## this method doesent work actually
-    local fqdn_test=$(echo $1 | grep -P '(?=^.{6,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
+    ## this method doesent work well actually
+    local fqdn_test=$(echo $1 | grep -P '(?=^.{5,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+\.(?:[a-z]{2,})$)')
     # '
             if [ -z "$fqdn_test" ]
             then

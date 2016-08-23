@@ -23,9 +23,6 @@ then
             ## /etc/hosts for trusted localhosts
             regenerate_etc_hosts 
             regenerate_relaydomains 
-
-            ## query 8.8.8.8 for dns information
-            regenerate_dns_publicinfo
             
             ## for each container import certificates
             regenerate_letsencrypt
@@ -42,8 +39,9 @@ then
             regenerate_root_configs
         
             ## add_user(s)
+            regenerate_users_sync
             regenerate_users 
-        
+             
             ## for each user generate_user_configs
             regenerate_users_configs
         
@@ -65,7 +63,12 @@ then
             ## kind of unnecessery, but since the commands are developed actively its here for now.
             regenerate_sudo_configs
             
-
+            ## just in case, if things changed
+            regenerate_users_sync
+            
+            ## query 8.8.8.8 for dns information
+            #regenerate_dns_publicinfo
+            
                
 ok
 fi ## regenerate

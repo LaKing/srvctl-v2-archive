@@ -104,14 +104,15 @@ nameserver 10.$HOSTNET.0.1
     chroot $rootfs groupadd -r -g 102 git
     chroot $rootfs useradd -r -u 102 -g 102 -s /sbin/nologin -d /var/git git
     
-    #chroot $rootfs groupadd -r -g 27 mysql
-    #chroot $rootfs useradd -r -u 27 -g 27 -s /sbin/nologin -d /var/lib/mysql mysql
+    ## TODO - check if we need users and especially what UIDs to use ...
+    chroot $rootfs groupadd -r -g 27 mysql
+    chroot $rootfs useradd -r -u 27 -g 27 -s /sbin/nologin -d /var/lib/mysql mysql
     
-    #chroot ${rootfs_path} groupadd -r -g 103 node
-    #chroot ${rootfs_path} useradd -r -u 103 -g 103 -s /sbin/nologin -d /srv node
+    chroot ${rootfs_path} groupadd -r -g 103 node
+    chroot ${rootfs_path} useradd -r -u 103 -g 103 -s /sbin/nologin -d /srv node
     
-    #chroot ${rootfs_path} groupadd -r -g 104 codepad
-    #chroot ${rootfs_path} useradd -r -u 104 -g 104 -s /sbin/nologin -d /srv/etherpad-lite codepad
+    chroot ${rootfs_path} groupadd -r -g 104 codepad
+    chroot ${rootfs_path} useradd -r -u 104 -g 104 -s /sbin/nologin -d /srv/codepad codepad
     
     #chroot ${rootfs_path} postalias /etc/aliases
     #chroot ${rootfs_path} 
@@ -143,7 +144,8 @@ nameserver 10.$HOSTNET.0.1
         ln -s /etc/apache2/conf-available/pound.conf $rootfs/etc/apache2/conf-enabled/pound.conf
     fi
 
-        set_file $rootfs/$_pound_conf '## srvctl
+    
+    set_file $rootfs/$_pound_conf '## srvctl
         <IfModule log_config_module>
 
             ### Custom log redefinition
@@ -154,9 +156,8 @@ nameserver 10.$HOSTNET.0.1
 
         </IfModule>
 
-        Listen 8080
-        Listen 8443 
 '
     
 }
+
 

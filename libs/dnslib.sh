@@ -264,9 +264,18 @@ function regenerate_dns_publicinfo {
         msg "Regenerate DNS - query public information."
         for _C in $(lxc_ls)
         do
+            
             rm -rf $SRV/$_C/dns-*
-            get_dns_servers $_C
+            rm -rf $SRV/$_C/dns.log
+            if [ -f $SRV/$_C/settings/disabled ]
+            then
+                echo -n ' '
+            else
+                echo -n .
+                get_dns_servers $_C
+            fi
         done
+        echo ''
     fi
 }
 
@@ -363,35 +372,35 @@ function regenerate_dns {
         cp $named_main_path/*.conf $named_live_path
 
 
-        for host in $SRVCTL_HOSTS
+        for _S in $SRVCTL_HOSTS
         do
             
-              if [ "$(ssh -n -o ConnectTimeout=1 $host hostname 2> /dev/null)" == "$host" ]
+              if [ "$(ssh -n -o ConnectTimeout=1 $_S hostname 2> /dev/null)" == "$_S" ]
               then
-                msg "Update remote DNS connection for $host"
+                msg "Update remote DNS connection for $_S"
                 
-                rm -rf /var/srvctl-host/$host.dns.tar.gz
+                rm -rf /var/srvctl-host/$_S.dns.tar.gz
                 
-                ## http method deprecated: wget -q --no-check-certificate https://$host/dns.tar.gz -O /var/srvctl-host/$host.dns.tar.gz
+                ## http method deprecated: wget -q --no-check-certificate https://$_S/dns.tar.gz -O /var/srvctl-host/$_S.dns.tar.gz
                 ## we use rsync instead
                 
-                rsync -aze ssh $host:/var/srvctl-host/$host.dns.tar.gz /var/srvctl-host
-                if [ "$?" != "0" ] || [ ! -f /var/srvctl-host/$host.dns.tar.gz ]
+                rsync -aze ssh $_S:/var/srvctl-host/$_S.dns.tar.gz /var/srvctl-host
+                if [ "$?" != "0" ] || [ ! -f /var/srvctl-host/$_S.dns.tar.gz ]
                 then
-                    err "Failed to fetch DNS update information from $host"
+                    err "Failed to fetch DNS update information from $_S"
                     continue
                 fi
                 
-                named_expath=/var/srvctl-host/named-$host
+                named_expath=/var/srvctl-host/named-$_S
                 
                 rm -rf $named_expath/*
                 mkdir -p $named_expath
 
-                tar -xf /var/srvctl-host/$host.dns.tar.gz -C $named_expath
+                tar -xf /var/srvctl-host/$_S.dns.tar.gz -C $named_expath
                 exif
                 
                 ## expath based include file included
-                named_exconf=/var/named/srvctl-$host.conf
+                named_exconf=/var/named/srvctl-$_S.conf
                 echo 'include "'$named_exconf'";' >> $named_includes
                 echo '## srvctl named external slave conf includes' > $named_exconf 
                 
@@ -405,8 +414,8 @@ function regenerate_dns {
                 
                 cp $named_expath/*.slave $named_live_path
               else
-                err "Could not connect to $host"
-                ssh -n -o ConnectTimeout=1 $host hostname
+                err "Could not connect to $_S"
+                ssh -n -o ConnectTimeout=1 $_S hostname
               fi
 
         done 
@@ -471,7 +480,7 @@ function get_dns_provider { ## for domain name $_c
     
         if [ -z "$(cat $SRV/$_c/dns-servers)" ]
         then
-            err "Domain $_c has no name servers. ($dns_authority?)"
+            echo "Domain $_c has no name servers. ($dns_authority?)" >> $SRV/$_c/dns.log
         fi 
     
     
@@ -482,11 +491,16 @@ function get_dns_provider { ## for domain name $_c
             if [ -z "$dns_provider" ]
             then
                 dns_provider="${_query%?}"
-            else
-                if [ "$dns_provider" != "${_query%?}" ]
-                then
-                    echo "$_c has multiple DNS authorities! ($dns_provider. $_query)" > $SRV/$_c/dns.log
-                fi
+            
+            ## seems to be no problem.
+            #
+            #else
+            #    if [ "$dns_provider" != "${_query%?}" ]
+            #    then
+            #        echo "$_c has multiple DNS authorities! ($dns_provider. $_query)" >> $SRV/$_c/dns.log
+            #    fi
+            #
+            
             fi
         done < $SRV/$_c/dns-servers
     
@@ -504,7 +518,7 @@ function get_dns_servers { ## argument domain
     ## dont apply for local containers, aliases, and mailservers
     if [ "${_c: -6}" == "-devel" ] || [ "${_c: -6}" == ".devel" ] || [ "${_c: -6}" == "-local" ] || [ "${_c: -6}" == ".local" ] || [ ! -d $SRV/$_c ] || [ "${_c:0:5}" == mail ] 
     then
-        echo 0 > /dev/null
+        return
     else
         get_dns_authority
         

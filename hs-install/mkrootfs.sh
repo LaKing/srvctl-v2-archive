@@ -7,6 +7,14 @@
     source $install_dir/hs-install/make_rootfs_config.sh
     nodejs_rpm_url=''
     
+    if $all_arg_set
+    then
+        rm -fr /var/srvctl-rootfs/apache
+        rm -fr /var/srvctl-rootfs/fedora
+        rm -fr /var/srvctl-rootfs/codepad
+        rm -fr /var/srvctl-rootfs/ubuntu
+    fi
+    
     if [ ! -d /var/srvctl-rootfs/fedora ] || $all_arg_set
     then
         SRVCTL_PKG_LIST="mc httpd mod_ssl openssl postfix mailx sendmail unzip rsync nfs-utils dovecot wget"    
@@ -108,6 +116,14 @@ mkdir -p /var/srvctl-rootfs/codepad/var/log/mysql
 chown -R mysql:mysql /var/srvctl-rootfs/codepad/var/log/mysql
 
 mkdir -p /var/srvctl-rootfs/codepad/var/codepad
+set_file /var/srvctl-rootfs/codepad/var/codepad/.gitconfig '[user]
+        email = codepad@'$CDN'
+        name = codepad
+[push]
+        default = simple
+'
+
+chown -R codepad:codepad /var/srvctl-rootfs/codepad/var/codepad
 
 ln -s /etc/codepad/settings.json $dir/settings.json
 ln -s /etc/codepad/SESSIONKEY.txt $dir/SESSIONKEY.txt
@@ -157,15 +173,7 @@ set_file /var/srvctl-rootfs/codepad/etc/codepad/settings.json '/* ep_codepad-dev
     },
 }
 '
-set_file /var/srvctl-rootfs/codepad/etc/codepad/push.sh '#!/bin/bash
-
-echo codepad-push
-exit
-cd /srv/codepad-project 
-git add -A .
-git commit -m codepad-auto
-git push
-'
+cat $install_dir/ve-install/codepad-project/push.sh > /var/srvctl-rootfs/codepad/etc/codepad/push.sh
 chmod 744 /var/srvctl-rootfs/codepad/etc/codepad/push.sh
 
 
@@ -199,4 +207,5 @@ ln -s '/usr/lib/systemd/system/codepad.service' '/var/srvctl-rootfs/codepad/etc/
         ## locale-gen en_US.UTF-8 
     fi
 #source $install_dir/hs-install/lxc-apps.sh
+
 

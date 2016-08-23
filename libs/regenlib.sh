@@ -41,9 +41,9 @@ function regenerate_var_ve {
             do
                 mkdir -p $dest/users/$_U 
          
-                if [ -f /var/srvctl-host/users/$_U/.password.sha512 ]
+                if [ -f /var/srvctl-users/$_U/.password.sha512 ]
                 then
-                    cat /var/srvctl-host/users/$_U/.password.sha512 > $dest/users/$_U/.hash
+                    cat /var/srvctl-users/$_U/.password.sha512 > $dest/users/$_U/.hash
                 fi                               
             done 
         done
@@ -182,24 +182,41 @@ function regenerate_etc_hosts {
         
         echo "${IP%/*}" > /var/srvctl/ifcfg/$HOSTNAME
         
-        _dig="$(dig $HOSTNAME +short)"
-        if [ "$_dig" != "$(cat /var/srvctl/ifcfg/$HOSTNAME)" ]
+        local _dig=''
+        
+        if [ -f /var/srvctl/ifcfg/$HOSTNAME ]
         then
-                err "CRITICAL ERROR - DNS $_dig != CONFIG $(cat /var/srvctl/ifcfg/$HOSTNAME)"
+            _dig=$(cat /var/srvctl/ifcfg/$HOSTNAME)
+        else
+            _dig="$(dig $HOSTNAME +short +time=1)"
+            echo $_dig > /var/srvctl/ifcfg/$HOSTNAME
         fi
+        
+        ## a but redundant configuration check
+        # if [ "$_dig" != "$(cat /var/srvctl/ifcfg/$HOSTNAME)" ]
+        # then
+        #        err "CRITICAL ERROR - DNS $_dig != CONFIG $(cat /var/srvctl/ifcfg/$HOSTNAME)"
+        # fi
             
-
         for _S in $SRVCTL_HOSTS
         do
+                    
+            if [ -f /var/srvctl/ifcfg/$_S ]
+            then
+                _dig=$(cat /var/srvctl/ifcfg/$_S)
+            else
+                _dig="$(dig $_S +short  +time=1)"
+                echo $_dig > /var/srvctl/ifcfg/$_S
+            fi
+        
             if [ "$(ssh -n -o ConnectTimeout=1 $_S hostname 2> /dev/null)" == "$_S" ]
             then
+                
                 msg "get hosts on $_S"
 
-                SIP="$(ssh -n -o ConnectTimeout=1 $_S 'cat /var/srvctl/ifcfg/ipv4' 2> /dev/null)"
-                if ! [ -z "$SIP" ]
+                if ! [ -z "$_dig" ]
                 then
-                    echo "${SIP%/*}    $_S" >> $_eh
-                    echo "${SIP%/*}" > /var/srvctl/ifcfg/$_S
+                    echo "$_dig    $_S" >> $_eh
                 fi
 
                 ssh -n -o ConnectTimeout=1 $_S "cat /var/srvctl-host/etchosts/$_S" > /var/srvctl-host/etchosts/$_S
@@ -207,12 +224,7 @@ function regenerate_etc_hosts {
             else 
                 err "Connection to $_S failed!"
             fi
-            
-            _dig="$(dig $_S +short)"
-            if [ "$_dig" != "$(cat /var/srvctl/ifcfg/$_S)" ]
-            then
-                err "CRITICAL ERROR for $_S DNS $_dig != CONFIG $(cat /var/srvctl/ifcfg/$_S)"
-            fi
+  
         done
         
         echo "" >> $_eh
@@ -299,16 +311,33 @@ function regenerate_relaydomains {
 
 
 function scan_host_key {
-
-        ## argument: Container
-        ntc "Scanning host key for "$1
     
-        ## TODO in the next line the container name may be better if not indicated.
-        echo "## srvctl scanned host-key $NOW" > $SRV/$1/host-key
-        ssh-keyscan -t rsa -H $(cat $SRV/$1/config.ipv4) >> $SRV/$1/host-key 2>/dev/null
-        ssh-keyscan -t rsa -H $1 >> $SRV/$1/host-key 2>/dev/null
-        echo '' >> $SRV/$1/host-key        
-                                
+    local _C=$1
+    local _ip=$(cat $SRV/$_C/config.ipv4)
+    local _res_ip=''
+    local _res_ve=''
+    
+    if [ ! -f $SRV/$_C/host-key ] || $all_arg_set
+    then
+        set_is_running $_C
+
+        if $is_running && [ "$(getent hosts $_C | cut -d' ' -f1)" == "$_ip" ]
+        then 
+            msg "Scanning host key of "$_C
+            _res_ip="$(ssh-keyscan -t rsa -H $_ip 2>/dev/null)" 
+            _res_ve="$(ssh-keyscan -t rsa -H $_C 2>/dev/null)"    
+            if [ ! -z "$_res_ip" ] && [ ! -z "$_res_ve" ]         
+            then
+                echo "## srvctl scanned host-key $NOW IP $_ip VE $_C" > $SRV/$_C/host-key
+                echo "$_res_ip" >> $SRV/$_C/host-key 
+                echo "$_res_ve" >> $SRV/$_C/host-key 
+            else
+                err "ssh-keyscan returned with no result."
+            fi
+        else
+            err "Could not scan host-key for: "$_C                   
+        fi              
+    fi                             
 }
 
 function regenerate_known_hosts {
@@ -333,7 +362,12 @@ function regenerate_known_hosts {
         ssh-keyscan -t rsa -H $HOSTNAME >> $known_hosts 2>/dev/null
         ssh-keyscan -t rsa -H ${HOSTNAME%%.*} >> $known_hosts 2>/dev/null
         ssh-keyscan -t rsa -H 10.$HOSTNET.0.1 >> $known_hosts 2>/dev/null
-        ssh-keyscan -t rsa -H $(cat /var/srvctl/ifcfg/$HOSTNAME) >> $known_hosts 2>/dev/null
+        
+        ## should be created on update-install
+        if [ -f /var/srvctl/ifcfg/$HOSTNAME ]
+        then
+             ssh-keyscan -t rsa -H $(cat /var/srvctl/ifcfg/$HOSTNAME) >> $known_hosts 2>/dev/null
+        fi
         
         echo '## srvctl containers' >> $known_hosts
         
@@ -352,38 +386,23 @@ function regenerate_known_hosts {
         
         for _C in $(lxc-ls)
         do
-        
-                if [ ! -f $SRV/$_C/host-key ] || $all_arg_set
-                then
+            scan_host_key $_C
 
-                        set_is_running $_C
-
-                        if $is_running
-                        then
-                                scan_host_key $_C
-                        #else
-                                # ntc "VE is stopped, could not scan host-key for: "$_C
-                                ## host        key is needed for .ssh/known-hosts
-                        fi
-                       
-                fi
-
-                if [ -f $SRV/$_C/host-key ]
-                then
-                        echo "## $_C" >> $known_hosts
-                        cat $SRV/$_C/host-key >> $known_hosts
-                fi
+            if [ -f $SRV/$_C/host-key ]
+            then
+                echo "## $_C" >> $known_hosts
+                cat $SRV/$_C/host-key >> $known_hosts
+            fi
 
         done ## regenerated  containers hosts
         #msg "Set ssh_known_hosts done."
         
         for _S in $SRVCTL_HOSTS
         do
-            if [ "$(ssh -n -o ConnectTimeout=1  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $_S '[ -f /var/srvctl-host/known_hosts/$HOSTNAME ] && hostname || echo err' 2> /dev/null)" == "$_S" ]
+            if [ "$(ssh -n -o ConnectTimeout=1 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $_S '[ -f /var/srvctl-host/known_hosts/$HOSTNAME ] && hostname || echo err' 2> /dev/null)" == "$_S" ]
             then
-                #echo rsync -aze ssh $_S:/var/srvctl-host/known_hosts/$_S /var/srvctl-host/known_hosts
                 msg "get $_S known_hosts"
-                rsync -aze ssh $_S:/var/srvctl-host/known_hosts/$_S /var/srvctl-host/known_hosts
+                ssh -n -o ConnectTimeout=1 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $_S "cat /var/srvctl-host/known_hosts/$_S" > /var/srvctl-host/known_hosts/$_S
             else
                 err "Could not fetch known_hosts of $_S"  
             fi
@@ -415,9 +434,39 @@ function regenerate_root_configs {
 
 }
 
+function regenerate_users_sync {
+    ## this is one way. $ROOTCA_HOST broadcasting data to all hosts ...
+    ## but regenerate is doing it back and forth ...
+    if [ "$ROOTCA_HOST" == $HOSTNAME ]
+    then
+        for _S in $SRVCTL_HOSTS
+        do    
+            if [ "$(ssh -n -o ConnectTimeout=1 $_S hostname 2> /dev/null)" == "$_S" ]
+            then
+                msg "Update users on $_S"
+                rsync -ae ssh /var/srvctl-users $_S:/var
+            else
+                err "Connection for users_sync failed to $_S"
+            fi
+        done
+    else
+        if [ "$(ssh -n -o ConnectTimeout=1 $ROOTCA_HOST hostname 2> /dev/null)" == "$ROOTCA_HOST" ]
+        then
+            msg "Update users from $ROOTCA_HOST"
+            rsync -ae ssh $ROOTCA_HOST:/var/srvctl-users /var
+        else
+            err "Connection for users_sync failed from $ROOTCA_HOST"
+        fi
+    fi
+}
+
+
 function regenerate_users {
         ## First of all, make sure all users we have defined for sites, are all present.
         msg "processing user-list"
+        
+        echo '' > /var/srvctl-host/local-users
+        
         for _C in $(lxc_ls)
         do
                 mkdir -p $SRV/$_C/settings
@@ -426,60 +475,58 @@ function regenerate_users {
                 for _U in $(cat $SRV/$_C/settings/users)
                 do                
                         ## if the user doesent exists ... well, create it.
-                        if [ ! -d "/home/$_U" ]
+                        if [ ! -d /home/$U ]
                         then
-                            ntc "Add user $_U"
                             add_user $_U
                         fi
-                        
-                        if [ -z "$(su $_U -c 'cd ~ && git config --global user.email')" ]
-                        then
-                            su $_U -c "cd ~ && git config --global user.email $_U@$HOSTNAME"
-                        fi
-                        if [ -z "$(su $_U -c 'cd ~ && git config --global user.name')" ]
-                        then
-                            su $_U -c "cd ~ && git config --global user.name $_U"
-                        fi
-                        if [ -z "$(su $_U -c 'cd ~ && git config --global push.default')" ]
-                        then
-                            su $_U -c "cd ~ && git config --global push.default simple"
-                        fi
-
                 done
         done
+
 }
 
-function generate_user_configs { ## for user
+function generate_user_configs { ## for each user
 
         ## for each user
 
         local _u=$1        
-        # msg "Generating user configs for user $_u"        
+        local _keys=/var/srvctl-users/$_u/authorized_keys       
 
         ## create keypair
-        if [ ! -f /home/$_u/.ssh/id_rsa.pub ] || [ ! -f /home/$_u/.ssh/id_rsa ] || [ ! -f /var/srvctl-host/users/$_u/srvctl_id_rsa.pub ] || [ ! -f /var/srvctl-host/users/$_u/srvctl_id_rsa ]
+        #if [ ! -f /home/$_u/.ssh/id_rsa.pub ] || [ ! -f /home/$_u/.ssh/id_rsa ]
+        #then
+          create_user_keypair $_u
+        #fi
+        
+        if [ "$ROOTCA_HOST" == $HOSTNAME ]
         then
-          create_keypair $_u
+            #if [ ! -f /var/srvctl-users/$_u/srvctl_id_rsa.pub ] || [ ! -f /var/srvctl-users/$_u/srvctl_id_rsa ]
+            #then
+                create_srvctl_keypair $_u
+            #fi  
+            
+            mkdir -p /root/srvctl-users/authorized_keys
+            ## srvctl-user key
+            cat /var/srvctl-users/$_u/user_id_rsa.pub > $_keys
+            echo '' >> $_keys
+        
+            ## srvctl-gui key
+            cat /var/srvctl-users/$_u/srvctl_id_rsa.pub >> $_keys
+            echo '' >> $_keys
+        
+            ## root-managed keys
+            if [ -f  /root/srvctl-users/authorized_keys/$_u ]
+            then
+                cat /root/srvctl-users/authorized_keys/$_u >> $_keys
+                echo '' >> $_keys
+            fi
         fi
-
-        mkdir -p /root/srvctl-users/authorized_keys
         
-        ## root key first
-        cat /root/.ssh/authorized_keys > /home/$_u/.ssh/authorized_keys
-        echo '' >> /home/$_u/.ssh/authorized_keys
-        
-        ## srvctl-gui key
-        cat /var/srvctl-host/users/$_u/srvctl_id_rsa.pub >> /home/$_u/.ssh/authorized_keys
-        echo '' >> /home/$_u/.ssh/authorized_keys
-        
-        ## root-managed keys
-        if [ -f  /root/srvctl-users/authorized_keys/$_u ]
+        if [ -f $_keys ]
         then
-            cat /root/srvctl-users/authorized_keys/$_u >> /home/$_u/.ssh/authorized_keys
+            cat /root/.ssh/authorized_keys > /home/$_u/.ssh/authorized_keys
+            cat $_keys >> /home/$_u/.ssh/authorized_keys
+            chown $_u:$_u /home/$_u/.ssh/authorized_keys
         fi
-        
-                        
-        chown $_u:$_u /home/$_u/.ssh/authorized_keys
         
         ## so we use bind mounts now, and want allow users to access files in their bind-mounted container dirs....
         usermod -a -G srv $_u
@@ -515,14 +562,7 @@ function regenerate_users_configs {
             fi
         done 
         
-        msg "regenerate client certificates"
-        for _U in $(ls /home)
-        do
-            if [ -d "/home/$_U" ]
-            then
-                create_ca_certificate client usernet $_U
-            fi
-        done
+
         
         msg "regenerate openvpn authorisations"
         mkdir -p /var/openvpn
@@ -538,10 +578,19 @@ function regenerate_users_configs {
         
     if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
     then 
+
+        msg "regenerate client certificates"
+        for _U in $(ls /home)
+        do
+            if [ -d "/home/$_U" ]
+            then
+                create_ca_certificate client usernet $_U
+            fi
+        done
         
         msg "Update settings for srvctl-gui"
         
-        rsync -a /var/srvctl-host/users /var/srvctl-gui
+        rsync -a /var/srvctl-users /var/srvctl-gui
         
         chown -R srvctl-gui:srvctl-gui /var/srvctl-gui
         chmod 700 /var/srvctl-gui
@@ -554,32 +603,16 @@ function regenerate_users_configs {
 
 function generate_user_structure ## for user, container
 {
-    _u=$1
-    _c=$2
+    local _u=$1
+    local _c=$2
 
      #dbg  "Generating user structure for $_u in $_c"
 
-                ## add users host public key to container root user - for ssh access.
-                if [ -f /home/$_u/.ssh/id_rsa.pub ]
-                then
-                        cat /home/$_u/.ssh/id_rsa.pub >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
-                else
-                        err "No id_rsa.pub for user "$_u
-                fi
-
-                ## add users submitted public key to container root user - for ssh access.
-                if [ -f /root/srvctl-users/authorized_keys/$_u ]
-                then
-                        cat /root/srvctl-users/authorized_keys/$_u >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
-                fi
-                
                 ## add users srvctl-gui public key to container root user - for gui ssh access.
-                if [ -f /var/srvctl-host/users/$_u/srvctl_id_rsa.pub ]
+                if [ -f /var/srvctl-users/$_u/authorized_keys ]
                 then
-                        #dbg "&& $_u @ $_c"
-                        cat /var/srvctl-host/users/$_u/srvctl_id_rsa.pub >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
+                        cat /var/srvctl-users/$_u/authorized_keys >> $SRV/$_c/rootfs/root/.ssh/authorized_keys
                 fi
-
 
                 ## Share via mount
                 ## Second, create common share
@@ -613,7 +646,7 @@ function regenerate_users_structure {
                 
                 cat /root/.ssh/id_rsa.pub > $SRV/$_C/rootfs/root/.ssh/authorized_keys
                 #echo '' >> $SRV/$_C/rootfs/root/.ssh/authorized_keys
-                cat /root/.ssh/authorized_keys >> $SRV/$_C/rootfs/root/.ssh/authorized_keys 2> /dev/null
+                cat /root/.ssh/authorized_keys >> $SRV/$_C/rootfs/root/.ssh/authorized_keys
                 chmod 600 $SRV/$_C/rootfs/root/.ssh/authorized_keys
          
                 for _U in $(cat $SRV/$_C/settings/users)
@@ -682,7 +715,7 @@ function regenerate_logfiles {
 
 function regenerate_counter {
 
-    __c=0
+    local __c=0
     
     for _C in $(lxc_ls)
     do
@@ -691,7 +724,7 @@ function regenerate_counter {
         then
             __n="$(cat $SRV/$_C/config.counter)"
 
-            if [ "$__n" -gt "$__c" ]
+            if (("$__n" >= "$__c"))
             then
                 __c=$__n
             fi
@@ -703,12 +736,11 @@ function regenerate_counter {
         
     if [ -f /var/srvctl-host/counter ]
     then
-        
         counter=$(cat /var/srvctl-host/counter)
         if ! [ "$counter" -eq "$__c" ]
         then
                 msg "Counter: $counter vs $__c"
-                ## todo, .. should the counter set __c ?
+                echo $__c > /var/srvctl-host/counter
         fi
     fi    
 }
@@ -834,6 +866,7 @@ function regenerate_perdition_files {
 }
 
 fi ## if onHS
+
 
 
 

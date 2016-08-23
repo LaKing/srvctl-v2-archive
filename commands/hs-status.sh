@@ -43,12 +43,14 @@ hint "status-all" "Detailed container status report."
 if [ "$CMD" == "status-all" ]
 then
 
-        sudomize
+    sudomize
 
         echo "Hostname: "$(hostname)
         echo "Uptime:   "$(uptime)
         free -h | head -n 2
-
+    
+    regenerate_dns_publicinfo
+    
         echo ''
         printf ${yellow}"%-10s"${NC} "STATUS"
         printf ${yellow}"%-48s"${NC} "HOSTNAME"
@@ -75,25 +77,28 @@ then
         get_dig_MX
         get_disk_usage
         get_users
+        if [ ! -f $SRV/$C/settings/disabled ]
+        then 
         
-        if [ -f $SRV/$C/dns.log ]
-        then
-            echo ''
-            while read line
-            do
-                err "$line"
-            done < $SRV/$C/dns.log
-        fi
+            if [ -f $SRV/$C/dns.log ]
+            then
+                echo ''
+                while read line
+                do
+                    ntc "$line"
+                done < $SRV/$C/dns.log
+            fi
         
-        if [ -f $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log ]
-        then
+            if [ -f $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log ]
+            then
+                echo ''
+                while read line
+                do
+                    ntc "$line"
+                done < $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log
+            fi
             echo ''
-            while read line
-            do
-                ntc "$line"
-            done < $SRV/$C/rootfs/var/log/srvctl/letsencrypt.log
         fi
-        echo ''
     done
     
     echo ''

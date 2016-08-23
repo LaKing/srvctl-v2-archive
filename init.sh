@@ -5,7 +5,7 @@
 
 ## some formatted date 
 NOW=$(date +%Y.%m.%d-%H:%M:%S)
-MSG="## srvctl modification. $NOW"
+MSG="## srvctl $NOW"
 
 ## Servers can have a direct domain name - what we can override
 ## useful in multi-server setups
@@ -132,7 +132,6 @@ OPAS3="${@:3}"
 OPAS4="${@:4}"
 ## all arguments, including command and argument
 ARGS="$*"
-
 
 ## Current start directory
 CWD=$(pwd)

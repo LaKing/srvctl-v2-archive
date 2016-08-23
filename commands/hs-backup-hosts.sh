@@ -31,14 +31,14 @@ then
         local_backup /root
         local_backup /var
         
-        for host in $SRVCTL_HOSTS
+        for _S in $SRVCTL_HOSTS
         do
-                if [ "$(ssh -n -o ConnectTimeout=1 $host hostname 2> /dev/null)" == "$host" ]
+                if [ "$(ssh -n -o ConnectTimeout=1 $_S hostname 2> /dev/null)" == "$_S" ]
                 then
-                    msg "Update backup for $host"
-                    srvctl_backup $host
+                    msg "Update backup for $_S"
+                    srvctl_backup $_S
                 else
-                    err "Could not connect to $host"
+                    err "Could not connect to $_S"
                 fi
         
         done
