@@ -10,6 +10,17 @@ then
         ## perdition is run as template.service by default.
         ## we use our own unit files and service names.
 
+cat $ssl_pem > /etc/perdition/crt.pem
+cat $ssl_key > /etc/perdition/key.pem
+
+ssl_cab_hasbang='#'
+if [ -f $ssl_cab ]
+then
+    ssl_cab_hasbang=''
+    cat $ssl_cab > /etc/perdition/ca-bundle.pem
+fi
+
+
         set_file /etc/perdition/perdition.conf '#### srvctl tuned perdition.conf
 ## Logging settings
 
@@ -70,9 +81,8 @@ ssl_no_cn_verify
 ## SSL files
 ssl_cert_file /etc/perdition/crt.pem
 ssl_key_file /etc/perdition/key.pem
+'$ssl_cab_hasbang'ssl_ca_chain_file /etc/perdition/ca-bundle.pem
 
-
-#ssl_ca_chain_file /etc/perdition/ca-bundle.pem
 '
 ## TODO check if chainfile is needed
 

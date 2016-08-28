@@ -8,6 +8,20 @@ msg "Installing postfix."
 
 pm postfix
 
+cat $ssl_pem > /etc/postfix/crt.pem
+cat $ssl_key > /etc/postfix/key.pem
+
+ssl_cab_hasbang='#'
+if [ -f $ssl_cab ]
+then
+    ssl_cab_hasbang=''
+    cat $ssl_cab > /etc/postfix/ca-bundle.pem
+fi
+
+
+chmod 400 /etc/postfix/crt.pem
+chmod 400 /etc/postfix/key.pem
+
 set_file /etc/postfix/main.cf '
 ## srvctl-host postfix configuration file 2.6.x
 # Global Postfix configuration file. 
@@ -68,7 +82,7 @@ relay_domains = $mydomain, hash:/etc/postfix/relaydomains
 
 ## SENDING
 ## SMTPS
-#smtpd_tls_CAfile =    /etc/srvctl/ca-bundle.pem
+'$ssl_cab_hasbang'smtpd_tls_CAfile =    /etc/postfix/ca-bundle.pem
 smtpd_tls_cert_file = /etc/postfix/crt.pem                            
 smtpd_tls_key_file =  /etc/postfix/key.pem
 smtpd_tls_security_level = may
@@ -154,12 +168,6 @@ smtp-amavis unix -    -    n    -    2 smtp
     -o smtpd_hard_error_limit=1000
 
 '
-
-cat $ssl_pem > /etc/postfix/crt.pem
-cat $ssl_key > /etc/postfix/key.pem
-
-chmod 400 /etc/postfix/crt.pem
-chmod 400 /etc/postfix/key.pem
 
 add_service postfix
 

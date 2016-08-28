@@ -132,8 +132,10 @@ then
                 systemctl status $service --no-pager
             fi
         done
-
-
+            
+                msg "Critical errors?"
+                echo journalctl -u postfix --since yesterday | grep fatal
+                journalctl -u postfix --since yesterday | grep fatal
         
         if $isROOT && [ "$(type -a netstat)" == "netstat is /usr/bin/netstat" ]
         then

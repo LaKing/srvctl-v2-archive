@@ -128,8 +128,8 @@ function regenerate_pound_sync {
     ## The /etc/srvctl/cert folder should be maintained on ROOTCA_HOST
     if [ "$HOSTNAME" != "$ROOTCA_HOST" ]
     then
-        #echo rsync --delete -aze ssh $ROOTCA_HOST:/etc/srvctl/cert /etc/srvctl/cert
-              rsync --delete -aze ssh $ROOTCA_HOST:/etc/srvctl/cert /etc/srvctl/cert
+        #echo rsync -aze ssh $ROOTCA_HOST:/etc/srvctl/cert /etc/srvctl
+              rsync -aze ssh $ROOTCA_HOST:/etc/srvctl/cert /etc/srvctl
     fi
     
     local MSG="## srvctl pound main $NOW"
@@ -141,6 +141,8 @@ function regenerate_pound_sync {
     
     
     echo 'Include "/var/pound/https-certificates.cfg"' >> /var/pound/https-includes.cfg
+    echo 'Include "/var/pound/acme-server.cfg"' >> /var/pound/http-includes.cfg
+    echo 'Include "/var/pound/mozilla-autoconfig-server.cfg"' >> /var/pound/http-includes.cfg
     
     for _S in $SRVCTL_HOSTS
     do
@@ -230,7 +232,6 @@ function regenerate_pound_files {
   
   #echo 'Include "'$pound_dir'/https-certificates.cfg"' >> $pound_dir/https-includes.cfg
   
-  echo 'Include "'$pound_dir'/acme-server.cfg"' >> $pound_dir/http-includes.cfg
   echo 'Include "'$pound_dir'/http-domains.cfg"' >> $pound_dir/http-includes.cfg
   echo 'Include "'$pound_dir'/http-dddn-domains.cfg"' >> $pound_dir/http-includes.cfg
   
@@ -256,7 +257,7 @@ function regenerate_pound_files {
   echo 'Include "'$pound_dir'/https-1-domains.cfg"' >> $pound_dir/https-wildcard.cfg
   
   ## first of all, set up the acme server
-  set_file $pound_dir/acme-server.cfg '## srvctl generated letsencrypt responder
+  echo '## srvctl generated letsencrypt responder
         Service
             URL "^/.well-known/acme-challenge/*"
             BackEnd
@@ -264,8 +265,19 @@ function regenerate_pound_files {
                 Port    1028
             End
         End
-  '
-
+  ' > /var/pound/acme-server.cfg
+  
+  echo '## srvctl generated letsencrypt responder
+        Service
+            URL "^/.well-known/autoconfig/mail/config-v1.1.xml"
+            BackEnd
+                Address localhost
+                Port    1029
+            End
+        End
+  ' > /var/pound/mozilla-autoconfig-server.cfg
+  
+  
   
   ## $_C is the local version of $C - the containers
   for _C in $(lxc-ls)

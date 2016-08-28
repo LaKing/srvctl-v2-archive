@@ -1,7 +1,7 @@
 function make_openvpn_client_conf { ## for user
 
     local _u=$1
-    local _ovpn=/home/$_u/$CDN-$HOSTNAME-openvpn-conf.ovpn
+    local _ovpn=/home/$_u/$HOSTNAME.ovpn
 
     if [ -f $_ovpn ]
     then
@@ -11,7 +11,7 @@ function make_openvpn_client_conf { ## for user
     if ssh $ROOTCA_HOST srvctl create_ca_certificate client usernet $_u
     then
                 
-    save_file $_ovpn "## Openvpn client configuration file for $HOSTNAME
+    save_file $_ovpn "## $CDN Openvpn client configuration file for $_u@$HOSTNAME
 ## Windows users can install http://www.openvpn.net/release/openvpn-2.1.3-install.exe
 ## Configs
 client

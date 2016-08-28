@@ -144,7 +144,6 @@ exit 0
 save_file /etc/openvpn/usernet-server.conf '## srvctl-created openvpn conf
 
 mode server
-local 127.0.0.1
 port 1100
 dev tap-usernet
 proto udp
@@ -172,7 +171,7 @@ dh /etc/openvpn/dh2048.pem
 client-config-dir /var/openvpn
 ccd-exclusive
 
-server-bridge 10.'$HOSTNET'.0.1 255.255.0.0 10.'$HOSTNET'.250.1 10.'$HOSTNET'.254.250
+server-bridge 10.'$HOSTNET'.0.1 255.255.0.0 10.'$HOSTNET'.250.1 10.'$HOSTNET'.253.250
 '
 
 save_file /etc/openvpn/hostnet-server.conf '## srvctl-created openvpn conf

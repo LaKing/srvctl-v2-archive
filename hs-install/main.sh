@@ -144,7 +144,7 @@ useradd -r -u 27 -g 27 -s /sbin/nologin -d /var/lib/mysql mysql 2> /dev/null
 
 ## acording to new users struct
 groupadd -r -g 505 srvctl-gui 2> /dev/null
-useradd -r -u 505 -g 505 -s /sbin/nologin -d /tmp codepad 2> /dev/null
+useradd -r -u 505 -g 505 -s /sbin/nologin -d /tmp srvctl-gui 2> /dev/null
 
 git config --global user.email "root@$CDN"
 git config --global user.name root
@@ -189,8 +189,28 @@ regenerate_sudo_configs
 if [ "$ROOTCA_HOST" == "$HOSTNAME" ]
 then
 
-    mkdir -p /var/srvctl-gui
+## service-file
+set_file /lib/systemd/system/srvctl-gui.service '## srvctl generated
+[Unit]
+Description=srvctl-gui server.
+After=syslog.target network.target
 
+[Service]
+Type=simple
+ExecStart=/bin/node '$install_dir'/hs-apps/srvctl-gui.js
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+'
+
+
+    mkdir -p /var/srvctl-gui
+    chown -R srvctl-gui:srvctl-gui /var/srvctl-gui
+    chmod 700 /var/srvctl-gui
+    
+    
     if [ ! -f /var/srvctl-gui/hosts ]
     then
         hostname > /var/srvctl-gui/hosts
@@ -205,17 +225,16 @@ then
 
 fi
       
-## srvct-gui
-set_file /lib/systemd/system/srvctl-gui.service '## srvctl generated
+set_file /lib/systemd/system/mozilla-autoconfig-server.service '## srvctl generated
 [Unit]
-Description=srvctl-gui server.
+Description=Mozilla thunderbird autoconfig server.
 After=syslog.target network.target
 
 [Service]
 Type=simple
-ExecStart=/bin/node '$install_dir'/hs-apps/srvctl-gui.js
-User=root
-Group=root
+ExecStart=/bin/node '$install_dir'/hs-apps/mozilla-autoconfig-server.js
+User=node
+Group=node
 
 [Install]
 WantedBy=multi-user.target
@@ -238,7 +257,7 @@ systemctl daemon-reload
     add_service amavisd 
     add_service opendkim
     add_service acme-server
-    
+    add_service mozilla-autoconfig-server
     
 mnt_rorootfs
 
@@ -253,6 +272,7 @@ then
     grub2-set-default "$GRUBBOOT"
     grub2-editenv list
 fi
+
 
 
 

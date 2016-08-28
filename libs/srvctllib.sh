@@ -256,7 +256,7 @@ function create_user_keypair { ## for user $U
         
         if [ ! -f /var/srvctl-users/$_u/user_id_rsa.pub ] || [ ! -f /var/srvctl-users/$_u/user_id_rsa ]
         then
-            err "No user_id_rsa for $_u"
+            ntc "No user_id_rsa for $_u"
         else
             cat /var/srvctl-users/$_u/user_id_rsa.pub > /home/$_u/.ssh/id_rsa.pub
             cat /var/srvctl-users/$_u/user_id_rsa > /home/$_u/.ssh/id_rsa

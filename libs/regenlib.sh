@@ -832,12 +832,23 @@ function regenerate_perdition_files {
         
         mkdir -p /var/srvctl-host/popmap
         
-        echo '## $HOSTNAME $NOW' > $popmap
+        echo "## $HOSTNAME $NOW" > $popmap
         echo '' >> $popmap
     
         for _C in $(lxc-ls)
         do
+            if [ "${C: -6}" == ".devel" ] || [ "${C: -6}" == "-devel" ] || [ "${C: -6}" == ".local" ] || [ "${C: -6}" == "-local" ]
+            then
+                continue
+            fi
+            
             echo "(.*)@$_C: $_C" >> $popmap
+            
+            if [ ${C:0:5} != "mail." ] && [ ! -d $SRV/mail.$C ]
+            then
+                echo "(.*)@mail.$_C: mail.$_C" >> $popmap
+            fi
+            
         done
         
         echo '' >> $popmap
