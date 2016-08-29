@@ -310,7 +310,7 @@ function add_user {
 
     if ! $all_arg_set
     then
-        if [ ! -z "$(cat /etc/passwd | grep '/home/$U:')" ] && [ -d /home/$U ] && [ -d /var/srvctl-users/$U ]
+        if [ ! -z "$(cat /etc/passwd | grep /home/$U:)" ] && [ -d /home/$U ] && [ -d /var/srvctl-users/$U ]
         then
             return
         fi
