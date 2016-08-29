@@ -21,20 +21,17 @@ then
         if [ ! -d "/home/$U/Maildir" ]
         then 
             ## initialize maildir
-            echo "This is the mailing system at "$(hostname)", your account has been created." | mail -s "Welcome" $U
+            echo "This is the mailing system at $HOSTNAME, your account has been created." | mail -s "Welcome" $U
         fi
     fi
         
     if $onHS
     then
         C=$OPA
-        
-        sudomize
-        authorize
      
         add_user $U 
      
-        if [ -f "$SRV/$C/settings/users" ] 
+        if [ ! -z "$C" ] && [ -f "$SRV/$C/settings/users" ] 
         then
             has=false
             for _i in $(cat $SRV/$C/settings/users)
@@ -48,7 +45,6 @@ then
             if ! $has
             then
                 echo $U >> $SRV/$C/settings/users
-                echo "$SC_USER +> $C" >> /home/$U/.parent_users
                 log "$SC_USER added $U to container $C"
             else
                 msg "$U has access to container $C"

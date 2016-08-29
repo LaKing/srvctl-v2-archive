@@ -308,6 +308,19 @@ function add_user {
     local U=$1
     local _had=false
 
+    if ! $all_arg_set
+    then
+        if [ ! -z "$(cat /etc/passwd | grep '/home/$U:')" ] && [ -d /home/$U ] && [ -d /var/srvctl-users/$U ]
+        then
+            return
+        fi
+    fi
+    
+    if [ -d /home/$U ] && [ ! -z "$(cat /etc/passwd | grep '/home/$U:')" ]
+    then
+        err "User dont exist on system but has a home folder !"
+    fi
+
     if [ ! -d /home/$U ]
     then
         msg "add user $U"

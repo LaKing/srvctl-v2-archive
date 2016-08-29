@@ -606,7 +606,7 @@ function generate_user_structure ## for user, container
     local _u=$1
     local _c=$2
 
-     #dbg  "Generating user structure for $_u in $_c"
+    #dbg  "Generating user structure for $_u in $_c"
 
                 ## add users srvctl-gui public key to container root user - for gui ssh access.
                 if [ -f /var/srvctl-users/$_u/authorized_keys ]
@@ -642,7 +642,6 @@ function regenerate_users_structure {
             then
                 continue
             fi
-
                 
                 cat /root/.ssh/id_rsa.pub > $SRV/$_C/rootfs/root/.ssh/authorized_keys
                 #echo '' >> $SRV/$_C/rootfs/root/.ssh/authorized_keys
@@ -650,8 +649,15 @@ function regenerate_users_structure {
                 chmod 600 $SRV/$_C/rootfs/root/.ssh/authorized_keys
          
                 for _U in $(cat $SRV/$_C/settings/users)
-                do        
-                        generate_user_structure $_U $_C
+                do  
+                    if [ -z "$(cat /etc/passwd | grep /home/$_U:)" ]
+                    then
+                        msg "adding user $_U required by $_C"
+                        add_user $_U
+                    fi
+                    
+                    generate_user_structure $_U $_C
+                
                 done
         
         done
