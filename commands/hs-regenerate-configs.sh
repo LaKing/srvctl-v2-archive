@@ -17,12 +17,13 @@ then
             ## for each container generate_lxc_config
             regenerate_config_files  
          
-            ## for each host and container scan_host_key
+            ## ssh related
             regenerate_known_hosts       
-        
+            regenerate_ssh_config
+            
             ## /etc/hosts for trusted localhosts
             regenerate_etc_hosts 
-            regenerate_relaydomains 
+            regenerate_relaydomains
             
             ## for each container import certificates
             regenerate_letsencrypt

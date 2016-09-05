@@ -141,6 +141,7 @@ function regenerate_etc_hosts {
  
                         echo $ip'                '$_C >>  $_eh
                         
+                        ## TODO: what if mail is on a different server?
                         if [ ! -d $SRV/mail.$_C ] && [ "${_C:0:5}" != "mail." ]
                         then
                             echo $ip'                mail.'$_C >>  $_eh
@@ -412,6 +413,84 @@ function regenerate_known_hosts {
         cat /var/srvctl-host/known_hosts/* > /var/srvctl/ssh_known_hosts
 }
 
+function regenerate_ssh_config {
+     
+        msg "regenerate ssh_config"
+        mkdir -p /var/srvctl-host/ssh_config
+        
+        save_file /etc/ssh/ssh_config '#srvctl $OpenBSD: ssh_config,v 1.30 2016/02/20 23:06:23 sobrado Exp $
+
+# Host *
+#   ForwardAgent no
+#   ForwardX11 no
+#   RhostsRSAAuthentication no
+#   RSAAuthentication yes
+#   PasswordAuthentication yes
+#   HostbasedAuthentication no
+#   GSSAPIAuthentication no
+#   GSSAPIDelegateCredentials no
+#   GSSAPIKeyExchange no
+#   GSSAPITrustDNS no
+#   BatchMode no
+#   CheckHostIP yes
+#   AddressFamily any
+#   ConnectTimeout 0
+#   StrictHostKeyChecking ask
+#   IdentityFile ~/.ssh/identity
+#   IdentityFile ~/.ssh/id_rsa
+#   IdentityFile ~/.ssh/id_dsa
+#   IdentityFile ~/.ssh/id_ecdsa
+#   IdentityFile ~/.ssh/id_ed25519
+#   Port 22
+#   Protocol 2
+#   Cipher 3des
+#   Ciphers aes128-ctr,aes192-ctr,aes256-ctr,arcfour256,arcfour128,aes128-cbc,3des-cbc
+#   MACs hmac-md5,hmac-sha1,umac-64@openssh.com,hmac-ripemd160
+#   EscapeChar ~
+#   Tunnel no
+#   TunnelDevice any:any
+#   PermitLocalCommand no
+#   VisualHostKey no
+#   ProxyCommand ssh -q -W %h:%p gateway.example.com
+#   RekeyLimit 1G 1h
+#
+# Uncomment this if you want to use .local domain
+# Host *.local
+#   CheckHostIP no
+
+Host *
+        GSSAPIAuthentication yes
+        ForwardX11Trusted yes
+        SendEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+        SendEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+        SendEnv LC_IDENTIFICATION LC_ALL LANGUAGE
+        SendEnv XMODIFIERS
+
+'
+        local _config=/var/srvctl-host/ssh_config/$HOSTNAME
+        echo "# srvctl $NOW" > $_config 
+        
+        for _C in $(lxc-ls)
+        do
+            echo "Host $_C" >> $_config 
+            echo "User root" >> $_config
+            echo "" >> $_config
+        done
+
+        for _S in $SRVCTL_HOSTS
+        do
+            if [ "$(ssh -n -o ConnectTimeout=1 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $_S '[ -f /var/srvctl-host/ssh_config/$HOSTNAME ] && hostname || echo err' 2> /dev/null)" == "$_S" ]
+            then
+                msg "get $_S ssh_config"
+                ssh -n -o ConnectTimeout=1 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $_S "cat /var/srvctl-host/ssh_config/$_S" > /var/srvctl-host/ssh_config/$_S
+            else
+                err "Could not fetch ssh_config of $_S"  
+            fi
+        done
+        
+        cat /var/srvctl-host/ssh_config/* >> /etc/ssh/ssh_config
+    
+}
 
 
 
@@ -484,9 +563,7 @@ function regenerate_users {
 
 }
 
-function generate_user_configs { ## for each user
-
-        ## for each user
+function generate_user_configs { ## for user
 
         local _u=$1        
         local _keys=/var/srvctl-users/$_u/authorized_keys       
@@ -848,11 +925,12 @@ function regenerate_perdition_files {
                 continue
             fi
             
-            echo "(.*)@$_C: $_C" >> $popmap
-            
-            if [ ${C:0:5} != "mail." ] && [ ! -d $SRV/mail.$C ]
+            if [ "${_C:0:5}" == "mail." ] 
             then
-                echo "(.*)@mail.$_C: mail.$_C" >> $popmap
+                echo "(.*)@$_C: $_C" >> $popmap
+            else
+                echo "(.*)@$_C: mail.$_C" >> $popmap
+                #echo "(.*)@mail.$_C: mail.$_C" >> $popmap
             fi
             
         done
@@ -882,7 +960,83 @@ function regenerate_perdition_files {
         
 }
 
+
+function regenerate_static_server {
+     
+     msg "regenerate static server files"
+    
+     mkdir -p /var/static-server
+     for c in $(ls /srv)
+     do
+        if [ ! -d $SRV/$c ] || [ "${c: -6}" == ".devel" ] || [ "${c: -6}" == "-devel" ] || [ "${c: -6}" == ".local" ] || [ "${c: -6}" == "-local" ] || [ "$c" == "lost+found" ] || [ "$c" == "$TMP" ]
+        then
+             continue
+        fi
+         
+        mkdir -p /var/static-server/$c
+         
+        if [ -z "$(ls /var/static-server/$c)" ]
+        then     
+            if [ -d $SRV/$c/static ]
+            then
+                if [ -z "$(ls $SRV/$c/static)" ]
+                then
+                    rm -fr $SRV/$c/static
+                    continue
+                else 
+                    rsync -a $SRV/$c/static/* /var/static-server/$c
+                fi
+            fi
+        else
+            mkdir -p $SRV/$c/static
+            rsync -a /var/static-server/$c/* $SRV/$c/static
+                 
+        fi
+      
+        ## aliases
+        if [ -f $SRV/$c/aliases ]
+        then
+             while read a 
+             do   
+                 #echo "ln -sf /var/static-server/$c /var/static-server/$a"
+                 if [ ! -e /var/static-server/$a ]
+                 then
+                     ln -sf /var/static-server/$c /var/static-server/$a
+                 fi
+             done < $SRV/$c/aliases
+        fi  
+        
+        if [ -f $SRV/$c/settings/users ]
+        then
+            local u=$(head -n 1 $SRV/$c/settings/users)
+    
+            if [ ! -z "$u" ] && [ -d /home/$u/$c ]
+            then
+                if [ ! -e /home/$u/$c/static-server ]
+                then
+                    ln -sf /var/static-server/$c /home/$u/$c/static-server
+                fi
+                chown -R $u:$u /var/static-server/$c
+            else 
+                err "$c has no owner for static-server $u"
+            fi
+        fi
+        
+     done 
+     
+    local service=static-server
+    
+    if [ $(systemctl is-active static-server) != "active" ]
+    then
+        err "inactive static-server"
+    fi
+    
+
+     
+}
+
 fi ## if onHS
+
 
 
 

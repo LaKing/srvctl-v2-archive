@@ -87,7 +87,75 @@
           log "Created ssh keypair for root."
         fi
 
+save_file /etc/ssh/ssh_config.bak '#        $OpenBSD: ssh_config,v 1.30 2016/02/20 23:06:23 sobrado Exp $
 
+# This is the ssh client system-wide configuration file.  See
+# ssh_config(5) for more information.  This file provides defaults for
+# users, and the values can be changed in per-user configuration files
+# or on the command line.
+
+# Configuration data is parsed as follows:
+#  1. command line options
+#  2. user-specific file
+#  3. system-wide file
+# Any configuration value is only changed the first time it is set.
+# Thus, host-specific definitions should be at the beginning of the
+# configuration file, and defaults at the end.
+
+# Site-wide defaults for some commonly used options.  For a comprehensive
+# list of available options, their meanings and defaults, please see the
+# ssh_config(5) man page.
+
+# Host *
+#   ForwardAgent no
+#   ForwardX11 no
+#   RhostsRSAAuthentication no
+#   RSAAuthentication yes
+#   PasswordAuthentication yes
+#   HostbasedAuthentication no
+#   GSSAPIAuthentication no
+#   GSSAPIDelegateCredentials no
+#   GSSAPIKeyExchange no
+#   GSSAPITrustDNS no
+#   BatchMode no
+#   CheckHostIP yes
+#   AddressFamily any
+#   ConnectTimeout 0
+#   StrictHostKeyChecking ask
+#   IdentityFile ~/.ssh/identity
+#   IdentityFile ~/.ssh/id_rsa
+#   IdentityFile ~/.ssh/id_dsa
+#   IdentityFile ~/.ssh/id_ecdsa
+#   IdentityFile ~/.ssh/id_ed25519
+#   Port 22
+#   Protocol 2
+#   Cipher 3des
+#   Ciphers aes128-ctr,aes192-ctr,aes256-ctr,arcfour256,arcfour128,aes128-cbc,3des-cbc
+#   MACs hmac-md5,hmac-sha1,umac-64@openssh.com,hmac-ripemd160
+#   EscapeChar ~
+#   Tunnel no
+#   TunnelDevice any:any
+#   PermitLocalCommand no
+#   VisualHostKey no
+#   ProxyCommand ssh -q -W %h:%p gateway.example.com
+#   RekeyLimit 1G 1h
+#
+# Uncomment this if you want to use .local domain
+# Host *.local
+#   CheckHostIP no
+
+Host *
+        GSSAPIAuthentication yes
+# If this option is set to yes then remote X11 clients will have full access
+# to the original X11 display. As virtually no X11 client supports the untrusted
+# mode correctly we set this to yes.
+        ForwardX11Trusted yes
+# Send locale-related environment variables
+        SendEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+        SendEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+        SendEnv LC_IDENTIFICATION LC_ALL LANGUAGE
+        SendEnv XMODIFIERS
+'
 
 source $install_dir/hs-install/lxc.sh
 #source $install_dir/hs-install/lxc-template.sh
@@ -240,6 +308,22 @@ Group=node
 WantedBy=multi-user.target
 '
 
+set_file /lib/systemd/system/static-server.service '## srvctl generated
+[Unit]
+Description=HTTP static-server as emergency fallback.
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/node '$install_dir'/hs-apps/static-server.js
+User=node
+Group=node
+
+[Install]
+WantedBy=multi-user.target
+'
+
+
 systemctl daemon-reload
      
       
@@ -258,6 +342,7 @@ systemctl daemon-reload
     add_service opendkim
     add_service acme-server
     add_service mozilla-autoconfig-server
+    add_service static-server
     
 mnt_rorootfs
 

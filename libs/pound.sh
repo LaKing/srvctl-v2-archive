@@ -302,17 +302,27 @@ function regenerate_pound_files {
     fi
     
     ## create configs
-    _ip=$(cat $SRV/$_C/config.ipv4)
-    _http_port=80
-    _https_port=443
-    _host=$_C
+    local _ip=$(cat $SRV/$_C/config.ipv4)
+    local _http_port=80
+    local _https_port=443
+    local _host=$_C
     
     ## used in the second part on redirects
-    _http_mark='http'
-    _https_mark='https'
+    local _http_mark='http'
+    local _https_mark='https'
     
     ## a-b-c.domain.org notation
-    _DC=$(echo $_C | tr '.' '-')
+    local _DC=$(echo $_C | tr '.' '-')
+    
+    local _static_server=''
+    
+    if [ -f /var/static-server/$_C/index.html ]
+    then
+    _static_server='Emergency
+      Address 10.'$HOSTNET'.0.1
+      Port 1280
+    End'
+    fi
     
     
     if [ -f $SRV/$_C/settings/pound-host ]
@@ -339,25 +349,27 @@ function regenerate_pound_files {
       ## always enabled
       
       set_file $cfg_dir/dddn-http-service '## srvctl dddn-http-service '$_C' '$_ip'
-      Service
-      HeadRequire "Host: '$_DC'.'$SDN'"
-      BackEnd
+Service
+    HeadRequire "Host: '$_DC'.'$SDN'"
+    BackEnd
       Address '$_C'
       Port    '$_http_port'
       '"$(cat -s $SRV/$_C/settings/pound-http-service-directives 2> /dev/null)"'
-      End
-      End'
+    End
+    '"$_static_server"'    
+End'
       
       set_file $cfg_dir/dddn-https-service '## srvctl dddn-https-service '$_C' '$_ip'
-      Service
-      HeadRequire "Host: '$_DC'.'$SDN'"
-      BackEnd
+Service
+    HeadRequire "Host: '$_DC'.'$SDN'"
+    BackEnd
       Address '$_C'
       Port    '$_https_port'
       '"$(cat -s $SRV/$_C/settings/pound-https-service-directives 2> /dev/null)"'
       HTTPS
-      End
-      End'
+    End
+    '"$_static_server"'  
+End'
       
       echo 'Include "'$cfg_dir/dddn-http-service'"' >> $pound_dir/http-dddn-domains.cfg
       echo 'Include "'$cfg_dir/dddn-https-service'"' >> $pound_dir/https-dddn-domains.cfg
@@ -386,25 +398,27 @@ function regenerate_pound_files {
         fi
         
         set_file $cfg_dir/altdomain-http-service '## srvctl altdomain-http-service '$_C' '$_ip'
-        Service
-        HeadRequire "Host: '$altdomain_hostname'"
-        BackEnd
+Service
+    HeadRequire "Host: '$altdomain_hostname'"
+    BackEnd
         Address '$_C'
         Port    '$altdomain_http_port'
         '"$(cat -s $SRV/$_C/settings/pound-altdomain-http-service-directives 2> /dev/null)"'
-        End
-        End'
+    End
+    '"$_static_server"'  
+End'
         
         set_file $cfg_dir/altdomain-https-service '## srvctl altdomain-https-service '$_C' '$_ip'
-        Service
-        HeadRequire "Host: '$altdomain_hostname'"
-        BackEnd
+Service
+    HeadRequire "Host: '$altdomain_hostname'"
+    BackEnd
         Address '$_C'
         Port    '$altdomain_https_port'
         '"$(cat -s $SRV/$_C/settings/pound-altdomain-https-service-directives 2> /dev/null)"'
         HTTPS
-        End
-        End'
+    End
+    '"$_static_server"'  
+End'
         
         echo 'Include "'$cfg_dir/altdomain-http-service'"' >> $pound_dir/http-domains.cfg
         echo 'Include "'$cfg_dir/altdomain-https-service'"' >> $pound_dir/https-domains.cfg
@@ -432,66 +446,71 @@ function regenerate_pound_files {
         '
         
         set_file $cfg_dir/codepad-https-service '## srvctl codepad-https-service '$_C' '$_ip'
-        Service
-            HeadRequire "Host: '$_DC'.codepad.'$SDN'"
-            BackEnd
-                Address '$_C'
-                Port    9001
-                TimeOut 300
-            End
-        End
-        Service
-            HeadRequire "Host: '$_DC'.dev.'$SDN'"
-            BackEnd
-                Address '$_C'
-                Port    9001
-                TimeOut 300
-            End
-        End      
-        '
+Service
+    HeadRequire "Host: '$_DC'.codepad.'$SDN'"
+    BackEnd
+        Address '$_C'
+        Port    9001
+        TimeOut 300
+    End
+    '"$_static_server"'  
+End
+        
+Service
+    HeadRequire "Host: '$_DC'.dev.'$SDN'"
+    BackEnd
+        Address '$_C'
+        Port    9001
+        TimeOut 300
+    End
+End
+'
         
         echo 'Include "'$cfg_dir/codepad-http-service'"' >> $pound_dir/http-domains.cfg
         echo 'Include "'$cfg_dir/codepad-https-service'"' >> $pound_dir/https-domains.cfg
         
         set_file $cfg_dir/play-https-service '## srvctl play-https-service '$_C' '$_ip'
-        Service
-            HeadRequire "Host: '$_DC'.play.'$SDN'"
-            BackEnd
-                Address '$_C'
-                Port    8443
-                TimeOut 300
-                HTTPS
-            End
-        End
-        Service
-            HeadRequire "Host: '$_DC'.run.'$SDN'"
-            BackEnd
-                Address '$_C'
-                Port    8443
-                TimeOut 300
-                HTTPS
-            End
-        End        
-        '
+Service
+    HeadRequire "Host: '$_DC'.play.'$SDN'"
+    BackEnd
+        Address '$_C'
+        Port    8443
+        TimeOut 300
+        HTTPS
+    End
+    '"$_static_server"'  
+End
+Service
+    HeadRequire "Host: '$_DC'.run.'$SDN'"
+    BackEnd
+        Address '$_C'
+        Port    8443
+        TimeOut 300
+        HTTPS
+    End
+    '"$_static_server"'  
+End        
+'
         
         set_file $cfg_dir/play-http-service '## srvctl play-http-service '$_C' '$_ip'
-        Service
-            HeadRequire "Host: '$_DC'.play.'$SDN'"
-            BackEnd
-                Address '$_C'
-                Port    8080
-                TimeOut 300
-            End
-        End
-        Service
-            HeadRequire "Host: '$_DC'.run.'$SDN'"
-            BackEnd
-                Address '$_C'
-                Port    8080
-                TimeOut 300
-            End
-        End       
-        '
+Service
+    HeadRequire "Host: '$_DC'.play.'$SDN'"
+    BackEnd
+        Address '$_C'
+        Port    8080
+        TimeOut 300
+    End
+    '"$_static_server"'  
+End
+Service
+    HeadRequire "Host: '$_DC'.run.'$SDN'"
+    BackEnd
+        Address '$_C'
+        Port    8080
+        TimeOut 300
+    End
+End       
+'
         
         echo 'Include "'$cfg_dir/play-http-service'"' >> $pound_dir/http-domains.cfg
         echo 'Include "'$cfg_dir/play-https-service'"' >> $pound_dir/https-domains.cfg
@@ -564,45 +583,48 @@ function regenerate_pound_files {
       if [ -f $SRV/$_C/settings/pound-no-http ]
       then
         set_file $cfg_dir/http-service '## srvctl http-service '$_C' '$_ip'
-        Service
-        HeadRequire "Host: '$_host'"
-        Redirect "https://'$_host'"
-        End'
+Service
+    HeadRequire "Host: '$_host'"
+    Redirect "https://'$_host'"
+End'
         
         _http_mark='https'
+      
       else
         set_file $cfg_dir/http-service '## srvctl http-service '$_C' '$_ip'
-        Service
-        HeadRequire "Host: '$_host'"
-        BackEnd
+Service
+    HeadRequire "Host: '$_host'"
+    BackEnd
         Address '$_C'
         Port    '$_http_port'
         '"$(cat -s $SRV/$_C/settings/pound-http-service-directives 2> /dev/null)"'
-        End
-        End'
+    End
+    '"$_static_server"'  
+End'
       fi
       
       if [ -f $SRV/$_C/settings/pound-no-https ]
       then
         
         set_file $cfg_dir/https-service '## srvctl https-service '$_C' '$_ip'
-        Service
-        HeadRequire "Host: '$_host'"
-        Redirect "http://'$_host'"
-        End'
+Service
+    HeadRequire "Host: '$_host'"
+    Redirect "http://'$_host'"
+End'
         
         _https_mark='http'
       else
         set_file $cfg_dir/https-service '## srvctl https-service '$_C' '$_ip'
-        Service
-        HeadRequire "Host: '$_host'"
-        BackEnd
+Service
+    HeadRequire "Host: '$_host'"
+    BackEnd
         Address '$_C'
         Port    '$_https_port'
         '"$(cat -s $SRV/$_C/settings/pound-https-service-directives 2> /dev/null)"'
         HTTPS
-        End
-        End'
+    End
+    '"$_static_server"'  
+End'
       fi
       
       if [ -f $SRV/$_C/settings/pound-redirect ] && [ ! -z $(cat $SRV/$_C/settings/pound-redirect) ]
@@ -662,7 +684,6 @@ function regenerate_pound_files {
         
         ## dnl will count the dots in the domain - for priorizing domains with more dots
         dnl=$(echo $A | grep -o "\." | grep -c "\.")
-        # TODO: BUGGED!!!!
         
         if [ -f $SRV/$_C/settings/pound-redirect ] && [ ! -z $(cat $SRV/$_C/settings/pound-redirect) ]
         then

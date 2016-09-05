@@ -17,7 +17,7 @@ xml += '<hostname>' + os.hostname() + '</hostname>';
 xml += '<port>993</port>';
 xml += '<socketType>SSL</socketType>';
 xml += '<authentication>password-cleartext</authentication>';
-xml += '<username>%EMAILLOCALPART%@mail.%EMAILDOMAIN%</username>';
+xml += '<username>%EMAILADDRESS%</username>';
 xml += '</incomingServer>';
 
 xml += '<incomingServer type="pop3">';
@@ -25,7 +25,7 @@ xml += '<hostname>' + os.hostname() + '</hostname>';
 xml += '<port>995</port>';
 xml += '<socketType>SSL</socketType>';
 xml += '<authentication>password-cleartext</authentication>';
-xml += '<username>%EMAILLOCALPART%@mail.%EMAILDOMAIN%</username>';
+xml += '<username>%EMAILADDRESS%</username>';
 xml += '</incomingServer>';
 
 xml += '<outgoingServer type="smtp">';
@@ -33,7 +33,7 @@ xml += '<hostname>' + os.hostname() + '</hostname>';
 xml += '<port>465</port>';
 xml += '<socketType>SSL</socketType>';
 xml += '<authentication>password-cleartext</authentication>';
-xml += '<username>%EMAILLOCALPART%@mail.%EMAILDOMAIN%</username>';
+xml += '<username>%EMAILADDRESS%</username>';
 xml += '</outgoingServer>';
 
 //xml += '<documentation url="http://'+os.hostname()+'/thunderbird-e-mail.html">';

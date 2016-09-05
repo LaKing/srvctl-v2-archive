@@ -2,10 +2,10 @@ if $onHS
 then ## no identation.
 
 ## add new host
-hint "add-fedora VE [USERNAME(s)]" "Add new LXC OS-container."
-hint "add-codepad VE [USERNAME(s)]" "Add new LXC OS-container running codepad."
-hint "add-ubuntu VE [USERNAME(s)]" "Add new LXC ubuntu based OS container."
-hint "add-apache VE [USERNAME(s)]" "Add new LXC application container running apache with a readonly filesystem."
+hint "add-fedora VE [CMS]" "Add new LXC OS-container. Optionally specify DNS"
+hint "add-codepad VE" "Add new LXC OS-container running codepad."
+hint "add-ubuntu VE" "Add new LXC ubuntu based OS container."
+hint "add-apache VE" "Add new LXC application container running apache with a readonly filesystem."
 
 if [ "$CMD" == "add" ] || [ "$CMD" == "add-fedora" ] || [ "$CMD" == "add-apache" ] || [ "$CMD" == "add-codepad" ] || [ "$CMD" == "add-ubuntu" ]
 then
@@ -110,12 +110,12 @@ then
         counter=$(($(cat /var/srvctl-host/counter)+1))
         echo $counter >  /var/srvctl-host/counter
 
-        log "Create $ctype container #$counter as $C"
+        log "Create $ctype container #$counter as $C for $SRVCTL_USER"
         
         ## instead of using the lxc-templates, we brew our own beer 
      
         mkdir -p $SRV/$C/settings
-        echo '' > $SRV/$C/settings/users
+        echo $SC_USER > $SRV/$C/settings/users
         echo $ctype > $SRV/$C/ctype
         echo $NOW > $SRV/$C/creation-date
         
@@ -260,27 +260,46 @@ chown -R codepad:codepad $SRV/$C/rootfs/srv/codepad-project
 
 
 ## USERs
+
+        generate_user_structure $SC_USER $C
         
-        if $isSUDO
-        then
-            msg "Add user $SC_USER" 
-            echo "$SC_USER" >> $SRV/$C/settings/users
-            U=$SC_USER
+        ## static-server
+        mkdir -p /var/static-server/$C
             
-            add_user $U
-            generate_user_configs $U
-            generate_user_structure $U $C
-        fi
+            if [ -d /home/$SC_USER/$C ]
+            then
+                if [ ! -e /home/$SC_USER/$C/static-server ]
+                then
+                    ln -sf /var/static-server/$C /home/$SC_USER/$C/static-server
+                fi
+                chown -R $SC_USER:$SC_USER /var/static-server/$C
+            fi
+            
+        local _config=/var/srvctl-host/ssh_config/$HOSTNAME 
+            echo "Host $C" >> $_config 
+            echo "User root" >> $_config
+            echo "" >> $_config    
+        
+        #if $isSUDO
+        #then
+        #    msg "Add user $SC_USER" 
+        #    echo "$SC_USER" >> $SRV/$C/settings/users
+        #    U=$SC_USER
+        #    
+        #    add_user $U
+        #    generate_user_configs $U
+        #    generate_user_structure $U $C
+        #fi
 
         ## add users from argument
-        for U in $OPAS3
-        do
-            msg "Add users $U"                
-            echo "$U" >> $SRV/$C/settings/users
-            add_user $U
-            generate_user_configs $U
-            generate_user_structure $U $C
-        done        
+        #for U in $OPAS3
+        #do
+        #    msg "Add users $U"                
+        #    echo "$U" >> $SRV/$C/settings/users
+        #    add_user $U
+        #    generate_user_configs $U
+        #    generate_user_structure $U $C
+        #done        
         
         mkdir -p $BACKUP_PATH/$C
         
@@ -441,14 +460,4 @@ man '
     Prefixes make sense, mail. or dev. will create MX or development servers.
     
 '
-
-
-
-
-
-
-
-
-
-
 
