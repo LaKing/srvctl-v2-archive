@@ -4,7 +4,7 @@ then ## no identation.
 ## regenerate configs 
 hint "restart-services" "Restart all srvctl-managed services. "
 
-if [ "$CMD" == "restart-services" ] || [ "$CMD" == "!!" ]
+if [ "$CMD" == "restart-services" ]
 then        
     restart_services
     ok  

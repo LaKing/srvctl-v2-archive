@@ -62,7 +62,7 @@ then
         
         for _S in $SRVCTL_HOSTS
         do
-            for _c in $(ssh $$_S srvctl ls)
+            for _c in $(ssh $_S srvctl ls)
             do
                 if [ "$_c" == "$C" ]
                 then
@@ -92,6 +92,7 @@ then
         
     fi
 
+
         if [ -z "$(ip addr show srv-net 2> /dev/null | grep UP)" ]
         then
             err "srv-net is not present. ... run 'srvctl update-install' then reboot?"
@@ -110,7 +111,7 @@ then
         counter=$(($(cat /var/srvctl-host/counter)+1))
         echo $counter >  /var/srvctl-host/counter
 
-        log "Create $ctype container #$counter as $C for $SRVCTL_USER"
+        log "Create $ctype container #$counter as $C for $SC_USER"
         
         ## instead of using the lxc-templates, we brew our own beer 
      

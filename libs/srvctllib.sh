@@ -308,6 +308,11 @@ function add_user {
     local U=$1
     local _had=false
 
+    if [ $U == root ]
+    then
+        return
+    fi
+    
     if ! $all_arg_set
     then
         if [ ! -z "$(cat /etc/passwd | grep /home/$U:)" ] && [ -d /home/$U ] && [ -d /var/srvctl-users/$U ]
