@@ -12,6 +12,11 @@ function bind_mount { ## container
         then
                 for _U in $(cat $SRV/$_C/settings/users)
                 do
+                    if [ $_U == root ]
+                    then
+                        continue
+                    fi
+                    
                     mkdir -p /home/$_U/$_C/bind
                     chown $_U:$_U /home/$_U/$_C/bind
                     chmod 775 /home/$_U/$_C/bind
@@ -150,7 +155,12 @@ function nfs_mount { # user on container
     
         for _U in $(cat $SRV/$_C/settings/users)        
         do
-         
+            
+            if [ $_U == root ]
+            then
+                continue
+            fi
+            
             set_is_running $_C
             
             if $is_running

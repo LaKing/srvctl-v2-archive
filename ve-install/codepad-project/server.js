@@ -3,8 +3,18 @@
 // Express with http and https
 
 // Boilerplates?
-// for passport authentication, https://github.com/scotch-io/easy-node-authentication
+
+// for passport authentication, 
+// https://github.com/scotch-io/easy-node-authentication
+
+// note, requires mongod
+
+// dnf -y install mongodb
+// systemctl enable mongod
+// systemctl start mongod
+
 // Angular 2 https://github.com/mschwarzmueller/angular-2-beta-boilerplate
+// Bootstrap with angular 2 https://github.com/valor-software/ng2-bootstrap
 
 function log(txt) {
     console.log(new Date(), txt);
@@ -32,4 +42,3 @@ httpServer.listen(8080);
 httpsServer.listen(8443);
 
 log("Project started.");
-

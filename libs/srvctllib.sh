@@ -139,6 +139,17 @@ function update_password { ## for local user
 
     local _u=$1
     local password=''
+    
+    if [ -z "$(cat /home/$_u/.password 2> /dev/null)" ]
+    then
+        rm -rf /home/$_u/.password
+    fi
+    
+    
+  if $onHS
+  then    
+
+    
     local passtor=/var/srvctl-users/$_u
     mkdir -p $passtor
     
@@ -148,10 +159,6 @@ function update_password { ## for local user
         rm -rf $passtor/.password
     fi
     
-    if [ -z "$(cat /home/$_u/.password 2> /dev/null)" ]
-    then
-        rm -rf /home/$_u/.password
-    fi
     
     ## Generate the passcode, which is the default password by the system
     if [ "$ROOTCA_HOST" == $HOSTNAME ]
@@ -196,11 +203,12 @@ function update_password { ## for local user
                 ## use existing password
                 password=$(cat $passtor/.password )
     fi
-       
+    
+     
     if [ -z "$password" ]
     then
-        err "Password-system encountered an error. Skipping."
-        return
+            err "Password-system encountered an error. Skipping."
+            return
     fi
     
     if [ -f "$passtor/$HOSTNAME.password" ]
@@ -224,6 +232,27 @@ function update_password { ## for local user
         echo -n $password > /home/$_u/.password
 
     fi
+  fi
+  
+  if $onVE
+  then
+      
+      if [ ! -f /home/$_u/.password ]
+      then
+          get_password
+      else
+          password="$(cat /home/$_u/.password)"          
+      fi
+        
+        #set
+        echo $password | passwd $_u --stdin 2> /dev/null 1> /dev/null
+        log "Password is $password for $_u@$HOSTNAME"    
+    
+        ## save
+        echo -n $(echo -n $password | openssl dgst -sha512 | cut -d ' ' -f 2) > /home/$_u/.password.sha512
+        echo -n $password > /home/$_u/.password
+      
+  fi 
     
         chown $_u:$_u /home/$_u/.password
         chmod 400 /home/$_u/.password  
