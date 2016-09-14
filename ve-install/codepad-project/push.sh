@@ -10,6 +10,19 @@ chown -R codepad:codepad $wd
 chmod -R +X $wd
 NOW=$(date +%Y.%m.%d-%H:%M:%S)
 
+if [ ! -z "$(find . -name '*.ts')" ]
+then
+    if [ ! -f /usr/bin/tsc ]
+    then
+        if [ $USER == root ]
+        then
+            npm -g install typescript
+        else
+            echo "Tyspescript propably needed, but not installed!"
+        fi
+    fi
+fi
+
 ## enforce codepad user
 if [ $USER != codepad ]
 then    
@@ -44,16 +57,11 @@ fi
 
 if [ ! -z "$(find . -name '*.ts')" ]
 then
-    if [ ! -f /usr/bin/tsc ]
-    then
-        npm -g install typescript
-    fi
-    
-    if [ ! -f $wd/tsconfig.json ]
-    then
-        tsc --init >> $log
-    fi
-    
+        if [ ! -f $wd/tsconfig.json ]
+        then
+            tsc --init >> $log
+        fi
+    ## run the typescript compiler
     tsc >> $log
 fi
 

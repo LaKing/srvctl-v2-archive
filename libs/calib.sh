@@ -93,21 +93,21 @@ then
     if  [ -f "$sc_ca_dir/$_name/$_file.key.pem" ] && [ -f "$sc_ca_dir/$_name/$_file.crt.pem" ]
     then
     
-    if [ "$(openssl x509 -noout -modulus -in $sc_ca_dir/$_name/$_file.crt.pem | openssl md5)" == "$(openssl rsa -noout -modulus -in $sc_ca_dir/$_name/$_file.key.pem | openssl md5)" ]
-    then
-        if openssl x509 -checkend 86400 -noout -in $sc_ca_dir/$_name/$_file.crt.pem
+        if [ "$(openssl x509 -noout -modulus -in $sc_ca_dir/$_name/$_file.crt.pem | openssl md5)" == "$(openssl rsa -noout -modulus -in $sc_ca_dir/$_name/$_file.key.pem | openssl md5)" ]
         then
-              echo "$_name certificate for $_u is OK" > /dev/null
+            if openssl x509 -checkend 86400 -noout -in $sc_ca_dir/$_name/$_file.crt.pem
+            then
+                  echo "$_name certificate for $_u is OK" > /dev/null
+            else
+                err "$_name certificate for $_u EXPIRED"
+                rm -fr $sc_ca_dir/$_name/$_file.crt.pem
+                rm -fr $sc_ca_dir/$_name/$_file.key.pem
+            fi
         else
-            err "$_name certificate for $_u EXPIRED"
+            err "$_name certificate for $_u INVALID"
             rm -fr $sc_ca_dir/$_name/$_file.crt.pem
             rm -fr $sc_ca_dir/$_name/$_file.key.pem
         fi
-    else
-        err "$_name certificate for $_u INVALID"
-        rm -fr $sc_ca_dir/$_name/$_file.crt.pem
-        rm -fr $sc_ca_dir/$_name/$_file.key.pem
-    fi
            
     fi
     
@@ -144,11 +144,10 @@ then
         -days 1095 
     fi
 
-
-    if [ -f /var/srvctl-host/users/$_u/.password ]
+    if [ -f /var/srvctl-users/$_u/.password ]
     then
-        local _passphrase="$(cat /var/srvctl-host/users/$_u/.password)"
-        
+        local _passphrase="$(cat /var/srvctl-users/$_u/.password)"
+                
         if [ ! -f "$sc_ca_dir/$_name/$_file.p12" ]
         then
             ntc "create $_file p12 ($_passphrase)"
@@ -358,5 +357,6 @@ function create_selfsigned_domain_certificate { ## for domain
         ## ca-bundle
         cat $ssl_pem > $cert_path/pound.pem
 }
+
 
 
