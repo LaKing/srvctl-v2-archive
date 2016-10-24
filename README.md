@@ -1,5 +1,8 @@
-Fedora srvctl
+Fedora srvctl v2
 ==============
+
+## Archive of the deprecated srvctl v2
+## srvctl v3 is a complete rewrite that uses systemd-containers
 
 My implementation of a virtual serverfarm manager, controlling the host(s) and some VE's.
 
